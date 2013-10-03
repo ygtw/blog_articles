@@ -1,0 +1,48 @@
+1st edition: 20131002
+env:
+ubuntu 12.04 64bit
+qtcreator : 2.8.0
+g++ version: (Ubuntu 4.8.1-2ubuntu1~12.04) 4.8.1
+ndk: android-ndk-r9
+sdk: adt-bundle-linux-x86-20130522
+api 版本安裝了 10, 11, 16, 17, 18 有些沒裝會出錯, 這是我一一補齊的結果。
+
+這次畫面總算對了。
+
+<a href="https://picasaweb.google.com/lh/photo/AaOWEVMxcaTYdnqQl1AZ4dMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="400" src="https://lh4.googleusercontent.com/-7uEeTtfGZuI/UkvbWONsa7I/AAAAAAAAs8E/xlw0RSlZqpc/s640/qt52alpha-android.jpg" width="640" /></a>
+
+qt 5.2 alpha 沒有 binary 可用, build from source.
+
+get qt 5.2 alpha source code:
+http://download.qt-project.org/development_releases/qt/5.2/5.2.0-alpha/single/
+
+ref:
+build android qt version from source code:
+<a href="http://qt-project.org/wiki/Qt5ForAndroidBuilding">http://qt-project.org/wiki/Qt5ForAndroidBuilding</a>
+
+我自己用的 configure 參數:
+<pre class="cmd">export ANDROID_BUILD_TOOLS_REVISION=18.1.0
+所以 build-tools path 是
+adt-bundle-linux-x86-20130522/sdk/build-tools/18.1.0
+
+../qt-everywhere-opensource-src-5.2.0-alpha/configure <strike>-developer-build</strike> -xplatform android-g++ -nomake tests -nomake examples -android-ndk /home/descent/android-dev/android-ndk-r8e -android-sdk /home/descent/android-dev/adt-bundle-linux-x86-20130522/sdk -android-ndk-host linux-x86 -android-toolchain-version 4.7 -skip qttranslations -skip qtwebkit -skip qtserialport -skip qtwebkit-examples 
+
+../qt-everywhere-opensource-src-5.2.0-alpha/configure  -xplatform android-g++ -nomake tests -nomake examples -android-ndk /home/descent/android-dev/android-ndk-r9 -android-sdk /home/descent/android-dev/adt-bundle-linux-x86-20130522/sdk -android-ndk-host linux-x86_64 -android-toolchain-version 4.8 -skip qttranslations -skip qtwebkit -skip qtserialport -skip qtwebkit-examples 
+</pre>
+-developer-build 會把 warnning 當成錯誤, 所以我拿掉了。
+記得
+<pre class="cmd">
+make install
+</pre>
+這步驟一定要做, 要不然設定 qtcreator 會怪怪的。
+
+qt 5.2 安裝後的目錄結構:
+<pre class="cmd">
+ls /usr/local/Qt-5.2.0/
+bin  doc  imports  include  jar  lib  mkspecs  plugins  qml  src
+</pre>
+設定 qtcreator
+tool/options/Build & Run/Qt Versions add qt5.2 qmake
+tool/options/android 設定 sdk, ndk
+
+使用 qtcreator 很容易有問題, 我搭配 adb 指令來把 a3.apk 傳到模擬器上。
