@@ -1,0 +1,844 @@
+
+一起把幾本相關的書介紹一下, 都是和 x86 保護模式相關。侯捷的文章有篇提到類似的技術: <a href="http://jjhou.boolan.com/review1-9.htm" target="main">93/04 無限延伸 DOS  視野</a>, 以我的學習方式來說, 如果在那時代, 我一定會把這些書籍補齊 (雖然我看原文書的能力極度不佳)。不過我沒有經歷過那時代的程式設計,不知道是有幸還是不幸; 在 linux 程式設計中, 不需要 undocument 系列, 書中列的程式, 在 unix like os 都有對應的工具, 甚至還有 source code 可以參考。
+
+1992 出版的 apue, 裡頭的技術, 到了現在 (2013) 還是可以使用, 1992 ms dos/windows 的技術呢？辛苦這些程式設計師了。文章提到的技術雖已經過時, 但文章本身看來依然精彩, 我看得欲罷不能。
+
+<a href="http://www.amazon.com/Programming-Environment-Addison-Wesley-Professional-Computing/dp/0201563177/ref=sr_1_3?s=books&amp;ie=UTF8&amp;qid=1380515312&amp;sr=1-3&amp;keywords=Advanced+Programming+in+the+UNIX+Environment" target="_blank">apue</a> Details:
+<ul>
+<li><b>Series:</b> Addison-Wesley Professional Computing Series</li>
+<li><b>Hardcover:</b> 768 pages</li>
+<li><b>Publisher:</b> Addison-Wesley Professional; First Edition edition (June 30, 1992)</li>
+<li><b>Language:</b> English</li>
+<li><b>ISBN-10:</b> 0201563177</li>
+<li><b>ISBN-13:</b> 978-0201563177</li>
+<li><b>     Product Dimensions:      </b>     9.2 x 7.8 x 2.2 inches     </li>
+<li><b>Shipping Weight:</b> 3.2 pounds</li>
+</ul>
+我大概是在 1998 年左右將重心從 ms 平台移到 linux 平台, 開始學習使用 linux 和 linux programming, 在 linux 上學習到的技術, 都是一直存在的, 沒有淘汰的問題, 能踏進 unix 領域真的太棒了, 不用一直去追新的紀錄, 不用擔心 ms 出了什麼新東西沒去學習會怕跟不上, 所以我現在學新 (老) 東西, 也會仔細評估, 儘量不去學習有可能<b>過時</b>的技術, 也比較傾向於 open source 的東西。
+
+看完書評, 我也想做類似的事情, 把我擁有/讀完的幾本書一起討論, 我想學侯老師的文章風格, 不過怕畫虎不成反類犬, 還是以自己的文字風格描述。我沒能看完所有內容, 所以只提看過的部份, 因為我對保護模式已經有了基本理解, 已經足夠我完成保護模式的 os, 所以有些細節就沒繼續研究。我的學習主要來自於 <a href="http://descent-incoming.blogspot.tw/2011/12/oranges.html" target="_blank">Orange's 一個作業系統的實現</a>第三章。
+
+侯老師提的書籍雖然已經過時, 不過文章本身很精彩, 建議一讀, 我是把這些技術當作歷史來讀。
+
+和侯老師這篇評的書籍有所不同, 這裡所提到的方式都是自己撰寫程式碼, 並不靠誰來完成保護模式的程式, 我覺得這種方式比較可以學到基本的東西, 否則沒了 DOS Extender, 不就什麼都完成不了嗎？那些書的技術會過時, VCPI/DPMI, ems/xms, 286-DOS Extender 和 386 DOS Extende, 沒學到這個不知道是幸還是不幸, 因為這些東西不容易, 若你辛苦學成, 到了現在也沒用了, 而且你可能也不會自己寫程式進出保護模式。但是這幾本的可不會, 放心把錢花在上面吧！只要 x86 一直回溯相容, 這些書籍的知識就不會過時, 不過 intel 會不會倒掉那可不是我能保證的。
+
+我若在那個年代 (1990) 就寫出可以在 dos 進入保護模式, 存取 1M 之外的記憶體, 再回到 dos, 那應該很轟動, 不過就算是 2013 年, 這也一樣不是那麼為人所知的程式。當然就是這些書讓我學會這些。更珍貴的是, 這是中文書籍, 比起外文書, 只要你肯看, 不會有語言障礙, 達成學習目標是比較容易的, 我敢說若你看一樣的原文書, 我一定比你先搞懂, 只要英文不是你的母語。
+
+我相信去看原文書一定是最不得已的作法, 若是中文書有相同主題的東西, 我懷疑會有多少人去看原文書, 我不相信你可以忍受這樣的誘惑, 當然前提這本中文書籍一定也得有相當水準。台灣或許沒有, 不過拜中國崛起之賜, 同樣使用中文的我們可以看懂他們的簡體書籍, 而其豐富的主題不是台灣的電腦書籍可以比擬的, 甚至還有不少出版社已經開始<b>翻譯</b>簡體中文書籍。這幾本書都不是翻譯書, 在中文世界很少有這樣的主題。
+
+不過我很懷疑會有多少人願意買這些書呢？2013 已經不像 1990, 只有系統層級的東西有趣, 在網路普遍之後, 光 web 這塊就有了極大的變化, 還有 ios, android app, 嵌入式系統, linux 程式設計, 不在只是 ms 的天下, COM+, Office OLE, 這些東西的重要性已經沒那麼高, 從 web 演伸出來的雲端更是目前的大熱門, 2013 有很多程式領域可供選擇, 這種底層的東西非但無法帶來立即的成就感 (挫折感可能到不少), 而學習曲線更是陡峭, 你寫了一個保護模式的程式能幹嘛？除非開發 os kernel, 否則一般人哪會去學習這個。用這技能找工作可能也不會太有優勢, 不過有趣就好, 讓我們來看看下面的書單。
+
+<a href="https://picasaweb.google.com/lh/photo/aLgY-NYj1oML96Zb9kVJlNMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="360" src="https://lh3.googleusercontent.com/-nsXnJYIG32s/UP1Oc_8SCeI/AAAAAAAAkb4/Lw69Kb5XlvA/s640/IMG_5262.JPG" width="640" /></a>
+
+<ul id="summary">
+<li>         作　　者：         <a href="http://www.360buy.com/writer/%E9%82%93%E5%BF%97_1.html" target="_blank">邓志</a> 著                                                           </li>
+<li>出 版                      社： <a href="http://www.360buy.com/publish/%E7%94%B5%E5%AD%90%E5%B7%A5%E4%B8%9A%E5%87%BA%E7%89%88%E7%A4%BE_1.html" target="_blank">电子工业出版社</a></li>
+<li>ＩＳＢＮ：9787121181764</li>
+<li>出版时间：2012-10-01</li>
+</ul>
+
+<b><span style="font-size: large;">x86/x64体系探索及编程</span></b>
+<h2>
+    <span class="">目录</span>       &nbsp;·&nbsp;·&nbsp;·&nbsp;·&nbsp;·&nbsp;·    </h2>
+第一篇  x86基础
+第1章  数与数据类型 2
+1.1  数 2
+1.1.1  数字 2
+1.1.2  二进制数 3
+1.1.3  二进制数的排列 3
+1.1.4  十六进制数 5
+1.1.5  八进制数与十进制数 5
+1.2  数据类型 6
+1.2.1  integer数 6
+1.2.2  floating-point数 9
+1.2.3  real number（实数）与NaN（not a number） 11
+1.2.4  unsupported编码值 14
+1.2.5  浮点数精度的转换 15
+1.2.6  浮点数的溢出 17
+1.2.7  BCD码 20
+1.2.8  SIMD数据 21
+第2章  x86/x64编程基础 23
+2.1  选择编译器 23
+2.2  机器语言 24
+2.3  Hello world 25
+2.3.1  使用寄存器传递参数 26
+2.3.2  调用过程 27
+2.3.3  定义变量 27
+2.4  16位编程、32位编程，以及64位编程 28
+2.4.1  通用寄存器 28
+2.4.2  操作数大小 30
+2.4.3  64位模式下的内存地址 30
+2.4.4  内存寻址模式 31
+2.4.5  内存寻址范围 34
+2.4.6  使用的指令限制 34
+2.5  编程基础 34
+2.5.1  操作数寻址 35
+2.5.2  传送数据指令 39
+2.5.3  位操作指令 45
+2.5.4  算术指令 47
+2.5.5  CALL与RET指令 48
+2.5.6  跳转指令 48
+2.6  编辑与编译、运行 48
+第3章  编写本书的实验例子 50
+3.1  实验的运行环境 50
+3.2  生成空白的映像文件 52
+3.2.1  使用nasm编译器生成 52
+3.2.2  使用bximage工具 52
+3.3  设置bochs配置文件 53
+3.4  源代码的基本结构 54
+3.5  编译源代码 55
+3.6  映像文件内的组织 55
+3.7  使用merge工具 56
+3.7.1  merge的配置文件 57
+3.7.2  执行merge命令 57
+3.8  使用U盘启动真实机器 58
+3.8.1  使用merge工具写U盘 58
+3.8.2  使用hex编辑软件写U盘 59
+3.9  编写boot代码 60
+3.9.1  LBA转换为CHS 62
+3.9.2  测试是否支持int 13h扩展功能 63
+3.9.3  使用int 13h扩展读磁盘 64
+3.9.4  最后看看load_module() 64
+3.10  总结 66
+第4章  处理器的身份 67
+4.1  测试是否支持CPUID指令 67
+4.2  CPUID指令的术语及表达 68
+4.3  基本信息与扩展信息 68
+4.4  处理器的型号（family,model与stepping） 72
+4.5  最大的物理地址和线性地址 73
+4.6  处理器扩展状态信息 74
+4.6.1  探测Processor Extended State子叶 75
+4.6.2  Processor Extended State子叶所需内存size 76
+4.6.3  Processor Extended State的保存 77
+4.6.4  Processor Extended State的恢复 78
+4.7  处理器的特性 78
+4.8  处理器的Cache与TLB信息 80
+4.9  MONITOR/MWAIT信息 83
+4.10  处理器的long mode 84
+第5章  了解Flags 85
+5.1  Eflags中的状态标志位 86
+5.1.1  signed数的运算 86
+5.1.2  unsigned数的运算 89
+5.2  IOPL标志位 90
+5.3  TF标志与RF标志 93
+5.4  NT标志 95
+5.5  AC标志 96
+5.6  VM标志 98
+5.7  eflags寄存器的其他事项 99
+第6章  处理器的控制寄存器 101
+6.1  CR8 102
+6.2  CR3 103
+6.3  CR0 104
+6.3.1  保护模式位PE 104
+6.3.2  x87 FPU单元的执行环境 104
+6.3.3  CR0.PG控制位 108
+6.3.4  CR0.CD与CR0.NW控制位 108
+6.3.5  CR0.WP控制位 110
+6.3.6  CR0.AM控制位 110
+6.4  CR4 110
+6.4.1  CR4.TSD与CR4.PCE控制位 110
+6.4.2  CR4.DE与CR4.MCD控制位 111
+6.4.3  CR4.OSFXSR控制位 111
+6.4.4  CR4.VMXE与CR4.SMXE控制位 111
+6.4.5  CR4.PCIDE与CR4.SMEP控制位 112
+6.4.6  CR4.OSXSAVE控制位 113
+6.4.7  CR4中关于页的控制位 113
+6.5  EFER扩展功能寄存器 114
+第7章  MSR 116
+7.1  MSR的使用 116
+7.2  MTRR 117
+7.2.1  Fixed-range区域的映射 118
+7.2.2  MTRR的功能寄存器 120
+7.3  MSR中对特殊指令的支持 124
+7.3.1  支持sysenter/sysexit指令的MSR 125
+7.3.2  支持syscall/sysret指令的MSR 126
+7.3.3  支持swapgs指令的MSR 127
+7.3.4  支持monitor/mwait指令的MSR 128
+7.4  提供processor feature管理 129
+7.5  其他未列出来的MSR 129
+7.6  关于MSR一些后续说明 129
+第二篇  处理器的工作模式
+第8章  实地址模式 132
+8.1  真实的地址 132
+8.2  real mode的编址 132
+8.3  real mode的状态 133
+8.4  段基址的计算 134
+8.5  第1条执行的指令 134
+8.6  实模式下的执行环境 135
+8.7  实模式下的IVT 135
+8.8  突破64K段限 136
+8.9  A20地址线 137
+第9章  SMM系统管理模式探索 138
+9.1  进入SMM 138
+9.2  SMM的运行环境 141
+9.2.1  SMRAM区域 141
+9.2.2  SMM执行环境的初始化 143
+9.2.3  SMM下的operand与address 144
+9.2.4  SMM下的CS与EIP 144
+9.2.5  SMM下的SS与ESP 145
+9.3  SMM里的中断 145
+9.4  SMI的Back-to-Back响应 147
+9.5  SMM里开启保护模式 147
+9.6  SMM的版本 148
+9.7  I/O指令的重启及Halt重启 151
+9.8  SMM的退出 152
+9.9  SMBASE的重定位 153
+9.10  SMI处理程序的初始化 154
+9.11  SMM的安全 156
+9.11.1  芯片组的控制 156
+9.11.2  处理器对SMRAM空间的限制 158
+9.11.3  cache的限制 160
+9.12  测试SMI处理程序 161
+第10章  x86/x64保护模式体系（上） 163
+10.1  x86/x64的权限 164
+10.2  保护模式下的环境 164
+10.2.1  段式管理所使用的资源 165
+10.2.2  paging分页机制所使用的资源 165
+10.3  物理地址的产生 166
+10.4  段式管理机制 167
+10.4.1  段式内存管理 168
+10.4.2  段式的保护措施 168
+10.5  段式管理的数据结构 169
+10.5.1  Segment Selector（段选择子） 169
+10.5.2  Descriptor Table（描述符表） 172
+10.5.3  Segment Selector Register（段寄存器） 174
+10.5.4  Segment Descriptor（段描述符） 175
+10.5.5  LDT描述符与LDT 258
+10.6  开启保护模式 260
+10.6.1  初始化GDT 260
+10.6.2  初始化IDT 262
+10.6.3  切换到保护模式 263
+第11章  x86/x64保护模式体系（下） 265
+11.1  物理页面 265
+11.1.1  处理器的最高物理地址（MAXPHYADDR） 266
+11.1.2  物理页面的大小 267
+11.1.3  页转换模式（Paging Mode） 268
+11.2  paging机制下使用的资源 270
+11.2.1  寄存器 270
+11.2.2  CPUID查询leaf 270
+11.2.3  寄存器的控制位 271
+11.2.4  页转换表资源 272
+11.3  32位paging模式（non-PAE模式） 273
+11.3.1  CR3结构 274
+11.3.2  32位paging模式下的PDE结构 275
+11.3.3  使用32位paging 279
+11.4  PAE paging模式 282
+11.4.1  在Intel64下的CR3与PDPTE寄存器 283
+11.4.2  在AMD64下的CR3 285
+11.4.3  PAE paging模式里的PDPTE结构 286
+11.4.4  PAE paging模式里的PDE结构 286
+11.4.5  PAE paging模式里的PTE结构 288
+11.4.6  使用和测试PAE paging模式 288
+11.4.7  使用和测试Execution Disable功能 292
+11.5  IA-32e paging模式 297
+11.5.1  IA-32e paging模式下的CR3 299
+11.5.2  IA-32e paging模式下的PML4E结构 302
+11.5.3  IA-32e paging模式下的PDPTE结构 302
+11.5.4  IA-32e paging模式下的PDE结构 303
+11.5.5  IA-32e paging模式下的PTE结构 304
+11.5.6  SMEP机制 304
+11.5.7  使用IA-32e paging模式 308
+11.6  TLB与Cache 314
+11.6.1  TLB 315
+11.6.2  Paging-Structure Cache 328
+11.7  page的内存cache类型 335
+11.7.1  PAT（Page Attribute Table） 335
+11.7.2  PAT MSR 337
+11.7.3  各级table entry的PCD及PWT标志 337
+11.8  页的保护措施 338
+11.8.1  访问权限位U/S的检查 338
+11.8.2  读/写权限位R/W的检查 339
+11.8.3  执行权限位XD的检查 339
+11.8.4  缺页保护P标志位的检查 340
+11.8.5  保留位的检查 341
+第12章  Long-mode 342
+12.1  x64体系的设计原则 343
+12.2  开启long-mode 344
+12.2.1  检测处理器是否支持long-mode 344
+12.2.2  EFER寄存器 345
+12.2.3  进入long-mode的必要条件 346
+12.3  退出long-mode 350
+12.4  long-mode的执行环境 352
+12.4.1  处理器模式的判断 352
+12.4.2  64位模式下的段描述符 353
+12.4.3  Long-mode的gate描述符 353
+12.4.4  Long-mode的描述符表结构 355
+12.4.5  Long-mode模式的段寄存器 356
+12.4.6  Long-mode的paging机制 357
+12.5  long-mode的指令环境 358
+12.5.1  64位模式的操作数 358
+12.5.2  64位模式下的无效指令 360
+12.5.3  64位模式下的寻址模式 361
+12.6  64位模式与compatibility模式编程 363
+12.6.1  64位模式切换到compatibility模式 363
+12.6.2  compatibility模式切换到64位模式 363
+12.6.3  利用compatibility模式执行legacy的库函数 364
+第三篇  调试与性能监控
+第13章  断点调试 370
+13.1  Single-Step单步调试模式 370
+13.2  Breakpoint调试模式 371
+13.3  Memory和I/O地址调试模式 372
+13.3.1  断点寄存器DR0～DR3 372
+13.3.2  状态寄存器DR6 372
+13.3.3  控制寄存器DR7 373
+13.3.4  Fault与Trap类型的debug异常 375
+13.3.5  General Detect产生的#DB异常 375
+13.3.6  执行断点指令产生的#DB异常 377
+13.3.7  访问数据断点产生的#DB异常 386
+13.3.8  访问I/O断点产生的#DB异常 390
+13.3.9  任务切换时产生的Trap调试异常 392
+第14章  分支记录 394
+14.1  检测处理器的家族和型号 395
+14.2  初识Branch Record 395
+14.2.1  记录存放的地方 395
+14.2.2  记录的形式 396
+14.2.3  何时进行记录 396
+14.3  IA32_DEBUGCTL寄存器 396
+14.3.1  配置Branch trace record的存放 398
+14.3.2  CPL-qualified branch record（受CPL限制的BTS） 399
+14.3.3  冻结监控 400
+14.4  LBR stack 402
+14.4.1  FROM_IP与TO_IP寄存器 402
+14.4.2  IA32_LASTBRANCH_TOS寄存器 404
+14.4.3  LBR stack的使用 405
+14.5  使用LBR捕捉branch trace 405
+14.6  #DB异常下的LBR 419
+14.7  IA-32e模式下的LBR stack 421
+14.8  使用Single-step on branch功能 428
+14.9  BTS（Branch Trace Store）机制 429
+14.9.1  检测DS（Debug Store）是否支持 430
+14.9.2  Debug store 64位格式 431
+14.9.3  检测BTS（Branch Trace Store）机制是否可用 431
+14.9.4  检测PEBS（Precise Event Based Sampling）机制是否可用 432
+14.9.5  Debug Store存储区域 432
+14.9.6  设置DS存储区域 439
+14.9.7  使用环形回路BTS buffer 443
+14.9.8  使BTS buffer产生DS中断 447
+14.9.9  过滤BTS记录 459
+14.9.10  64位模式下的BTS机制 463
+第15章  性能监控 469
+15.1  性能监控机制 469
+15.2  Performance monitoring机制的版本 470
+15.2.1  确定处理器所支持的功能 471
+15.2.2  IA32_PMCx寄存器在各版本中的数量 472
+15.2.3  IA32_PMCx寄存器的宽度 472
+15.2.4  预定义的event 473
+15.3  Nehalem架构下的性能监控机制 474
+15.3.1  物理资源 474
+15.3.2  counter（计数器） 475
+15.3.3  开启计数器 476
+15.3.4  全局控制器 476
+15.3.5  通用计数控制器 477
+15.3.6  固定用途计数控制器 478
+15.3.7  全局状态寄存器 480
+15.3.8  全局溢出控制器 481
+15.3.9  使用Performance monitoring的例子 481
+15.3.10  在PMI中冻结计数器 486
+15.4  PEBS（Precise Event Based Sampling）机制 489
+15.4.1  PEBS buffer 490
+15.4.2  PEBS中断 493
+15.4.3  PEBS事件 496
+15.4.4  PEBS的触发 497
+15.4.5  PEBS记录的报告 498
+15.4.6  PEBS buffer满时中断 504
+15.4.7  多个PMI触发 510
+15.4.8  Load latency监控机制 521
+15.5  使用Fixed计数器 525
+15.6  Time-stamp counter与clock 528
+15.6.1  Invariant TSC 529
+15.6.2  读取TSC值 530
+15.6.3  Clock per instruction 531
+第四篇  中断体系
+第16章  中断与异常处理 538
+16.1  Interrupt Source（中断源） 539
+16.1.1  硬件中断 539
+16.1.2  软件中断 540
+16.2  Exception Source（异常源） 540
+16.3  Exception的恢复 541
+16.4  中断vector 544
+16.5  中断的屏蔽 545
+16.5.1  可屏蔽的中断 545
+16.5.2  不可屏蔽的中断 547
+16.6  IDTR寄存器 548
+16.7  IVT（Interrupt Vector Table） 549
+16.8  IDT（Interrupt Descriptor Table） 550
+16.9  gate描述符 551
+16.9.1  legacy保护模式下的Interrupt-gate与Trap-gate描述符 551
+16.9.2  IA-32e模式下的Interrupt-gate与Trap-gate描述符 552
+16.9.3  Task-gate描述符 552
+16.10  软件上的中断/异常处理流程 553
+16.10.1  处理器对gate描述符和code描述符的检查 553
+16.10.2  权限的检查 556
+16.10.3  权限处理的三种情形 557
+16.10.4  第1种情形：同级调用 558
+16.10.5  第2种情形：权限及stack的切换 559
+16.10.6  第3种情形：conforming代码段 566
+16.10.7  Eflags标志位的处理 567
+16.10.8  执行中断/异常处理程序 567
+16.11  中断/异常调用中的任务切换 567
+16.12  中断/异常调用返回 568
+16.12.1  返回时的任务切换 568
+16.12.2  IRET指令的operand size 568
+16.12.3  IRET指令返回前的检查 571
+16.12.4  返回到低权限级别时 573
+16.12.5  同级返回 578
+16.13  错误码 579
+第17章  8259中断控制器 582
+17.1  8259结构 583
+17.1.1  IRQ的优先级 584
+17.1.2  中断请求状态 584
+17.1.3  中断服务状态 584
+17.1.4  中断屏蔽状态 585
+17.1.5  中断响应过程 586
+17.2  8259编程 587
+17.2.1  8259寄存器I/O地址 587
+17.2.2  8259初始化 588
+17.2.3  8259的操作字 592
+17.2.4  设置edge和level触发模式 596
+第18章  Local APIC体系 597
+18.1  APIC体系概述 597
+18.1.1  local APIC接收到的中断源 598
+18.1.2  APIC体系的版本 600
+18.2  使用local APIC 600
+18.2.1  检测local APIC版本 600
+18.2.2  开启和关闭local APIC 601
+18.3  local APIC寄存器 604
+18.3.1  local APIC寄存器地址 604
+18.3.2  local APIC寄存器列表 606
+18.4  local APIC ID 609
+18.4.1  local APIC ID寄存器 609
+18.4.2  APIC ID在multi-threading处理器下 610
+18.4.3  multi-threading技术的使用 617
+18.4.4  multi-threading处理器编程 627
+18.5  local APIC版本寄存器 633
+18.6  LVT寄存器 634
+18.7  ICR（Interrupt Command Register） 635
+18.8  LVT寄存器及ICR的设置 636
+18.8.1  delivery mode的设置 636
+18.8.2  trigger模式的设置 637
+18.9  中断vector及priority 637
+18.9.1  local interrupt的vector设置 637
+18.9.2  有效的vector值 638
+18.9.3  local interrupt的优先级 638
+18.9.4  在64位模式下的优先级 640
+18.10  处理器的IPI机制 641
+18.10.1  IPI消息对象 641
+18.10.2  使用physical目标模式 641
+18.10.3  使用logical目标模式 645
+18.10.4  多处理器的初始化与编程 648
+18.11  local APIC的中断处理 659
+18.11.1  检查目标 660
+18.11.2  IRR和ISR仲裁 661
+18.11.3  发送EOI命令 663
+18.12  APIC timer 663
+18.13  错误处理 666
+18.14  LINT0与LINT1 669
+18.14.1  LINT0与LINT1寄存器 670
+18.14.2  从LINT0屏蔽外部中断请求 672
+18.14.3  从LINT1屏蔽NMI 673
+18.15  Performance Monitoring 675
+第19章  I/O APIC 679
+19.1  I/O APIC寄存器 680
+19.1.1  direct register（直接寄存器） 680
+19.1.2  indirect register（间接寄存器） 682
+19.1.3  I/O APIC的IRQ 684
+19.1.4  I/O APIC的中断处理 685
+19.2  使用HPET（高精度定时器） 688
+19.2.1  HPET寄存器基址 688
+19.2.2  HPET的工作原理 689
+第五篇  浮点与SIMD指令环境
+第20章  x87 FPU单元与MMX技术 698
+20.1  x87 FPU执行环境 699
+20.1.1  x87 FPU 数据寄存器 700
+20.1.2  x87 FPU的stack结构 701
+20.1.3  x87 FPU状态寄存器 710
+20.2  x87 FPU的异常 718
+20.2.1  status寄存器的异常标志位 719
+20.2.2  异常的屏蔽 720
+20.2.3  #IS与#IA异常 720
+20.2.4  #D异常 722
+20.2.5  #Z异常 723
+20.2.6  #O与#U异常 723
+20.2.7  舍入 727
+20.3  x87 FPU的异常处理机制 729
+20.3.1  默认处理方法 730
+20.3.2  unmasked下的异常 732
+20.3.3  使用native模式 732
+20.3.4  使用DOS compatibility模式 739
+20.4  MMX指令环境 742
+20.4.1  MMX寄存器 742
+20.4.2  64位SIMD整数运算 743
+20.4.3  MMX指令的比较操作 746
+20.4.4  MMX指令的unpack操作 746
+20.4.5  x87 FPU与MMX混合编程 747
+20.5  x87 FPU与MMX的状态 748
+20.5.1  x87 FPU环境信息的保存 748
+20.5.2  使用FSAVE/FNSAVE指令 749
+20.5.3  MMX寄存器的保存 750
+20.6  x87 FPU与MMX环境的设置 750
+20.6.1  为任务切换设置环境 751
+20.6.2  x87 FPU与MMX环境的推荐设置 758
+第21章  SSE系列指令环境 759
+21.1  处理器的资源 760
+21.1.1  处理器对SSE指令的支持 761
+21.1.2  128位的XMM寄存器 762
+21.1.3  MXCSR 762
+21.1.4  SIMD数据类型 765
+21.2  SSE系列指令的异常 765
+21.2.1  异常的屏蔽 766
+21.2.2  numeric异常的处理 769
+21.3  SSE系列指令的操作 771
+21.3.1  packed数据的运算 772
+21.3.2  scalar数据的运算 772
+21.3.3  Horizontal的运算 773
+21.3.4  MOV与load/store操作 773
+21.3.5  shuffle操作 774
+21.3.6  unpack操作 777
+21.3.7  blend操作 777
+21.3.8  insert操作 778
+21.3.9  extract操作 780
+21.3.10  compare操作 781
+21.3.11  logical操作 783
+21.3.12  convert操作 785
+21.3.13  string处理指令 788
+21.4  SSE系列指令操作环境 800
+21.4.1  SSE系列指令支持 800
+21.4.2  SSE系列指令State信息 801
+21.4.3  SSE系列指令环境的设置 805
+21.4.4  x87 FPU/MMX与SSE环境的延时切换 807
+附录A  参考资料 808
+附录B  实验清单 809
+
+20130121 購於台南若水堂 119 X 5.2 = 619, 可不是便宜的書籍。不過其技術含量絕對不只值這價錢, 這是一本教 x86/x64 cpu 的書籍, 涵蓋 x86 保護模式, 以及 64 bit 模式的程式設計。
+
+有人說這不是初學者看得懂的書, 我不能確定, 畢竟我不是初學者, 但就算初學者還是可以試著讀讀看, 會拿起這本書的讀者一定是想知道 x86 的細節, 到底什麼是 x86 cpu?
+
+<pre class="cmd"></pre>
+<div class="mt9 reviewText">
+<div class="drkgry">
+<span style="color: blue;">内容零乱，不适合初学者。不能说书的内容一无是处，但是初学者看绝对一头雾水，所以不建议初学者看。 </span></div>
+</div>
+<div class="clearboth txtsmall gt9 vtStripe">
+<div class="fl cmt">
+<span style="color: blue;"><a class="noTextDecoration" href="http://www.amazon.cn/review/R3CLYWJ2DVWAQ1/ref=cm_cr_dp_cmt?ie=UTF8&amp;ASIN=B009H775U0&amp;channel=detail-glance&amp;nodeID=&amp;store=books#wasThisHelpful">回应</a>  <span class="gry gr4 gl4">|</span>&nbsp;</span></div>
+<div class="vt">
+<div>
+<div class="votingPrompt drkgry fl mr6">
+<span style="color: blue;"><b>这条评论对您有用吗？</b></span></div>
+</div>
+</div>
+</div>
+<div class="mt4 ttl">
+<span style="color: blue;"><span class="swSprite s_star_2_0 " title="平均2.0 星">平均2.0 星</span>   <a class="txtlarge gl3 gr4 reviewTitle valignMiddle" href="http://www.amazon.cn/review/R2VEGGMWNCO8EL/ref=cm_cr_dp_title?ie=UTF8&amp;ASIN=B009H775U0&amp;channel=detail-glance&amp;nodeID=&amp;store=books"><b>很一般的书</b></a><span class="gry valignMiddle">         <span class="inlineblock txtsmall">2013年3月24日</span> </span></span></div>
+<div class="mt4 ath">
+<span style="color: blue;"><span class="gr10">        <span class="txtsmall"><span class="gry">评论者</span> <a class="noTextDecoration" href="http://profile.amazon.cn/gp/pdp/profile/A3MPLJ23NCV33J/ref=cm_cr_dp_pdp">alemist</a></span> </span></span>   </div>
+<div class="txtsmall mt4 fvavp">
+<span style="color: blue;"><span class="inlineblock avpOrVine"><span class="orange strong avp">购买过此商品</span></span></span></div>
+<div class="mt9 reviewText">
+<div class="drkgry">
+<span style="color: blue;">很一般的书，内容很杂，没有重点，当参考书用都参考不了&nbsp;</span></div>
+<div class="drkgry">
+</div>
+</div>
+<div class="drkgry">
+</div>
+
+在<a href="http://www.amazon.cn/x86-x64%E4%BD%93%E7%B3%BB%E6%8E%A2%E7%B4%A2%E5%8F%8A%E7%BC%96%E7%A8%8B-%E9%82%93%E5%BF%97/dp/B009H775U0/ref=dp_return_2?ie=UTF8&amp;s=books" target="_blank">中國亞馬遜上的評價</a>看到這評論, 寫出這種評論很容易, 但要寫出這本書, 難度至少是 n 次方起跳, 身為讀者我看得很難過, 我相信作者更難過。看輕別人並不能提高自己的程度, 除了你自己的自尊。身為讀者尊重一本好書是我認為最基本的的態度, 不管這本書對你是否有用。
+
+你能說出 x86 16 bit, 32 bit, 64 bit 的程式有什麼不同嗎?
+好奇為什麼這樣的程式碼稱為 16 bit, 那樣的則稱為 32 bit, 而怎樣又是 64 bit 程式?
+我被這些問題所迷惑 ...
+
+x86 很複雜, 但是能在一顆 cpu 就同時享受 16 bit, 32 bit, 64 bit 程式, 似乎也只有 x86 這樣有包袱的 cpu 才能遇到。
+
+x86 為了相容而倒置這麼混亂的東西想把他釐清嗎？
+看看本書並搭配<a href="http://www.mouseos.com/" target="_blank">作者的網站</a>, 相信會有很好的收穫。
+
+可以把<b> x86/x64 体系探索及编程</b>當成一本組合語言學習書籍, 和台灣一堆教組合語言的書籍不同在於:
+自己打造執行環境, 從開機後就執行書上的範例程式, 沒有 os 介入。沒有什麼 int 21 中斷的東西, 都什麼時代了, 還有多少人需要學習 dos int 21, 這對於學習組合語言來說是沒必要的, bios call 可能還更重要些 (不過可能也要過時了)。
+
+8.8 講提到 big real mode, big real mode 可以在真實模式下存取到 4g 記憶體, 又可以使用真實模式下的 bios call, 很神奇吧！
+
+第 12 章介紹 long mode (64 bit mode), 要怎麼進入 long mode 呢? 和進入保護模式一樣, 需要寫一段程式碼, 可以由保護模式進入 long mode, 也可以由真實模式進入 long mode, 但是和保護模式不同, long mode 需要使用 paging, 所以還得先把 paging 搞定才行; 而保護模式是不一定要使用 paging 的功能。
+
+你應該有發現, 就算使用 long mode, 32bit 程式碼一樣可以正常執行, 這可是保護模式無法做到的事情, 很厲害的設計吧！
+
+書本相關訊息: <a href="http://www.mouseos.com/books/x86-64/index.html">http://www.mouseos.com/books/x86-64/index.html</a> 
+x86/x64 指令编码内幕（适用于 AMD/Intel）: <a href="http://www.mouseos.com/x64/index.html">http://www.mouseos.com/x64/index.html</a>
+一起參考
+学习OpCode: <a href="http://www.luocong.com/learningopcode.htm">http://www.luocong.com/learningopcode.htm</a>
+
+
+台灣也曾經有一本在講保護模式的書籍 - <b>80486/Pentium 保護模式原理與實務</b>
+
+<table border="0" cellpadding="1" cellspacing="0" class="txt2" style="width: 100%px;"><tbody>
+<tr><td>作者：<a class="txt3" href="http://www.book4u.com.tw/search_result.asp?SearchOption=3&amp;SearchText=%ACI%AB%C2%BB%CA%AC%E3%A8s%AB%C7">施威銘研究室</a></td><td></td></tr>
+<tr><td>分類：<a class="txt3" href="http://www.book4u.com.tw/search_result.asp?SearchOption=7&amp;SearchText=A2200">電腦與網路</a>／<a class="txt3" href="http://www.book4u.com.tw/search_result.asp?SearchOption=8&amp;SearchText=A2206">網路</a></td><td>叢書系列：組合語言系列</td></tr>
+<tr><td>出版社：<a class="txt3" href="http://www.book4u.com.tw/search_result.asp?SearchOption=2&amp;SearchText=%BAX%BC%D0">旗標</a></td><td>出版日期：<strike>2000/1/5</strike> 民國 84 年 7 月</td></tr>
+<tr><td>ISBN：957717129x</td><td>書籍編號：sb0054415</td></tr>
+</tbody></table>
+
+
+<span class="gphoto-photocaption-caption"><a href="https://picasaweb.google.com/lh/photo/gqFdVZ2IhXEBwkDbMrGiYdMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="360" src="https://lh5.googleusercontent.com/-z5PNtTlAoYo/TnAeAbZ3i_I/AAAAAAAATXM/5smJ_9bk-_o/s640/IMGA0817.JPG" width="640" /></a></span>
+
+<span class="gphoto-photocaption-caption">不過深入的程度可差多了, 這僅僅在介紹保護模式, 但沒有程式碼來介紹如何切換進入保護模式, 而是使用廠商提供的 library 來使用保護模式資源 (dpmi 之類的東西)。拿 2012 年的書和 1995 年的書相比也許不適當, 不過我要指出這樣的書籍才有資格算是<b>實務</b>, 實務是很重要的, 有了實作的經驗, 才能證明自己對其<b>原理</b>已經真的了解。</span>
+<span class="gphoto-photocaption-caption">
+</span> <span class="gphoto-photocaption-caption">書上的實務只的是使用 dpmi 這樣的方式來進入保護模式, 使用 1M 之後的記憶體, 深入程度實在差太多。和本篇介紹的其他書籍相比, 高下立判。</span>
+
+<span class="gphoto-photocaption-caption">我比較習慣這本書的用語, 前半段講解保護模式非常的清楚詳細, 不過我懷疑你能靠這樣的理解就寫出進出保護模式的程式嗎。</span>
+<span class="gphoto-photocaption-caption">
+</span> <span id="btAsinTitle"><a href="http://www.amazon.cn/80x86%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%E6%95%99%E7%A8%8B/dp/B00116JXJG" target="_blank">80x86汇编语言程序设计教程</a> <span style="font-size: 16px; text-transform: capitalize;">[平装]</span></span>    
+<div class="buying">
+~ <a href="http://www.amazon.cn/s?ie=UTF8&amp;field-author=%E6%9D%A8%E5%AD%A3%E6%96%87&amp;search-alias=books">杨季文</a> (编者)                     </div>
+<div class="buying">
+<span class="tiny">                  <span class="crAvgStars" style="white-space: no-wrap;"><span class="asinReviewsSummary" name="B00116JXJG">                <a href="http://www.amazon.cn/product-reviews/B00116JXJG/ref=dp_top_cm_cr_acr_img?ie=UTF8&amp;showViewpoints=1" name="reviewHistoPop_B00116JXJG_5916_star__contentDiv_reviewHistoPop_B00116JXJG_5916" style="text-decoration: none;"><span class="swSprite s_star_4_0 " title="平均4.2 星">平均4.2 星</span>&nbsp;</a>&nbsp;<span class="histogramButton" style="margin-left: -3px;"><a href="http://www.amazon.cn/product-reviews/B00116JXJG/ref=dp_top_cm_cr_acr_img?ie=UTF8&amp;showViewpoints=1" name="reviewHistoPop_B00116JXJG_5916_button__contentDiv_reviewHistoPop_B00116JXJG_5916" style="text-decoration: none;"><span class="swSprite s_chevron ">浏览全部评论</span>&nbsp;</a></span></span>(<a href="http://www.amazon.cn/product-reviews/B00116JXJG/ref=dp_top_cm_cr_acr_txt?ie=UTF8&amp;showViewpoints=1">27 条商品评论</a>)</span>                                                                                                            </span> <span class="byLinePipe">|</span>         <a href="http://www.amazon.cn/80x86%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%E6%95%99%E7%A8%8B/dp/B00116JXJG#" id="productGuarantee" style="cursor: pointer;">亚马逊正品保证</a>   <span class="byLinePipe">|</span>                                      
+<div style="display: -moz-inline-stack; display: inline-block; display: inline; zoom: 1;">
+<div id="tafContainerDiv">
+<a href="http://www.amazon.cn/gp/pdp/taf/ref=cm_sw_l_view_jdp_CL1erb059H2ZM?ie=UTF8&amp;contentID=B00116JXJG&amp;contentName=item&amp;contentType=asin&amp;contentURI=%2Fdp%2FB00116JXJG&amp;emailCaptionStrID=&amp;emailCustomMsgStrID=&amp;emailDescStrID=&amp;emailImageURL=&amp;emailSubjectStrID=&amp;emailTemplate=%2Fgp%2Fpdp%2Fcommon%2Femail%2Fshare-product&amp;eventID=&amp;imageURL=&amp;isDynamicSWF=0&amp;itemInfo=B00116JXJG&amp;learnMoreButton=&amp;merchantID=&amp;params=&amp;parentASIN=B00116JXJG&amp;placementID=jdp_CL1erb059H2ZM&amp;referer=http%253A%252F%252Fwww.amazon.cn%252Fgp%252Fproduct%252FB00116JXJG%252Fref%253D&amp;relatedAccounts=amazondeals%2Camazonmp3&amp;suppressPurchaseReqLogin=&amp;titleText=&amp;type=SH&amp;viaAccount=amazon" id="swftext"><span class="tafShareTextCompact">分享</span></a></div>
+</div>
+</div>
+<hr noshade="noshade" size="1" />
+<div class="buying" id="priceBlock">
+<table class="product"><tbody>
+<tr>     <td class="priceBlockLabel">市场价:</td>     <td><span class="listprice" id="listPriceValue">￥ 39.00</span></td>   </tr>
+<tr id="actualPriceRow">     <td class="priceBlockLabelPrice" id="actualPriceLabel">价格:</td>     <td id="actualPriceContent"><span id="actualPriceValue"><b class="priceLarge">￥ 31.20</b></span>     <span id="actualPriceExtraMessaging">                                         此商品可以享受<b>免费送货</b>    <a href="http://www.amazon.cn/gp/help/customer/display.html/ref=mk_sss_dp_1?ie=UTF8&amp;nodeId=200345620&amp;pop-up=1" target="AmazonHelp">详情</a>                 </span></td> </tr>
+<tr class="youSavePriceRow" id="youSaveRow">     <td class="priceBlockLabel" id="youSaveLabel">为您节省:</td>     <td class="price" id="youSaveContent"><span id="youSaveValue">￥ 7.80         (8折)</span>     </td>   </tr>
+<tr style="height: 0px; line-height: 0px;"><td style="visibility: hidden;">
+</td><td style="visibility: hidden;">
+</td></tr>
+</tbody></table>
+</div>
+
+<div class="separator" style="clear: both; text-align: center;">
+<a href="http://4.bp.blogspot.com/-N8gokwUXTS0/UYxWoZScSDI/AAAAAAAAmZM/NR1K9ZDHTpM/s1600/x86.jpg" imageanchor="1" style="clear: left; float: left; margin-bottom: 1em; margin-right: 1em;">
+<img border="0" src="http://4.bp.blogspot.com/-N8gokwUXTS0/UYxWoZScSDI/AAAAAAAAmZM/NR1K9ZDHTpM/s1600/x86.jpg" /></a></div>
+原來台灣技術書籍的水準已經差中國這麼多了, <b>80x86 汇编语言程序设计教程</b> (杨季文) 這本可是 1998 年出版的, 其中第二部份在探討保護模式, 並且有組合語言範例 (masm) 針對保護模式切換、中斷、權限、分頁管理 ...
+
+真可悲, 我還把 <b>80486/Pentium 保護模式原理與實務</b>當寶貝, <b>80x86 汇编语言程序设计教程</b>這本的等級高多了, 原來台灣落後這麼多了, 要得到這些資料只能硬 K intel 那手冊嗎？保證 K 死你, 印出來就累了, 什麼, 你要在電腦上看, 那我猜你一定沒看過這些手冊吧！
+
+1998 年的書, 就談到怎麼寫保護模式的程式碼了。難怪中國一堆這樣的資料。
+
+我說的資料是包含程式碼, 可不是只單純的介紹什麼是保護模式, 只介紹觀念, 這相對上容易多了。資訊教育的書籍程度就差這麼多, 台灣要追上很辛苦。
+
+這本吸引我的部份是保護模式, 使用的組譯器是 masm, masm 由於有些 segment reigster 的指定, 整個語法看來複雜不少, 有弊必有利, 這可以做比較詳細的控制。
+
+masm 的缺點是只能在 ms 平台上使用。選用軟體時, 我儘量不使用只能在單一平台的軟體, 蘋果都知道代工廠不能只找鴻海, 我也是。
+
+<table style="width: auto;"><tbody>
+<tr><td><a href="https://picasaweb.google.com/lh/photo/RA7dTfnOE01mBJBI--OHPNMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="360" src="https://lh5.googleusercontent.com/-W7cPVlJMK4o/UWVLe1mAExI/AAAAAAAAlt0/TnfLaMw0gnQ/s640/IMG_5531.JPG" width="640" /></a></td></tr>
+<tr><td style="font-family: arial,sans-serif; font-size: 11px; text-align: right;">寄件者 <a href="https://picasaweb.google.com/105103177642172932400/ComputerBooks?authuser=0&amp;feat=embedwebsite">computer books</a></td></tr>
+</tbody></table>
+x86汇编语言：从实模式到保护模式
+
+<h3 class="productDescriptionSource">
+目录</h3>
+第1部分 预备知识 
+第1章 十六进制计数法 
+1.1 二进制计数法回顾 
+1.1.1 关于二进制计数法 
+1.1.2 二进制到十进制的转换 
+1.1.3 十进制到二进制的转换 
+1.2 十六进制计数法 
+1.2.1 十六进制计数法的原理 
+1.2.2 十六进制到十进制的转换 
+1.2.3 十进制到十六进制的转换 
+1.3 为什么需要十六进制 
+本章习题 
+第2章 处理器、内存和指令 
+2.1 最早的处理器 
+2.2 寄存器和算术逻辑部件 
+2.3 内存储器 
+2.4 指令和指令集 
+2.5 古老的Intel 8086处理器 
+2.5.18086的通用寄存器 
+2.5.2 程序的重定位难题 
+2.5.3 内存分段机制 
+2.5.48086的内存分段机制 
+本章习题 
+第3章 汇编语言和汇编软件 
+3.1 汇编语言简介 
+3.2 NASM编译器 
+3.2.1 NASM的下载和安装 
+3.2.2 代码的书写和编译过程 
+3.2.3 用HexView观察编译后的机器代码 
+本章习题 
+第4章 虚拟机的安装和使用 
+4.1 计算机的启动过程 
+4.1.1 如何将编译好的程序提交给处理器 
+4.1.2 计算机的加电和复位 
+4.1.3 基本输入输出系统 
+4.1.4 硬盘及其工作原理 
+4.1.5 一切从主引导扇区开始 
+4.2 创建和使用虚拟机 
+4.2.1 别害怕，虚拟机是软件 
+4.2.2 下载和安装Oracle VM VirtualBox 
+4.2.3 虚拟硬盘简介 
+4.2.4 练习使用FixVhdWr工具向虚拟硬盘写数据 
+第2部分 实模式 
+第5章 编写主引导扇区代码 
+5.1 本章代码清单 
+5.2 欢迎来到主引导扇区 
+5.3 注释 
+5.4 在屏幕上显示文字 
+5.4.1 显卡和显存 
+5.4.2 初始化段寄存器 
+5.4.3 显存的访问和ASCII代码 
+5.4.4 显示字符 
+5.4.5 MOV指令的格式 
+5.5 显示标号的汇编地址 
+5.5.1 标号 
+5.5.2 如何显示十进制数字 
+5.5.3 在程序中声明并初始化数据 
+5.5.4 分解数的各个数位 
+5.5.5 显示分解出来的各个数位 
+5.5 使程序进入无限循环状态 
+5.7 完成并编译主引导扇区代码 
+5.7.1 主引导扇区有效标志 
+5.7.2 代码的保存和编译 
+5.8 加载和运行主引导扇区代码 
+5.8.1 把编译后的指令写入主引导扇区 
+5.8.2 启动虚拟机观察运行结果 
+5.9 程序的调试技术 
+5.9.1 开源的Bochs虚拟机软件 
+5.9.2 Bochs下的程序调试入门 
+本章习题 
+第6章 相同的功能，不同的代码 
+6.1 代码清单6－1 
+6.2 跳过非指令的数据区 
+6.3 在数据声明中使用字面值 
+6.4 段地址的初始化 
+6.5 段之间的批量数据传送 
+6.6 使用循环分解数位 
+6.7 计算机中的负数 
+6.7.1 无符号数和有符号数 
+6.7.2 处理器视角中的数据类型 
+6.8 数位的显示 
+6.9 其他标志位和条件转移指令 
+6.9.1 奇偶标志位PF 
+6.9.2 进位标志CF 
+6.9.3 溢出标志OF 
+6.9.4 现有指令对标志位的影响 
+6.9.5 条件转移指令 
+6.10 NASM编译器的$和$$标记 
+6.11 观察运行结果 
+6.12 本章程序的调试 
+6.12.1 调试命令“n”的使用 
+6.12.2 调试命令“u”的使用 
+6.12.3 用调试命令“info”察看标志位 
+本章习题 
+第7章 比高斯更快的计算 
+7.1 从1加到100的故事 
+7.2 代码清单7－1 
+7.3 显示字符串 
+7.4 计算1到100的累加和 
+7.5 累加和各个数位的分解与显示 
+7.5.1 栈和栈段的初始化 
+7.5.2 分解各个数位并压栈 
+7.5.3 出栈并显示各个数位 
+7.5.4 进一步认识堆栈 
+7.6 程序的编译和运行 
+7.6.1 观察程序的运行结果 
+7.6.2 在调试过程中察看栈中内容 
+7.78086处理器的寻址方式 
+7.7.1 寄存器寻址 
+7.7.2 立即寻址 
+7.7.3 内存寻址 
+本章习题 
+第8章 硬盘和显卡的访问与控制 
+8.1 本章代码清单 
+8.2 用户程序的结构 
+8.2.1 分段、段的汇编地址和段内汇编地址 
+8.2.2 用户程序头部 
+8.3 加载程序（器）的工作流程 
+8.3.1 初始化和决定加载位置 
+8.3.2 准备加载用户程序 
+8.3.3 外围设备及其接口 
+8.3.4 I／O端口和端口访问 
+8.3.5 通过硬盘控制器端口读扇区数据 
+8.3.6 过程调用 
+8.3.7 加载用户程序 
+8.3.8 用户程序重定位 
+8.3.9 将控制权交给用户程序 
+8.3.10 处理器的无条件转移指令 
+8.4 用户程序的工作流程 
+8.4.1 初始化段寄存器和栈切换 
+8.4.2 调用字符串显示例程 
+8.4.3 过程的嵌套 
+8.4.4 屏幕光标控制 
+8.4.5 取当前光标位置 
+8.4.6 处理回车和换行字符 
+8.4.7 显示可打印字符 
+8.4.8 滚动屏幕内容 
+8.4.9 重置光标 
+8.4.10 切换到另一个代码段中执行 
+8.4.11 访问另一个数据段 
+8.5 编译和运行程序并观察结果 
+本章习题 
+第9章 中断和动态时钟显示 
+9.1 外部硬件中断 
+9.1.1 非屏蔽中断 
+9.1.2 可屏蔽中断 
+9.1.3 实模式下的中断向量表 
+9.1.4 实时时钟、CMOS RAM和BCD编码 
+9.1.5 代码清单9－1 
+9.1.6 初始化8259、RTC和中断向量表 
+9.1.7 使处理器进入低功耗状态 
+9.1.8 实时时钟中断的处理过程 
+9.1.9 代码清单9－1的编译和运行 
+9.2 内部中断 
+9.3 软中断 
+9.3.1 BIOS中断 
+9.3.2 代码清单9－2 
+9.3.3 从键盘读字符并显示 
+9.3.4 代码清单9－2的编译和运行 
+本章习题 
+…… 
+第3部分 32位保护模式 
+附录1 本书用到的x86指令及其页码 
+附录2 本书用到的重要图表及其页码 
+
+20130409 購於成大若水堂 291NT, 這價錢真是便宜, 書中關於保護模式的內容我已經了解不少, 但我還是下手買了。
+
+本書以 virtual box, bochs 等虛擬機來學習 x86 組合語言, 我覺得這是比較好的方式, 不侷限在 os 之下, 光是處理列印到螢幕這功能, 就不簡單。藉由呼叫 os api 來達到某些功能, 那用 c 去 call 不就好了, 學組合語言就是要來做些 c 無法做得的事情才有趣。
+
+這是以學習組合語言為主的書籍, 並講述 16/32 x86 模式, 就是 x86 真實模式和保護模式, 並沒有提及 long mode。
+
+薄薄一本就能學到 x86 保護模式與中斷和 task switch, 實在值得。本書利用虛擬機來學習 x86 保護模式, 不再只是架構的講解, 還提供程式碼, 這才是有用的學習方式。透過模擬器可以追蹤整個程式流程和記憶體位址的內容, 可以降低學習曲線, 以前沒有模擬器的時代可以完成這樣的程式, 腦袋可得要很清楚, 才能把程式寫正確。
+
+本書主要是學習組合語言, 以 nasm 為使用的組譯器。
+
+第八章在介紹存取硬碟和顯示卡, 當然都是靠自己的程式碼, 不假外力, 從 stat port 設定要讀寫的資料/磁區, 完全自己親手打造, 成就感十足。
+
+根據我之前的學習經驗, 這不是容易看的一本書, 需要有毅力耐心和其拼鬥, 也需要有學習 x86 架構的熱情, 這樣的知識學習曲線不短, 又沒有馬上立即的功效, 很難吸引人們去學習, 通常也都是真的對這方面有興趣的人才願意花時間學習, 還不一定能成功。
+
+作者網站: <a href="http://blog.163.com/leechung@126/">http://blog.163.com/leechung@126/</a>
+範例程式碼:
+<a href="http://ishare.iask.sina.com.cn/f/34697012.html">http://ishare.iask.sina.com.cn/f/34697012.html</a>
+勘誤表:
+<a href="http://blog.163.com/leechung@126/blog/static/70525507201301803044445/">http://blog.163.com/leechung@126/blog/static/70525507201301803044445/</a> 
+
+有了上述的書籍打底, 我相信在看 amd/intel 手冊時, 就不會有那麼艱難的感覺了。
+
+ref link:
+好用的組譯器: 
+<a href="http://radare.org/y/?p=examples&amp;f=rasm">http://radare.org/y/?p=examples&amp;f=rasm</a>
+玩 machine code 的朋友一定要試試。 
+
+amd 手冊:
+<a href="http://developer.amd.com/resources/documentation-articles/developer-guides-manuals/">http://developer.amd.com/resources/documentation-articles/developer-guides-manuals/</a>
+
+<h3>
+Manuals</h3>
+<ul>
+<li><a href="http://support.amd.com/us/Processor_TechDocs/26568_APM_v4.pdf" target="_blank" title="Link opens in new browser window.">AMD64 Architecture Programmer’s Manual Volume 4: 128-bit and 256 bit media instructions</a> PDF – 12/13/2011</li>
+<li><a href="http://support.amd.com/us/Processor_TechDocs/24593_APM_v2.pdf" target="_blank" title="Link opens in new browser window.">AMD64 Architecture Programmer’s Manual Volume 2: System Programming</a> PDF – 12/13/2011</li>
+<li><a href="http://support.amd.com/us/Processor_TechDocs/26569_APM_v5.pdf" target="_blank" title="Link opens in new browser window.">AMD64 Architecture Programmer’s Manual Volume 5: 64-Bit Media and x87 Floating-Point Instructions</a> PDF – 12/13/2011</li>
+<li><a href="http://support.amd.com/us/Processor_TechDocs/24594_APM_v3.pdf" target="_blank" title="Link opens in new browser window.">AMD64 Architecture Programmer’s Manual Volume 3: General Purpose and System Instructions</a> PDF – 12/13/2011</li>
+<li><a href="http://support.amd.com/us/Processor_TechDocs/24592_APM_v1.pdf" target="_blank" title="Link opens in new browser window.">AMD64 Architecture Programmer’s Manual Volume 1: Application Programming</a> PDF – 12/13/2011</li>
+</ul>
+
+intel architecture software developer's manual:
+<a href="http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html">http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html</a>
+
+
+
