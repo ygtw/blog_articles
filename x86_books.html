@@ -1,4 +1,3 @@
-
 一起把幾本相關的書介紹一下, 都是和 x86 保護模式相關。侯捷的文章有篇提到類似的技術: <a href="http://jjhou.boolan.com/review1-9.htm" target="main">93/04 無限延伸 DOS  視野</a>, 以我的學習方式來說, 如果在那時代, 我一定會把這些書籍補齊 (雖然我看原文書的能力極度不佳)。不過我沒有經歷過那時代的程式設計,不知道是有幸還是不幸; 在 linux 程式設計中, 不需要 undocument 系列, 書中列的程式, 在 unix like os 都有對應的工具, 甚至還有 source code 可以參考。
 
 1992 出版的 apue, 裡頭的技術, 到了現在 (2013) 還是可以使用, 1992 ms dos/windows 的技術呢？辛苦這些程式設計師了。文章提到的技術雖已經過時, 但文章本身看來依然精彩, 我看得欲罷不能。
@@ -18,6 +17,8 @@
 
 看完書評, 我也想做類似的事情, 把我擁有/讀完的幾本書一起討論, 我想學侯老師的文章風格, 不過怕畫虎不成反類犬, 還是以自己的文字風格描述。我沒能看完所有內容, 所以只提看過的部份, 因為我對保護模式已經有了基本理解, 已經足夠我完成保護模式的 os, 所以有些細節就沒繼續研究。我的學習主要來自於 <a href="http://descent-incoming.blogspot.tw/2011/12/oranges.html" target="_blank">Orange's 一個作業系統的實現</a>第三章。
 
+我是因為要學習 x86 os 開發才會探討這些主題, 這過程實在辛苦, 目前我已經把重心轉移到 arm cortex m3, 這顆 soc 簡單不少, 我打算在上面開發一個研究用的 os, 稱做 cm3_simple_os, 若能把 simple_os (x86) 整合進來, 那 x86 和 cm3 就可以用同樣的程式碼了, 這路還很遠, 我沒把握。
+
 侯老師提的書籍雖然已經過時, 不過文章本身很精彩, 建議一讀, 我是把這些技術當作歷史來讀。
 
 和侯老師這篇評的書籍有所不同, 這裡所提到的方式都是自己撰寫程式碼, 並不靠誰來完成保護模式的程式, 我覺得這種方式比較可以學到基本的東西, 否則沒了 DOS Extender, 不就什麼都完成不了嗎？那些書的技術會過時, VCPI/DPMI, ems/xms, 286-DOS Extender 和 386 DOS Extende, 沒學到這個不知道是幸還是不幸, 因為這些東西不容易, 若你辛苦學成, 到了現在也沒用了, 而且你可能也不會自己寫程式進出保護模式。但是這幾本的可不會, 放心把錢花在上面吧！只要 x86 一直回溯相容, 這些書籍的知識就不會過時, 不過 intel 會不會倒掉那可不是我能保證的。
@@ -30,16 +31,16 @@
 
 <a href="https://picasaweb.google.com/lh/photo/aLgY-NYj1oML96Zb9kVJlNMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="360" src="https://lh3.googleusercontent.com/-nsXnJYIG32s/UP1Oc_8SCeI/AAAAAAAAkb4/Lw69Kb5XlvA/s640/IMG_5262.JPG" width="640" /></a>
 
-<ul id="summary">
-<li>         作　　者：         <a href="http://www.360buy.com/writer/%E9%82%93%E5%BF%97_1.html" target="_blank">邓志</a> 著                                                           </li>
-<li>出 版                      社： <a href="http://www.360buy.com/publish/%E7%94%B5%E5%AD%90%E5%B7%A5%E4%B8%9A%E5%87%BA%E7%89%88%E7%A4%BE_1.html" target="_blank">电子工业出版社</a></li>
-<li>ＩＳＢＮ：9787121181764</li>
-<li>出版时间：2012-10-01</li>
+<ul id="summary"> 
+<li>作者: <a href="http://www.360buy.com/writer/%E9%82%93%E5%BF%97_1.html" target="_blank">邓志</a> 著</li> 
+<li>出版社: <a href="http://www.360buy.com/publish/%E7%94%B5%E5%AD%90%E5%B7%A5%E4%B8%9A%E5%87%BA%E7%89%88%E7%A4%BE_1.html" target="_blank">电子工业出版社</a></li>
+<li>ＩＳＢＮ: 9787121181764</li>
+<li>出版时间: 2012-10-01</li>
+<li>頁數: 813</li>
 </ul>
 
 <b><span style="font-size: large;">x86/x64体系探索及编程</span></b>
-<h2>
-    <span class="">目录</span>       &nbsp;·&nbsp;·&nbsp;·&nbsp;·&nbsp;·&nbsp;·    </h2>
+<h2>目录</h2>
 第一篇  x86基础
 第1章  数与数据类型 2
 1.1  数 2
