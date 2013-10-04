@@ -1,0 +1,604 @@
+雖然基本原理是一樣的, 但細節還是有所不同。這個範例保存所有暫存器, 沒有保存 stack, 而且不談細節。
+
+source code: <a href="https://github.com/descent/stm32f4_prog">https://github.com/descent/stm32f4_prog</a>
+git commit: b3ed8870ce3dbc50d55909a81f7b4e5af50f9a7d
+
+<fieldset>
+<legend>process_2.S</legend>
+<pre style="white-space: pre-wrap;"><b>  1</b> # not process switch, this is context switch
+<b>  2</b> 
+<b>  3</b> @.equ STACK_TOP, 0x20000800
+<b>  4</b> .text
+<b>  5</b> .global _start
+<b>  6</b> .code 16
+<b>  7</b> .syntax unified
+<b>  8</b> _start:
+<b>  9</b>   .word STACK_TOP, start 
+<b> 10</b>   .type start, function @ let lsb to 1
+<b> 11</b> 
+<b> 12</b>   .word int_isr+1
+<b> 13</b>   .word hardf_isr+1
+<b> 14</b>   .word mmf_isr+1
+<b> 15</b>   .word int_isr+1
+<b> 16</b>   .word int_isr+1
+<b> 17</b>   .word int_isr+1
+<b> 18</b>   .word int_isr+1
+<b> 19</b>   .word int_isr+1
+<b> 20</b>   .word int_isr+1
+<b> 21</b>   .word svc_isr+1 @ svc isr
+<b> 22</b>   .word int_isr+1
+<b> 23</b>   .word int_isr+1
+<b> 24</b>   .word int_isr+1
+<b> 25</b>   .word int_isr+1
+<b> 26</b>   .word int_isr+1
+<b> 27</b>   .word int_isr+1
+<b> 28</b>   .word int_isr+1
+<b> 29</b> 
+<b> 30</b> start:
+<b> 31</b>   @ init a proc
+<b> 32</b>   ldr r0, =proc_a_stack
+<b> 33</b> 
+<b> 34</b>   @ setup proc a psr
+<b> 35</b>   mov r1, #0x21000000
+<b> 36</b>   str r1, [r0, #(-4)]
+<b> 37</b> 
+<b> 38</b>   @ setup proc a pc
+<b> 39</b>   ldr r1, =proc_a
+<b> 40</b>   str r1, [r0, #(-8)]
+<b> 41</b> 
+<b> 42</b>   @@@@@@@@@@@@@@@@@@@
+<b> 43</b> 
+<b> 44</b>   @ init b proc
+<b> 45</b>   ldr r0, =proc_b_stack
+<b> 46</b> 
+<b> 47</b>   @ setup proc b psr
+<b> 48</b>   mov r1, #0x21000000
+<b> 49</b>   str r1, [r0, #(-4)]
+<b> 50</b> 
+<b> 51</b>   @ setup proc b pc
+<b> 52</b>   ldr r1, =proc_b
+<b> 53</b>   str r1, [r0, #(-8)]
+<b> 54</b> 
+<b> 55</b>   @@@@@@@@@@@@@@@@@@@
+<b> 56</b> 
+<b> 57</b>   ldr r0, =proc_a_sp
+<b> 58</b>   ldr r1, =proc_a_stack
+<b> 59</b>   sub r1, #(16*4)
+<b> 60</b>   str r1, [r0]
+<b> 61</b> 
+<b> 62</b>   ldr r0, =proc_b_sp
+<b> 63</b>   ldr r1, =proc_b_stack
+<b> 64</b>   sub r1, #(16*4)
+<b> 65</b>   str r1, [r0]
+<b> 66</b> 
+<b> 67</b>   ldr r0, =cur_proc
+<b> 68</b>   mov r1, #0
+<b> 69</b>   str r1, [r0]
+<b> 70</b> 
+<b> 71</b>   ldr r1, =proc_a_sp
+<b> 72</b>   ldr r0, [r1]
+<b> 73</b> 
+<b> 74</b>   @ ref: scmrtos-code/Ports/CortexM3/GCC/OS_Target_asm.S
+<b> 75</b>   LDR     r4, [r0, #(4 * 14)]     @ Load process entry point into R4
+<b> 76</b>   add     r0, #(4 * 16)           @ emulate context restore
+<b> 77</b>   mov sp, r0
+<b> 78</b> @  dsb
+<b> 79</b>   isb                             @ Insert a barrier
+<b> 80</b> 
+<b> 81</b>   bx r4                           @ run proc_a
+<b> 82</b> 
+<span style="color: #3d85c6;"><span style="background-color: white;"><b> 83</b> .type proc_a, function @ let lsb to 1
+<b> 84</b> proc_a:
+<b> 85</b>   movs r0, #0x10
+<b> 86</b>   movs r1, #0x11
+<b> 87</b>   movs r2, #0x12
+<b> 88</b>   movs r3, #0x13
+<b> 89</b>   movs r4, #0x14
+<b> 90</b>   movs r5, #0x15
+<b> 91</b>   movs r6, #0x16
+<b> 92</b>   movs r7, #0x17
+<b> 93</b>   movs r8, #0x18
+<b> 94</b>   movs r9, #0x19
+<b> 95</b>   movs r10, #0x1a
+<b> 96</b>   movs r11, #0x1b
+<b> 97</b>   movs r12, #0x1c
+<b> 98</b>   svc 0
+<b> 99</b>   nop
+<b>100</b>   b proc_a</span></span>
+<b>101</b> 
+<span style="color: #45818e;"><b>102</b> .type proc_b, function @ let lsb to 1
+<b>103</b> proc_b:
+<b>104</b>   movs r0, #0x20
+<b>105</b>   movs r1, #0x21
+<b>106</b>   movs r2, #0x22
+<b>107</b>   movs r3, #0x23
+<b>108</b>   movs r4, #0x24
+<b>109</b>   movs r5, #0x25
+<b>110</b>   movs r6, #0x26
+<b>111</b>   movs r7, #0x27
+<b>112</b>   movs r8, #0x28
+<b>113</b>   movs r9, #0x29
+<b>114</b>   movs r10, #0x2a
+<b>115</b>   movs r11, #0x2b
+<b>116</b>   movs r12, #0x2c
+<b>117</b>   nop
+<b>118</b>   svc 0
+<b>119</b>   b proc_b</span>
+<b>120</b> 
+<b>121</b> 
+<b>122</b> .type del_func, function @ let lsb to 1
+<b>123</b> del_func:
+<b>124</b>   mov r5, #5
+<b>125</b>   b del_func
+<b>126</b> 
+<b>127</b> int_isr:
+<b>128</b>   mov r0, #67
+<b>129</b>   bx lr
+<b>130</b> 
+<b>131</b> hardf_isr:
+<b>132</b>   mov r0, #0x3b
+<b>133</b>   bx lr
+<b>134</b> @ memory manage fault
+<b>135</b> mmf_isr:
+<b>136</b>   mov r0, #0x3a
+<b>137</b>   bx lr
+<b>138</b> 
+<b>139</b> svc_isr:
+<b>140</b>   cpsid i @Prevent interruption during context switch
+<b>141</b> 
+<b>142</b>   push {r4-r11}
+<b>143</b> 
+<b>144</b>   @ choice another process
+<b>145</b>   ldr r1, =cur_proc
+<b>146</b>   ldr r0, [r1]
+<b>147</b> 
+<b>148</b> 
+<b>149</b>   cmp r0, #1
+<b>150</b>   beq.n 1f
+<b>151</b>   @ current proc a, switch to proc b
+<b>152</b>   ldr r2, =proc_a_sp
+<b>153</b>   str sp, [r2] @ save cur process sp
+<b>154</b> 
+<b>155</b>   mov r3, #1
+<b>156</b>   str r3, [r1]
+<b>157</b> 
+<b>158</b>   ldr r0, =proc_b_sp
+<b>159</b> 
+<b>160</b>   b 2f
+<b>161</b> 1:
+<b>162</b>   @ current proc b, switch to proc a
+<b>163</b>   ldr r2, =proc_b_sp
+<b>164</b>   str sp, [r2] @ save cur process sp
+<b>165</b> 
+<b>166</b>   mov r3, #0
+<b>167</b>   str r3, [r1]
+<b>168</b> 
+<b>169</b>   ldr r0, =proc_a_sp
+<b>170</b> 
+<b>171</b> 2:
+<b>172</b> 
+<b>173</b>   ldr r0, [r0]
+<b>174</b> 
+<b>175</b>   mov sp, r0
+<b>176</b>   pop {R4-R11}     // Restore r4-11 from new process stack
+<b>177</b> 
+<b>178</b>   cpsie i
+<b>179</b>   bx lr
+<b>180</b> 
+<b>181</b> 
+<b>182</b> .data
+<b>183</b> 
+<b>184</b> proc_a_sp:
+<b>185</b> .word 1
+<b>186</b> proc_b_sp:
+<b>187</b> .word 2
+<b>188</b> 
+<b>189</b> proc_a_ptr:
+<b>190</b> .space  0x300, 0
+<b>191</b> proc_a_stack:
+<b>192</b> 
+<b>193</b> proc_b_ptr:
+<b>194</b> .space  0x300, 0
+<b>195</b> proc_b_stack:
+<b>196</b> 
+<b>197</b> 
+<b>198</b> cur_proc:
+<b>199</b> .word 
+<b>200</b> 
+<b>201</b> .space  0x300, 0
+<b>202</b> STACK_TOP:
+</pre>
+</fieldset>
+
+
+綠色部份自己的程式碼要負責存起來, 黑色部份在中斷發生時, arm cm3 會自動保存。
+在初始化一個 process 時, 設定好 psr, pc 即可, ref L31 ~L53。
+
+再來要記住 process frame 的 stack poniter (proc_a_sp, proc_b_sp), ref: L57 ~ L65。
+
+<pre class="cmd">(gdb) p/x proc_a_sp
+$1 = 0x200002c8
+(gdb) p/x proc_b_sp
+$2 = 0x200005c8
+</pre>
+
+L74 ~ L 81 在設定 proc a 的 stack, 並跳到 proc_a 執行。
+
+高 - 高位址
+低 - 低位址
+
+<table border="1"><caption> process frame&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 資料結構 </caption> <tbody>
+<tr>     <td>高 stack top</td> <td></td>    </tr>
+<tr>    <td></td>    <td>psr</td>   </tr>
+<tr>    <td></td>    <td>pc</td>   </tr>
+<tr>    <td></td>    <td>lr</td>   </tr>
+<tr>    <td></td>    <td>r12</td>   </tr>
+<tr>    <td></td>    <td>r3</td>   </tr>
+<tr>    <td></td>    <td>r2</td>   </tr>
+<tr>     <td></td>    <td>r1</td> </tr>
+<tr><td></td>    <td>r0</td>   </tr>
+<tr>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span></td>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;">r11</span> <span style="color: #6aa84f;"> </span></td>   </tr>
+<tr>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span></td>    <td><span style="color: #6aa84f;">r10</span> <span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span></td>   </tr>
+<tr>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span></td>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;">r9</span><span style="color: #6aa84f;"></span></td>   </tr>
+<tr>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span></td>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;">r8</span> <span style="color: #6aa84f;"> </span></td>   </tr>
+<tr>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span></td>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;">r7</span> <span style="color: #6aa84f;"> </span></td>   </tr>
+<tr>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span></td>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;">r6</span> <span style="color: #6aa84f;"> </span></td>   </tr>
+<tr>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span></td>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;">r5</span> <span style="color: #6aa84f;"> </span></td>   </tr>
+<tr>     <td><span style="color: #6aa84f;">低 stack poniter</span></td><td><span style="color: #6aa84f;">r4</span></td>   </tr>
+</tbody> </table>
+
+在 proc_a svc 0 之後, 跳到 svc_isr 後, stack 變化如下:
+<pre class="cmd">0x20000308 -&gt; (svc 0) 0x200002e8 -&gt; (push {r4-r11) 0x200002c8
+</pre>
+
+最後 proc a process frame 內容, 把所有暫存器內容保存起來, 等著下次輪到 proc a 執行之後回復。
+<pre class="cmd"><span style="color: #6aa84f;">0x200002c8 </span><proc_a_ptr><span style="color: #6aa84f;">:    0x14    0x00    0x00    0x00    0x15    0x00    0x00    0x00
+0x200002d0 </span><proc_a_ptr><span style="color: #6aa84f;">:    0x16    0x00    0x00    0x00    0x17    0x00    0x00    0x00
+0x200002d8 </span><proc_a_ptr><span style="color: #6aa84f;">:    0x18    0x00    0x00    0x00    0x19    0x00    0x00    0x00
+0x200002e0 </span><proc_a_ptr><span style="color: #6aa84f;">:    0x1a    0x00    0x00    0x00    0x1b    0x00    0x00    0x00</span>
+<span style="color: red;">0x200002e8 </span><proc_a_ptr><span style="color: red;">:    0x10    0x00    0x00    0x00    0x11    0x00    0x00    0x00
+0x200002f0 </span><proc_a_ptr><span style="color: red;">:    0x12    0x00    0x00    0x00    0x13    0x00    0x00    0x00
+0x200002f8 </span><proc_a_ptr><span style="color: red;">:    0x1c    0x00    0x00    0x00    0xff    0xff    0xff    0xff
+0x20000300 </span><proc_a_ptr><span style="color: red;">:    0xc0    0x00    0x00    0x00    0x00    0x00    0x00    0x01</span>
+0x20000308 <proc_b_ptr>:    0x08    0x03    0x00    0x20
+</proc_b_ptr></proc_a_ptr></proc_a_ptr></proc_a_ptr></proc_a_ptr></proc_a_ptr></proc_a_ptr></proc_a_ptr></proc_a_ptr></pre>
+
+綠色部份是 r4 ~ r11, 紅色部份是 r0~ r3, r12, lr, pc, psr。
+
+再來載入, proc b stack poniter, 離開 svc_isr 後, 會執行 proc_b, 再來就是一樣的故事了, 只是主角換成 proc b。
+
+在 proc_b svc 0 之後, 跳到 svc_isr 後, stack 變化如下:
+<pre class="cmd">0x20000608 -&gt; (svc 0) 0x200005e8 -&gt; (push {r4-r11) 0x200005c8
+</pre>
+
+手工意視圖
+<a href="https://picasaweb.google.com/lh/photo/_2rxImbdVBDnc-qjlnHkXNMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="480" src="https://lh4.googleusercontent.com/-p4n4rJSnaeg/UjETgwbbNBI/AAAAAAAArvk/Upozt6r14C4/s640/P1340168.JPG" width="640" /></a>
+
+真要體會, 請在 arm cortex m3 平台跑一次, 才算真懂。下一篇完成最後的動作, 保存 stack。
+
+參考資料:
+<ul>
+<li>STM32F207 高性能网络型 MCU 嵌入式系统设计。</li>
+<li>scmrtos source code, 以下所列的程式碼為我所參考的部份。</li>
+</ul>
+
+commit c8e243cfc666ed7230a874b951f2e719e8f9335c
+Author: evgenynest <evgenynest b526ac-3511-40f3-916a-959e9aa89f3e="">
+Date:&nbsp;&nbsp; Thu Aug 22 05:32:42 2013 +0000
+
+git-svn-id: svn://svn.code.sf.net/p/scmrtos/code/trunk@581 25b526ac-3511-40f3-916a-959e9
+</evgenynest>
+
+<pre style="white-space: pre-wrap;"><span style="color: blue;"><b>158</b>      void os_start(stack_item_t* sp)</span></pre>
+<pre style="white-space: pre-wrap;"><span style="color: #3d85c6;"><b>53</b> void TBaseProcess::init_stack_frame( stack_item_t * Stack</span></pre>
+<pre style="white-space: pre-wrap;"><span style="color: #3d85c6;"><b>612</b> stack_item_t* OS::TKernel::context_switch_hook(stack_item_t* sp)</span></pre>
+<pre style="white-space: pre-wrap;"><span style="color: #6aa84f;"><b>119</b> PendSVC_ISR:</span></pre>
+
+<fieldset>
+<legend>OS_Target_asm.S</legend>
+<pre style="white-space: pre-wrap;"><b>  1</b> //******************************************************************************
+<b>  2</b> //*
+<b>  3</b> //*     FULLNAME:  Single-Chip Microcontroller Real-Time Operating System
+<b>  4</b> //*
+<b>  5</b> //*     NICKNAME:  scmRTOS
+<b>  6</b> //*
+<b>  7</b> //*     PROCESSOR: ARM Cortex-M3 
+<b>  8</b> //*
+<b>  9</b> //*     TOOLKIT:   ARM GCC
+<b> 10</b> //*               
+<b> 11</b> //*     PURPOSE:   Target Dependent Low-Level Stuff
+<b> 12</b> //*               
+<b> 13</b> //*     Version: 4.00
+<b> 14</b> //*
+<b> 15</b> //*     $Revision$
+<b> 16</b> //*     $Date::             $
+<b> 17</b> //*
+<b> 18</b> //*     Copyright (c) 2003-2012, Harry E. Zhurov
+<b> 19</b> //*
+<b> 20</b> //*     Permission is hereby granted, free of charge, to any person 
+<b> 21</b> //*     obtaining  a copy of this software and associated documentation 
+<b> 22</b> //*     files (the "Software"), to deal in the Software without restriction, 
+<b> 23</b> //*     including without limitation the rights to use, copy, modify, merge, 
+<b> 24</b> //*     publish, distribute, sublicense, and/or sell copies of the Software, 
+<b> 25</b> //*     and to permit persons to whom the Software is furnished to do so, 
+<b> 26</b> //*     subject to the following conditions:
+<b> 27</b> //*
+<b> 28</b> //*     The above copyright notice and this permission notice shall be included 
+<b> 29</b> //*     in all copies or substantial portions of the Software.
+<b> 30</b> //*
+<b> 31</b> //*     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
+<b> 32</b> //*     EXPRESS  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
+<b> 33</b> //*     MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+<b> 34</b> //*     IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
+<b> 35</b> //*     CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
+<b> 36</b> //*     TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH 
+<b> 37</b> //*     THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+<b> 38</b> //*
+<b> 39</b> //*     =================================================================
+<b> 40</b> //*     See http://scmrtos.sourceforge.net for documentation, latest
+<b> 41</b> //*     information, license and contact details.
+<b> 42</b> //*     =================================================================
+<b> 43</b> //*
+<b> 44</b> //******************************************************************************
+<b> 45</b> //*     Ported by Andrey Chuikin, Copyright (c) 2008-2012
+<b> 46</b> //*     Ported to GCC Ivan A-R &lt;ivan@tuxotronic.org&gt; (l) 2008
+<b> 47</b> //*     gcc port by Anton B. Gusev aka AHTOXA, Copyright (c) 2009-2012
+<b> 48</b> 
+<b> 49</b> #include "scmRTOS_TARGET_CFG.h"
+<b> 50</b> 
+<b> 51</b> //-----------------------------------------------------------------------------
+<b> 52</b> //      CODE GENERATION DIRECTIVES
+<b> 53</b> //
+<b> 54</b> //        RSEG CODE:CODE(2)
+<b> 55</b>     .cpu cortex-m3
+<b> 56</b>     .fpu softvfp   
+<b> 57</b>     .syntax unified
+<b> 58</b>     .thumb
+<b> 59</b>     .text 
+<b> 60</b>     .align 4
+<b> 61</b> 
+<b> 62</b> 
+<b> 63</b> //-----------------------------------------------------------------------------
+<b> 64</b> //  EQUATES
+<b> 65</b> //
+<b> 66</b>     .equ    NVIC_SYSPRI14        ,     0xE000ED22  // System priority register (priority 14).
+<b> 67</b>     .equ    NVIC_PENDSV_PRI      ,           0xFF  // PendSV priority value (lowest).
+<b> 68</b>     .equ    NVIC_SYSPRI15        ,     0xE000ED23  // System priority register (priority 15).
+<b> 69</b>     .equ    NVIC_ST_PRI          ,           0xFF  // SysTick priority value (lowest).
+<b> 70</b> 
+<b> 71</b>     .equ    NVIC_ST_CTRL         ,    0xE000E010   // SysTick Ctrl &amp; Status Reg.
+<b> 72</b>     .equ    NVIC_ST_RELOAD       ,    0xE000E014   // SysTick Reload  Value Reg.
+<b> 73</b>     .equ    NVIC_ST_CTRL_CLK_SRC ,    0x00000004   // Clock Source.
+<b> 74</b>     .equ    NVIC_ST_CTRL_INTEN   ,    0x00000002   // Interrupt enable.
+<b> 75</b>     .equ    NVIC_ST_CTRL_ENABLE  ,    0x00000001   // Counter mode.
+<b> 76</b> 
+<b> 77</b> 
+<b> 78</b> //-----------------------------------------------------------------------------
+<b> 79</b> //  PUBLIC FUNCTIONS
+<b> 80</b> //
+<b> 81</b>     .section    .text,"ax"
+<b> 82</b>     .code 16
+<b> 83</b> 
+<b> 84</b>     .extern os_context_switch_hook
+<b> 85</b> 
+<b> 86</b>     .global PendSVC_ISR
+<b> 87</b>     .global os_start
+<b> 88</b> 
+<b> 89</b> //-----------------------------------------------------------------------------
+<b> 90</b> //      HANDLE PendSV EXCEPTION
+<b> 91</b> //      void PendSVC_ISR(void)
+<b> 92</b> //
+<b> 93</b> // Note(s) : 1) PendSV is used to cause a context switch.  This is a recommended method for performing
+<b> 94</b> //              context switches with Cortex-M3.  This is because the Cortex-M3 auto-saves half of the
+<b> 95</b> //              processor context on any exception, and restores same on return from exception.  So only
+<b> 96</b> //              saving of R4-R11 is required and fixing up the stack pointers.  Using the PendSV exception
+<b> 97</b> //              this way means that context saving and restoring is identical whether it is initiated from
+<b> 98</b> //              a thread or occurs due to an interrupt or exception.
+<b> 99</b> //
+<b>100</b> //           2) Pseudo-code is:
+<b>101</b> //              a) Get the process SP
+<b>102</b> //              b) Save remaining regs r4-r11 on process stack;
+<b>103</b> //              c) Call os_context_switch_hook for save current task SP and get new task SP;
+<b>104</b> //              d) Restore R4-R11 from new process stack;
+<b>105</b> //              e) Perform exception return which will restore remaining context.
+<b>106</b> //
+<b>107</b> //           3) On entry into PendSV handler:
+<b>108</b> //              a) The following have been saved on the process stack (by processor):
+<b>109</b> //                 xPSR, PC, LR, R12, R0-R3
+<b>110</b> //              b) Processor mode is switched to Handler mode (from Thread mode)
+<b>111</b> //              c) Stack is Main stack (switched from Process stack)
+<b>112</b> //
+<b>113</b> //           4) Since PendSV is set to lowest priority in the system (by os_start() below), we
+<b>114</b> //              know that it will only be run when no other exception or interrupt is active, and
+<b>115</b> //              therefore safe to assume that context being switched out was using the process stack (PSP).
+<b>116</b> //
+<b>117</b> 
+<span style="color: #6aa84f;"><b>118</b> .thumb_func
+<b>119</b> PendSVC_ISR:
+<b>120</b>     CPSID   I                 // Prevent interruption during context switch
+<b>121</b>     MRS     R0, PSP           // PSP is process stack pointer
+<b>122</b>     STMDB   R0!, {R4-R11}     // Save remaining regs r4-11 on process stack
+<b>123</b>     // At this point, entire context of process has been saved                                                            
+<b>124</b> 
+<b>125</b>     PUSH    {LR}              // we must save LR (exc_return value) until exception return
+<b>126</b>     BL      os_context_switch_hook    // call os_context_switch_hook();
+<b>127</b>     
+<b>128</b>     // R0 is new process SP;
+<b>129</b>     LDMIA   R0!, {R4-R11}     // Restore r4-11 from new process stack
+<b>130</b>     MSR     PSP, R0           // Load PSP with new process SP
+<b>131</b>     CPSIE   I
+<b>132</b>     POP     {PC}              // Return to saved exc_return. Exception return will restore remaining context</span>
+<b>133</b> 
+<b>134</b>     .align 2
+<b>135</b> 
+<b>136</b> //-----------------------------------------------------------------------------
+<b>137</b> //      Initialize system timer.
+<b>138</b> //      void init_system_timer()
+<b>139</b> // Perform systick timer initialization.
+<b>140</b> //
+<b>141</b>     .weak  __init_system_timer
+<b>142</b> __init_system_timer:
+<b>143</b> 
+<b>144</b>     LDR     R1, =NVIC_SYSPRI15      // Set the SysTick exception priority (lowest)
+<b>145</b>     LDR     R2, =NVIC_ST_PRI
+<b>146</b>     STRB    R2, [R1]
+<b>147</b> 
+<b>148</b>     LDR     R1, =NVIC_ST_RELOAD     // Setup SysTick
+<b>149</b>     LDR     R2, =(SYSTICKFREQ/SYSTICKINTRATE-1)
+<b>150</b>     STR     R2, [R1]
+<b>151</b>     LDR     R1, =NVIC_ST_CTRL       // Enable and run SysTick
+<b>152</b>     LDR     R2, =(NVIC_ST_CTRL_CLK_SRC | NVIC_ST_CTRL_INTEN | NVIC_ST_CTRL_ENABLE)
+<b>153</b>     STR     R2, [R1]
+<b>154</b>     BX      LR
+<b>155</b> 
+<span style="color: blue;"><b>156</b> //-----------------------------------------------------------------------------
+<b>157</b> //      START MULTITASKING
+<b>158</b> //      void os_start(stack_item_t* sp)
+<b>159</b> //
+<b>160</b> // Note(s) : 1) os_start() MUST:
+<b>161</b> //              a) Setup PendSV and SysTick exception priority to lowest;
+<b>162</b> //              b) Setup SysTick (reload value);
+<b>163</b> //              c) Enable interrupts (tasks will run with interrupts enabled).
+<b>164</b> //              d) Jump to exec() function of the highest priority process.
+<b>165</b> //
+<b>166</b> .thumb_func
+<b>167</b> os_start:
+<b>168</b>     LDR     R1, =NVIC_SYSPRI14      // Set the PendSV exception priority (lowest)
+<b>169</b>     LDR     R2, =NVIC_PENDSV_PRI
+<b>170</b>     STRB    R2, [R1]
+<b>171</b> 
+<b>172</b>     LDR     R4, [R0, #(4 * 14)]  // Load process entry point into R4
+<b>173</b>     ADD     R0, #(4 * 16)           // emulate context restore
+<b>174</b>     MSR     PSP, R0                 // store process SP to PSP
+<b>175</b>     MOV     R0, #2                  // set up the current (thread) mode: use PSP as stack pointer, privileged level
+<b>176</b>     MSR     CONTROL, R0
+<b>177</b>     ISB                             // Insert a barrier
+<b>178</b> 
+<b>179</b>     BL      __init_system_timer      // run system timer
+<b>180</b> 
+<b>181</b>     CPSIE   I                       // Enable interrupts at processor level
+<b>182</b> 
+<b>183</b>     BX      R4                      // Jump to process exec() function</span>
+<b>184</b> 
+<b>185</b>     .end
+</pre>
+</fieldset>
+
+
+
+<fieldset>
+<legend>Ports/CortexM3/GCC/OS_Target_cpp.cpp</legend>
+<pre style="white-space: pre-wrap;"><b>47</b> 
+<b>48</b> 
+<b>49</b> #include &lt;scmRTOS.h&gt;
+<b>50</b> 
+<b>51</b> using namespace OS;
+<b>52</b> 
+<span style="color: #3d85c6;"><b>53</b> void TBaseProcess::init_stack_frame( stack_item_t * Stack
+<b>54</b>                                    , void (*exec)()
+<b>55</b>                                 #if scmRTOS_DEBUG_ENABLE == 1
+<b>56</b>                                    , stack_item_t * StackBegin
+<b>57</b>                                 #endif
+<b>58</b>                                    )
+<b>59</b> {
+<b>60</b>     // ARM Architecture Procedure Call Standard [AAPCS] requires 8-byte stack alignment:
+<b>61</b>     StackPointer = (stack_item_t*)((uintptr_t)Stack &amp; 0xFFFFFFF8);
+<b>62</b>     *(--StackPointer)  = 0x01000000L;             // xPSR
+<b>63</b>     *(--StackPointer)  = reinterpret_cast&lt;uint32_t&gt;(exec); // Entry Point
+<b>64</b>     StackPointer -= 14;                           // emulate "push R14,R12,R3,R2,R1,R0,R11-R4"
+<b>65</b> 
+<b>66</b> #if scmRTOS_DEBUG_ENABLE == 1
+<b>67</b>     for (stack_item_t* pDst = StackBegin; pDst &lt; StackPointer; pDst++)
+<b>68</b>         *pDst = STACK_DEFAULT_PATTERN;
+<b>69</b> #endif // scmRTOS_DEBUG_ENABLE
+<b>70</b> }</span>
+<b>71</b> 
+<b>72</b> #pragma weak SystemTimer_ISR = Default_SystemTimer_ISR
+<b>73</b> 
+<b>74</b> namespace OS
+<b>75</b> {
+<b>76</b> extern "C" void Default_SystemTimer_ISR();
+<b>77</b> }
+<b>78</b> 
+<b>79</b> //------------------------------------------------------------------------------
+<b>80</b> OS_INTERRUPT void OS::Default_SystemTimer_ISR()
+<b>81</b> {
+<b>82</b>     scmRTOS_ISRW_TYPE ISR;
+<b>83</b> 
+<b>84</b> #if scmRTOS_SYSTIMER_HOOK_ENABLE == 1
+<b>85</b>     system_timer_user_hook();
+<b>86</b> #endif
+<b>87</b> 
+<b>88</b>     Kernel.system_timer();
+<b>89</b> 
+<b>90</b> #if scmRTOS_SYSTIMER_NEST_INTS_ENABLE == 0
+<b>91</b>     DISABLE_NESTED_INTERRUPTS();
+<b>92</b> #endif
+<b>93</b> }
+<b>94</b> //------------------------------------------------------------------------------
+<b>95</b> 
+</pre>
+</fieldset>
+
+
+<fieldset>
+<legend>Common/OS_Kernel.h</legend>
+<pre style="white-space: pre-wrap;"><b>607</b> //------------------------------------------------------------------------------
+<b>608</b> #ifndef CONTEXT_SWITCH_HOOK_CRIT_SECT
+<b>609</b> #define CONTEXT_SWITCH_HOOK_CRIT_SECT()
+<b>610</b> #endif
+<b>611</b> 
+<span style="color: #3d85c6;"><b>612</b> stack_item_t* OS::TKernel::context_switch_hook(stack_item_t* sp)
+<b>613</b> {
+<b>614</b>     CONTEXT_SWITCH_HOOK_CRIT_SECT();
+<b>615</b> 
+<b>616</b>     ProcessTable[CurProcPriority]-&gt;StackPointer = sp;
+<b>617</b>     sp = ProcessTable[SchedProcPriority]-&gt;StackPointer;
+<b>618</b>     
+<b>619</b> #if scmRTOS_CONTEXT_SWITCH_USER_HOOK_ENABLE == 1
+<b>620</b>     context_switch_user_hook();
+<b>621</b> #endif
+<b>622</b> 
+<b>623</b>     CurProcPriority = SchedProcPriority;
+<b>624</b>     return sp;
+<b>625</b> }</span>
+<b>626</b> //------------------------------------------------------------------------------
+<b>627</b> #endif // scmRTOS_CONTEXT_SWITCH_SCHEME
+<b>628</b> 
+<b>629</b> //-----------------------------------------------------------------------------
+<b>630</b> bool OS::TBaseProcess::is_sleeping() const
+<b>631</b> {
+<b>632</b>     TCritSect cs;
+<b>633</b>     return this-&gt;Timeout != 0;
+<b>634</b> }
+<b>635</b> //-----------------------------------------------------------------------------
+<b>636</b> bool OS::TBaseProcess::is_suspended() const
+<b>637</b> {
+<b>638</b>     TCritSect cs;
+<b>639</b>     return (Kernel.ReadyProcessMap &amp; get_prio_tag(this-&gt;Priority)) == 0;
+<b>640</b> }
+<b>641</b> 
+<b>642</b> //-----------------------------------------------------------------------------
+<b>643</b> INLINE void OS::run()
+<b>644</b> {
+<b>645</b>     stack_item_t *sp = Kernel.ProcessTable[pr0]-&gt;StackPointer;
+<b>646</b>     os_start(sp);
+<b>647</b> }
+<b>648</b> 
+<b>649</b> #if scmRTOS_OBSOLETE_NAMES == 1
+<b>650</b> namespace OS
+<b>651</b> {
+<b>652</b>     INLINE void Sleep(timeout_t t = 0) { sleep(t); }
+<b>653</b> 
+<b>654</b>     INLINE bool IsProcessSleeping(const TBaseProcess&amp; p) { return p.is_sleeping(); }
+<b>655</b>     INLINE bool IsProcessSuspended(const TBaseProcess&amp; p) { return p.is_suspended(); }
+<b>656</b> }   // namespace OS
+<b>657</b> #endif
+<b>658</b> 
+<b>659</b> #include &lt;OS_Services.h&gt;
+<b>660</b> 
+<b>661</b> #endif // OS_KERNEL_H
+</pre>
+</fieldset>
+
+也可以參考這個檔案:scmrtos-code-git/Ports/CortexM4F/GCC/OS_Target_cpp.cpp
