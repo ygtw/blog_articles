@@ -1,0 +1,648 @@
+我在很久以前學習組合語言時 (雖然很久之前就學, 不過並不表示我有學好, 事實上, 它還讓我產生不少挫折感), 就有一個疑問?
+
+dos 執行檔和其他 os 執行檔有什麼分別, 為什麼不能拿來互相執行? 因為都是 intel cpu, machine code 應該都一樣。
+ex:
+nop 這指令, 在 dos, os/2, linux, win 3.1, win 95, winnt, winxp 不都是 0x90 嗎？為什麼不能在每個 os 平台執行這個執行檔。
+
+別急 ... 我知道你可能有幾個答案, 但這可不是簡單就能回答的問題。這次介紹的範例程式就是要來突破這樣的限制, 不過不是<b>載入/執行</b>執行檔 (pe, elf), 而是 object file (coff, elf format), 我要在 linux 上載入/執行 windows coff object file。能載入 objet file 應該也能載入 pe file, 這我就沒實作過了, load/relocate/run object file 的練習對我來說已經足夠, 我已經滿足, 希望有人看到我這篇後, 實作出載入 pe 的版本。而為什麼我這麼說呢？因為要是不行, 那 wine 是怎麼做到的, 所以一定有辦法, 而難度我覺得比本範例要難上不少。
+
+在自行 parse elf object file 之後, 我有了上述的想法, 因為原理都是一樣的, 只要能從 coff object file 找到一樣的資訊, 應該可以搞定, 能完成的話一定很酷。
+
+流程大概是這樣:
+<ol>
+<li>load elf/coff object to memory.</li>
+<li>do the relocation.</li>
+<li>call the object hello function, hello will call func, func will call printf.</li>
+<li>back to linux shell prompt.</li>
+</ol>
+所需要的知識:
+<ul>
+<li><a href="http://descent-incoming.blogspot.tw/2012/08/blog-post.html" target="_blank">程式設計師的自我修養 - 連結、載入、程式庫</a> chapter 3, 4, 6, 7。</li>
+<li>Binary Hacks--駭客秘傳技巧一百招 #72</li>
+</ul>
+
+要看懂這個範例程式, 上述資料一定要看懂, 這個程式是我集合上面兩本的內容發展而來。
+
+coff 可以參考:
+<ul>
+<li><a href="http://www.mouseos.com/assembly/07.html">http://www.mouseos.com/assembly/07.html</a></li>
+<li>pecoff: <a href="http://download.microsoft.com/download/e/b/a/eba1050f-a31d-436b-9281-92cdfeae4b45/pecoff.doc">http://download.microsoft.com/download/e/b/a/eba1050f-a31d-436b-9281-92cdfeae4b45/pecoff.doc</a> or <a href="https://docs.google.com/file/d/0ByC_parZRMFtX2VpSTBJcS0wQ0E/edit?usp=sharing">pecoff</a></li>
+</ul>
+
+我研究 machine code 就是為了要做 dynamic linker/loader, 因為要把 address 的部份找出來, 然後修改它; 而事實上, 事情比我想的更簡單, assembler 已經做好最難的苦工, 把要修改的位址, 該位址要填上的新值都已經紀錄在 object file, 程式只要去讀出來就好了, 不過研讀 machine code 還是沒有白費, 至少能看懂修改了什麼部份, 只是沒那麼重要就是。
+
+來看看要載入的 object source code, 目的很簡單, 就是要去執行 hello() 然後返回呼叫端。 
+
+<fieldset>
+<legend>hello.c</legend>
+<pre><b> 1</b> <span style="color: blue;"><b>#include <span style="color: green;">&lt;stdio.h&gt;</span></b></span>
+<b> 2</b> 
+<b> 3</b> <b>int</b> <span style="color: #2040a0;">p</span><span style="color: #4444ff;">=</span><span style="color: red;">0x9876</span><span style="color: #4444ff;">;</span>
+<b> 4</b> <b>int</b> <span style="color: #2040a0;">i</span><span style="color: #4444ff;">=</span><span style="color: red;">0x1234</span><span style="color: #4444ff;">;</span>
+<b> 5</b> 
+<b> 6</b> <b>void</b> <span style="color: #2040a0;">func</span><span style="color: #4444ff;">(</span><b>int</b> <span style="color: #4444ff;">*</span><span style="color: #2040a0;">j</span><span style="color: #4444ff;">)</span>
+<b> 7</b> <span style="color: #4444ff;"><b>{</b></span>
+<b> 8</b>   <span style="color: #4444ff;">*</span><span style="color: #2040a0;">j</span> <span style="color: #4444ff;">=</span> <span style="color: red;">0x56ef</span><span style="color: #4444ff;">;</span>
+<b> 9</b> <span style="color: blue;"><b>#ifdef _MSC_VER</b></span>
+<b>10</b>   <span style="color: #2040a0;">printf</span><span style="color: #4444ff;">(</span><span style="color: green;">"vc i: %x<span style="color: #77dd77;">\n</span>"</span>, <span style="color: #2040a0;">i</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>11</b> <span style="color: blue;"><b>#else</b></span>
+<b>12</b>   <span style="color: #2040a0;">printf</span><span style="color: #4444ff;">(</span><span style="color: green;">"gcc/linux i: %x<span style="color: #77dd77;">\n</span>"</span>, <span style="color: #2040a0;">i</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>13</b> <span style="color: blue;"><b>#endif</b></span>
+<b>14</b>   <b>return</b><span style="color: #4444ff;">;</span>
+<b>15</b> <span style="color: #4444ff;"><b>}</b></span>
+<b>16</b> 
+<b>17</b> <b>void</b> <span style="color: #2040a0;">hello</span><span style="color: #4444ff;">(</span><span style="color: #4444ff;">)</span>
+<b>18</b> <span style="color: #4444ff;"><b>{</b></span>
+<b>19</b>   //<span style="color: #2040a0;">puts</span><span style="color: #4444ff;">(</span><span style="color: green;">"hello"</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>20</b>   <span style="color: #2040a0;">func</span><span style="color: #4444ff;">(</span><span style="color: #4444ff;">&amp;</span><span style="color: #2040a0;">i</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>21</b> <span style="color: #4444ff;"><b>}</b></span>
+</pre>
+</fieldset>
+
+這次的工具除了 linux 上的開發工具還要準備 windows 上的開發工具 vc2010, 用來編譯出 coff object file, 你可能需要兩台電腦或是使用 vmware 這樣的虛擬機器。 
+
+env:
+vc2010 
+windows xp
+cl /c hello.c 產生 hello.obj (要載入的就是這個 object file)
+
+程式最主要就是在 linux 載入由 windows vc2010 產生的 hello.obj, 先來分析這個 object file。
+我用上的工具有:
+dumpbin (vc2010)
+objdump (mingw)
+hexdump
+
+GNU toolchain 我比較熟悉, 可惜 readelf 這個最有力的工具沒有 coff 版本, 使用 dumpbin 代替。
+
+要怎麼開始呢？先來找出要 relocation 的地方吧, 看看 table 1 和 table 3 所標示的紅色部份。
+
+總共有五處, 我有提到, 要是能看懂機械碼, 把這五處看出來會比較輕鬆, 若是看後面的組合語言部份, 應該也勉強可看出來, 這裡需要知道 c function call 轉成組合語言後的規則, 若不懂, 這裡可能會有點難理解 (這你得先克服, 我沒打算說明這部份, 請參考組合語言書籍和 c 連結的部分)。再來就是找出這五個地方的位址, 把 relocate 後的值填上。
+
+說來簡單, 要怎麼找呢？從 coff object file 本身就可以得到這五個地方的位址。
+
+relocate _func:
+找出 .text section 的 offset (因為 _func 在 .text section), table 1 L92 得知, .text offset 是 0x165
+L117 0x39 
+0x165+0x39 = 0x19e
+Table 2 0x19e 將 00000000 (4 bytes) 填上正確的值就完成了。
+那正確的值是多少呢？
+_func 這個 symbol 在記憶體上的位置是多少, 就是那個值了。所以先找到 _func 在檔案中的 offset, 在加上整個 hello.obj 被載入到記憶體的位置就搞定。
+
+talbe 1 L133 可以查到 _func 在 SEC4 (L87 得到 .text, offset 0x165), symbol 那欄是 0, 所以 0x165 + 0 = 0x165 就是 _func 所在檔案 offset。Table 2 藍色部份就是 _func。
+
+搞定了嗎？還沒, e8 是 call 指令, 感覺填上要位址就是要 call 的位址, 但是 call 指令並不是這麼直覺, 它是這樣的:
+假設要 call 0x100 的位址, 實際上的指令是 (0x100, 0x110, 0x115 為記憶體位址)
+0x100
+...
+...
+0x110 call ???
+0x115 nop
+??? 是 0x100 - 0x115 = <span style="color: red;">-0x15</span> -&gt; call <span style="color: red;">-0x15</span> 才會去 call 0x100 的位址。
+
+所以這個值得要用 _func - cal&nbsp; 下一個指令的位址 (ref TABLE 0x1a2)&nbsp; -&gt; 0x165 - 0x1a2 = 0xffffffc3 (十進位 -61), 填上就對了。
+
+來看看 _hello 的 offset:
+Talbe 1 L133 可以查到 _func 在 SEC4 (L87 得到 .text, offset 0x165), symbol 那欄是 0x30, 所以 0x165 + 0 = 0x190 就是 _hello 所在檔案 offset。Table 2 綠色部份就是 _hello。 
+
+relocate _i:
+步驟都一樣, 從 Table 1 L192 找出 _i 在 SEC3, SEC3 offset (0x153)+ _i SYMOBL 值是 4 = 0x157。
+那個地方要改成 0x157 呢？
+
+table 1 L113 (0xe), L116 (0x34)
+
+relocate $SG2641: 這是 printf 傳入的字串, hello.c L10 or L12, 道理一樣, 自己試試看。
+
+relocate _printf, 這個最簡單了, printf 已經被我使用 static link 連結到主程式中, 怎麼得到他的位址?
+printf_addr = &amp;printf;
+出乎意料之外的簡單吧, 想辦法把這位址放在 call printf 這邊就對了, 和 _func 一樣的作法。而這個就是 windows coff 可以正常在 linux 環境執行的關鍵, 把 windows printf 的位址換成 linux printf 即可, 秘密說穿了, 很簡單吧！
+
+最後提一下這個語法, 很嚇人吧！
+(*(void(*)())(hello_addr + text_offset + hello_val) )();
+把 hello() 的位址當成 function pointer 來執行, 如果你看不懂, 就先背起來, 搞懂那一堆 relocation value 應該已經昏頭了。
+
+除了使用 vs 2010 compile 這個 hello.o, 我還測試了 cygwin gcc, mingw gcc, 本程式都可以正常載入並執行。
+
+table x 是程式執行結果, 也歡迎自己 git clone 把程式 compile 起來試試。
+
+<fieldset>
+<legend>table 1: dumpbin /ALL hello.obj &gt; hello.obj.txt</legend>
+<pre><b>  1</b> Microsoft (R) COFF/PE Dumper Version 10.00.30319.01
+<b>  2</b> Copyright (C) Microsoft Corporation.  All rights reserved.
+<b>  3</b> 
+<b>  4</b> 
+<b>  5</b> Dump of file hello.obj
+<b>  6</b> 
+<b>  7</b> File Type: COFF OBJECT
+<b>  8</b> 
+<b>  9</b> FILE HEADER VALUES
+<b> 10</b>              14C machine (x86)
+<b> 11</b>                4 number of sections
+<b> 12</b>         51D224BB time date stamp Tue Jul 02 08:54:19 2013
+<b> 13</b>              1D9 file pointer to symbol table
+<b> 14</b>               10 number of symbols
+<b> 15</b>                0 size of optional header
+<b> 16</b>                0 characteristics
+<b> 17</b> 
+<b> 18</b> SECTION HEADER #1
+<b> 19</b> .drectve name
+<b> 20</b>        0 physical address
+<b> 21</b>        0 virtual address
+<b> 22</b>       2F size of raw data
+<b> 23</b>       B4 file pointer to raw data (000000B4 to 000000E2)
+<b> 24</b>        0 file pointer to relocation table
+<b> 25</b>        0 file pointer to line numbers
+<b> 26</b>        0 number of relocations
+<b> 27</b>        0 number of line numbers
+<b> 28</b>   100A00 flags
+<b> 29</b>          Info
+<b> 30</b>          Remove
+<b> 31</b>          1 byte align
+<b> 32</b> 
+<b> 33</b> RAW DATA #1
+<b> 34</b>   00000000: 20 20 20 2F 44 45 46 41 55 4C 54 4C 49 42 3A 22     /DEFAULTLIB:"
+<b> 35</b>   00000010: 4C 49 42 43 4D 54 22 20 2F 44 45 46 41 55 4C 54  LIBCMT" /DEFAULT
+<b> 36</b>   00000020: 4C 49 42 3A 22 4F 4C 44 4E 41 4D 45 53 22 20     LIB:"OLDNAMES" 
+<b> 37</b> 
+<b> 38</b>    Linker Directives
+<b> 39</b>    -----------------
+<b> 40</b>    /DEFAULTLIB:"LIBCMT"
+<b> 41</b>    /DEFAULTLIB:"OLDNAMES"
+<b> 42</b> 
+<b> 43</b> SECTION HEADER #2
+<b> 44</b> .debug$S name
+<b> 45</b>        0 physical address
+<b> 46</b>        0 virtual address
+<b> 47</b>       70 size of raw data
+<b> 48</b>       E3 file pointer to raw data (000000E3 to 00000152)
+<b> 49</b>        0 file pointer to relocation table
+<b> 50</b>        0 file pointer to line numbers
+<b> 51</b>        0 number of relocations
+<b> 52</b>        0 number of line numbers
+<b> 53</b> 42100040 flags
+<b> 54</b>          Initialized Data
+<b> 55</b>          Discardable
+<b> 56</b>          1 byte align
+<b> 57</b>          Read Only
+<b> 58</b> 
+<b> 59</b> RAW DATA #2
+<b> 60</b>   00000000: 04 00 00 00 F1 00 00 00 64 00 00 00 26 00 01 11  ....n...d...&amp;...
+<b> 61</b>   00000010: 00 00 00 00 43 3A 5C 67 69 74 5C 70 72 6F 67 73  ....C:\git\progs
+<b> 62</b>   00000020: 5C 6C 6F 61 64 5F 6F 62 6A 5C 68 65 6C 6C 6F 2E  \load_obj\hello.
+<b> 63</b>   00000030: 6F 62 6A 00 3A 00 3C 11 00 22 00 00 07 00 10 00  obj.:.&lt;.."......
+<b> 64</b>   00000040: 00 00 6F 76 01 00 10 00 00 00 6F 76 01 00 4D 69  ..ov......ov..Mi
+<b> 65</b>   00000050: 63 72 6F 73 6F 66 74 20 28 52 29 20 4F 70 74 69  crosoft (R) Opti
+<b> 66</b>   00000060: 6D 69 7A 69 6E 67 20 43 6F 6D 70 69 6C 65 72 00  mizing Compiler.
+<b> 67</b> 
+<b> 68</b> SECTION HEADER #3
+<b> 69</b>    .data name
+<b> 70</b>        0 physical address
+<b> 71</b>        0 virtual address
+<b> 72</b>       12 size of raw data
+<b> 73</b>      153 file pointer to raw data (00000153 to 00000164)
+<b> 74</b>        0 file pointer to relocation table
+<b> 75</b>        0 file pointer to line numbers
+<b> 76</b>        0 number of relocations
+<b> 77</b>        0 number of line numbers
+<b> 78</b> C0300040 flags
+<b> 79</b>          Initialized Data
+<b> 80</b>          4 byte align
+<b> 81</b>          Read Write
+<b> 82</b> 
+<b> 83</b> RAW DATA #3
+<b> 84</b>   00000000: 76 98 00 00 34 12 00 00 76 63 20 69 3A 20 25 78  v...4...vc i: %x
+<b> 85</b>   00000010: 0A 00                                            ..
+<b> 86</b> 
+<b> 87</b> SECTION HEADER #4
+<b> 88</b>    .text name
+<b> 89</b>        0 physical address
+<b> 90</b>        0 virtual address
+<b> 91</b>       42 size of raw data
+<span style="color: #b45f06;"><b> 92</b>      165 file pointer to raw data (00000165 to 000001A6)</span>
+<b> 93</b>      1A7 file pointer to relocation table
+<b> 94</b>        0 file pointer to line numbers
+<b> 95</b>        5 number of relocations
+<b> 96</b>        0 number of line numbers
+<b> 97</b> 60500020 flags
+<b> 98</b>          Code
+<b> 99</b>          16 byte align
+<b>100</b>          Execute Read
+<b>101</b> 
+<b>102</b> RAW DATA #4
+<b>103</b>   00000000: 55 8B EC 8B 45 08 C7 00 EF 56 00 00 8B 0D 00 00  U.i.E.C.iV......
+<b>104</b>   00000010: 00 00 51 68 00 00 00 00 E8 00 00 00 00 83 C4 08  ..Qh....e.....A.
+<b>105</b>   00000020: 5D C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC  ]AIIIIIIIIIIIIII
+<b>106</b>   00000030: 55 8B EC 68 00 00 00 00 E8 00 00 00 00 83 C4 04  U.ih....e.....A.
+<b>107</b>   00000040: 5D C3                                            ]A
+<b>108</b> 
+<span style="color: red;"><b>109</b> RELOCATIONS #4
+<b>110</b>                                                 Symbol    Symbol
+<b>111</b>  Offset    Type              Applied To         Index     Name
+<b>112</b>  --------  ----------------  -----------------  --------  ------
+<b>113</b>  0000000E  DIR32                      00000000         9  _i
+<b>114</b>  00000014  DIR32                      00000000         A  $SG2641
+<b>115</b>  00000019  REL32                      00000000         E  _printf
+<b>116</b>  00000034  DIR32                      00000000         9  _i
+<b>117</b>  00000039  REL32                      00000000         D  _func</span>
+<b>118</b> 
+<b>119</b> COFF SYMBOL TABLE
+<b>120</b> 000 00AA766F ABS    notype       Static       | @comp.id
+<b>121</b> 001 00000001 ABS    notype       Static       | @feat.00
+<b>122</b> 002 00000000 SECT1  notype       Static       | .drectve
+<b>123</b>     Section length   2F, #relocs    0, #linenums    0, checksum        0
+<b>124</b> 004 00000000 SECT2  notype       Static       | .debug$S
+<b>125</b>     Section length   70, #relocs    0, #linenums    0, checksum        0
+<b>126</b> 006 00000000 SECT3  notype       Static       | .data
+<b>127</b>     Section length   12, #relocs    0, #linenums    0, checksum C0D84B87
+<b>128</b> 008 00000000 SECT3  notype       External     | _p
+<b>129</b> 009 00000004 SECT3  notype       External     | _i
+<b>130</b> 00A 00000008 SECT3  notype       Static       | $SG2641
+<b>131</b> 00B 00000000 SECT4  notype       Static       | .text
+<b>132</b>     Section length   42, #relocs    5, #linenums    0, checksum 3672F956
+<b>133</b> 00D 00000000 SECT4  notype ()    External     | _func
+<b>134</b> 00E 00000000 UNDEF  notype ()    External     | _printf
+<b>135</b> 00F 00000030 SECT4  notype ()    External     | _hello
+<b>136</b> 
+<b>137</b> String Table Size = 0x0 bytes
+<b>138</b> 
+<b>139</b>   Summary
+<b>140</b> 
+<b>141</b>           12 .data
+<b>142</b>           70 .debug$S
+<b>143</b>           2F .drectve
+<b>144</b>           42 .text
+</pre>
+</fieldset>
+
+<fieldset>
+<legend>table 2 - hexdump -C hello.obj</legend>
+<pre>00000000  4c 01 04 00 bb 24 d2 51  d9 01 00 00 10 00 00 00  |L....$.Q........|
+00000010  00 00 00 00 2e 64 72 65  63 74 76 65 00 00 00 00  |.....drectve....|
+00000020  00 00 00 00 2f 00 00 00  b4 00 00 00 00 00 00 00  |..../...........|
+00000030  00 00 00 00 00 00 00 00  00 0a 10 00 2e 64 65 62  |.............deb|
+00000040  75 67 24 53 00 00 00 00  00 00 00 00 70 00 00 00  |ug$S........p...|
+00000050  e3 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00000060  40 00 10 42 2e 64 61 74  61 00 00 00 00 00 00 00  |@..B.data.......|
+00000070  00 00 00 00 12 00 00 00  53 01 00 00 00 00 00 00  |........S.......|
+00000080  00 00 00 00 00 00 00 00  40 00 30 c0 2e 74 65 78  |........@.0..tex|
+00000090  74 00 00 00 00 00 00 00  00 00 00 00 42 00 00 00  |t...........B...|
+000000a0  65 01 00 00 a7 01 00 00  00 00 00 00 05 00 00 00  |e...............|
+000000b0  20 00 50 60 20 20 20 2f  44 45 46 41 55 4c 54 4c  | .P`   /DEFAULTL|
+000000c0  49 42 3a 22 4c 49 42 43  4d 54 22 20 2f 44 45 46  |IB:"LIBCMT" /DEF|
+000000d0  41 55 4c 54 4c 49 42 3a  22 4f 4c 44 4e 41 4d 45  |AULTLIB:"OLDNAME|
+000000e0  53 22 20 04 00 00 00 f1  00 00 00 64 00 00 00 26  |S" ........d...&amp;|
+000000f0  00 01 11 00 00 00 00 43  3a 5c 67 69 74 5c 70 72  |.......C:\git\pr|
+00000100  6f 67 73 5c 6c 6f 61 64  5f 6f 62 6a 5c 68 65 6c  |ogs\load_obj\hel|
+00000110  6c 6f 2e 6f 62 6a 00 3a  00 3c 11 00 22 00 00 07  |lo.obj.:.&lt;.."...|
+00000120  00 10 00 00 00 6f 76 01  00 10 00 00 00 6f 76 01  |.....ov......ov.|
+00000130  00 4d 69 63 72 6f 73 6f  66 74 20 28 52 29 20 4f  |.Microsoft (R) O|
+00000140  70 74 69 6d 69 7a 69 6e  67 20 43 6f 6d 70 69 6c  |ptimizing Compil|
+00000150  65 72 00 76 98 00 00 34  12 00 00 76 63 20 69 3a  |er.v...4...vc i:|
+00000160  20 25 78 0a 00 <span style="color: blue;">55 8b ec  8b 45 08 c7 00 ef 56 00  | %x..U...E....V.|
+00000170  00 8b 0d 00 00 00 00 51  68 00 00 00 00 e8 00 00  |.......Qh.......|
+00000180  00 00 83 c4 08 5d c3</span> cc  cc cc cc cc cc cc cc cc  |.....]..........|
+00000190  cc cc cc cc cc <span style="color: lime;">55 8b ec  68 00 00 00 00 e8 <span style="color: red;">00 00</span>  |.....U..h.......|
+000001a0  <span style="color: red;">00 00</span> 83 c4 04 5d c3</span> 0e  00 00 00 09 00 00 00 06  |.....]..........|
+000001b0  00 14 00 00 00 0a 00 00  00 06 00 19 00 00 00 0e  |................|
+000001c0  00 00 00 14 00 34 00 00  00 09 00 00 00 06 00 39  |.....4.........9|
+000001d0  00 00 00 0d 00 00 00 14  00 40 63 6f 6d 70 2e 69  |.........@comp.i|
+000001e0  64 6f 76 aa 00 ff ff 00  00 03 00 40 66 65 61 74  |dov........@feat|
+000001f0  2e 30 30 01 00 00 00 ff  ff 00 00 03 00 2e 64 72  |.00...........dr|
+00000200  65 63 74 76 65 00 00 00  00 01 00 00 00 03 01 2f  |ectve........../|
+00000210  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00000220  00 2e 64 65 62 75 67 24  53 00 00 00 00 02 00 00  |..debug$S.......|
+00000230  00 03 01 70 00 00 00 00  00 00 00 00 00 00 00 00  |...p............|
+00000240  00 00 00 00 00 2e 64 61  74 61 00 00 00 00 00 00  |......data......|
+00000250  00 03 00 00 00 03 01 12  00 00 00 00 00 00 00 87  |................|
+00000260  4b d8 c0 00 00 00 00 00  00 5f 70 00 00 00 00 00  |K........_p.....|
+00000270  00 00 00 00 00 03 00 00  00 02 00 5f 69 00 00 00  |..........._i...|
+00000280  00 00 00 04 00 00 00 03  00 00 00 02 00 24 53 47  |.............$SG|
+00000290  32 36 34 31 00 08 00 00  00 03 00 00 00 03 00 2e  |2641............|
+000002a0  74 65 78 74 00 00 00 00  00 00 00 04 00 00 00 03  |text............|
+000002b0  01 42 00 00 00 05 00 00  00 56 f9 72 36 00 00 00  |.B.......V.r6...|
+000002c0  00 00 00 5f 66 75 6e 63  00 00 00 00 00 00 00 04  |..._func........|
+000002d0  00 20 00 02 00 5f 70 72  69 6e 74 66 00 00 00 00  |. ..._printf....|
+000002e0  00 00 00 20 00 02 00 5f  68 65 6c 6c 6f 00 00 30  |... ..._hello..0|
+000002f0  00 00 00 04 00 20 00 02  00 04 00 00 00           |..... .......|
+000002fd
+</pre>
+</fieldset>
+
+mingw objdump 2.23.1
+
+<fieldset>
+<legend>table 3 objdump -d hello.obj</legend>
+<pre><b> 1</b> 
+<b> 2</b> hello.obj:     file format pe-i386
+<b> 3</b> 
+<b> 4</b> 
+<b> 5</b> Disassembly of section .text:
+<b> 6</b> 
+<b> 7</b> 00000000 &lt;_func&gt;:
+<b> 8</b>    0: 55                    push   %ebp
+<b> 9</b>    1: 8b ec                 mov    %esp,%ebp
+<b>10</b>    3: 8b 45 08              mov    0x8(%ebp),%eax
+<b>11</b>    6: c7 00 ef 56 00 00     movl   $0x56ef,(%eax)
+<b>12</b>    c: 8b 0d <span style="color: red;">00 00 00 00</span>     mov    0x0,%ecx
+<b>13</b>   12: 51                    push   %ecx
+<b>14</b>   13: 68 <span style="color: red;">00 00 00 00</span>        push   $0x0
+<b>15</b>   18: e8 <span style="color: red;">00 00 00 00</span>        call   1d &lt;_func+0x1d&gt;
+<b>16</b>   1d: 83 c4 08              add    $0x8,%esp
+<b>17</b>   20: 5d                    pop    %ebp
+<b>18</b>   21: c3                    ret    
+<b>19</b>   22: cc                    int3   
+<b>20</b>   23: cc                    int3   
+<b>21</b>   24: cc                    int3   
+<b>22</b>   25: cc                    int3   
+<b>23</b>   26: cc                    int3   
+<b>24</b>   27: cc                    int3   
+<b>25</b>   28: cc                    int3   
+<b>26</b>   29: cc                    int3   
+<b>27</b>   2a: cc                    int3   
+<b>28</b>   2b: cc                    int3   
+<b>29</b>   2c: cc                    int3   
+<b>30</b>   2d: cc                    int3   
+<b>31</b>   2e: cc                    int3   
+<b>32</b>   2f: cc                    int3   
+<b>33</b> 
+<b>34</b> 00000030 &lt;_hello&gt;:
+<b>35</b>   30: 55                    push   %ebp
+<b>36</b>   31: 8b ec                 mov    %esp,%ebp
+<b>37</b>   33: 68 <span style="color: red;">00 00 00 00</span>        push   $0x0
+<b>38</b>   38: e8 <span style="color: red;">00 00 00 00</span>        call   3d &lt;_hello+0xd&gt;
+<b>39</b>   3d: 83 c4 04              add    $0x4,%esp
+<b>40</b>   40: 5d                    pop    %ebp
+<b>41</b>   41: c3                    ret    
+</pre>
+</fieldset>
+
+<fieldset>
+<legend>objdump -x hello.obj</legend>
+<pre><b> 1</b> 
+<b> 2</b> hello.obj:     file format pe-i386
+<b> 3</b> hello.obj
+<b> 4</b> architecture: i386, flags 0x0000003d:
+<b> 5</b> HAS_RELOC, HAS_LINENO, HAS_DEBUG, HAS_SYMS, HAS_LOCALS
+<b> 6</b> start address 0x00000000
+<b> 7</b> 
+<b> 8</b> Characteristics 0x0
+<b> 9</b> 
+<b>10</b> Time/Date  Tue Jul 02 08:54:19 2013
+<b>11</b> Magic   0000
+<b>12</b> MajorLinkerVersion 0
+<b>13</b> MinorLinkerVersion 0
+<b>14</b> SizeOfCode  00000000
+<b>15</b> SizeOfInitializedData 00000000
+<b>16</b> SizeOfUninitializedData 00000000
+<b>17</b> AddressOfEntryPoint 00000000
+<b>18</b> BaseOfCode  00000000
+<b>19</b> BaseOfData  00000000
+<b>20</b> ImageBase  00000000
+<b>21</b> SectionAlignment 00000000
+<b>22</b> FileAlignment  00000000
+<b>23</b> MajorOSystemVersion 0
+<b>24</b> MinorOSystemVersion 0
+<b>25</b> MajorImageVersion 0
+<b>26</b> MinorImageVersion 0
+<b>27</b> MajorSubsystemVersion 0
+<b>28</b> MinorSubsystemVersion 0
+<b>29</b> Win32Version  00000000
+<b>30</b> SizeOfImage  00000000
+<b>31</b> SizeOfHeaders  00000000
+<b>32</b> CheckSum  00000000
+<b>33</b> Subsystem  00000000 (unspecified)
+<b>34</b> DllCharacteristics 00000000
+<b>35</b> SizeOfStackReserve 00000000
+<b>36</b> SizeOfStackCommit 00000000
+<b>37</b> SizeOfHeapReserve 00000000
+<b>38</b> SizeOfHeapCommit 00000000
+<b>39</b> LoaderFlags  00000000
+<b>40</b> NumberOfRvaAndSizes 00000000
+<b>41</b> 
+<b>42</b> The Data Directory
+<b>43</b> Entry 0 00000000 00000000 Export Directory [.edata (or where ever we found it)]
+<b>44</b> Entry 1 00000000 00000000 Import Directory [parts of .idata]
+<b>45</b> Entry 2 00000000 00000000 Resource Directory [.rsrc]
+<b>46</b> Entry 3 00000000 00000000 Exception Directory [.pdata]
+<b>47</b> Entry 4 00000000 00000000 Security Directory
+<b>48</b> Entry 5 00000000 00000000 Base Relocation Directory [.reloc]
+<b>49</b> Entry 6 00000000 00000000 Debug Directory
+<b>50</b> Entry 7 00000000 00000000 Description Directory
+<b>51</b> Entry 8 00000000 00000000 Special Directory
+<b>52</b> Entry 9 00000000 00000000 Thread Storage Directory [.tls]
+<b>53</b> Entry a 00000000 00000000 Load Configuration Directory
+<b>54</b> Entry b 00000000 00000000 Bound Import Directory
+<b>55</b> Entry c 00000000 00000000 Import Address Table Directory
+<b>56</b> Entry d 00000000 00000000 Delay Import Directory
+<b>57</b> Entry e 00000000 00000000 CLR Runtime Header
+<b>58</b> Entry f 00000000 00000000 Reserved
+<b>59</b> 
+<b>60</b> Sections:
+<b>61</b> Idx Name          Size      VMA               LMA               File off  Algn
+<b>62</b>   0 .drectve      0000002f  00000000  00000000  000000b4  2**0
+<b>63</b>                   CONTENTS, READONLY, DEBUGGING, EXCLUDE
+<b>64</b>   1 .debug$S      00000070  00000000  00000000  000000e3  2**0
+<b>65</b>                   CONTENTS, READONLY, DEBUGGING
+<b>66</b>   2 .data         00000012  00000000  00000000  00000153  2**2
+<b>67</b>                   CONTENTS, ALLOC, LOAD, DATA
+<b>68</b>   3 .text         00000042  00000000  00000000  00000165  2**4
+<b>69</b>                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+<b>70</b> SYMBOL TABLE:
+<b>71</b> [  0](sec -1)(fl 0x00)(ty   0)(scl   3) (nx 0) 0x00aa766f @comp.id
+<b>72</b> [  1](sec -1)(fl 0x00)(ty   0)(scl   3) (nx 0) 0x00000001 @feat.00
+<b>73</b> [  2](sec  1)(fl 0x00)(ty   0)(scl   3) (nx 1) 0x00000000 .drectve
+<b>74</b> AUX scnlen 0x2f nreloc 0 nlnno 0
+<b>75</b> [  4](sec  2)(fl 0x00)(ty   0)(scl   3) (nx 1) 0x00000000 .debug$S
+<b>76</b> AUX scnlen 0x70 nreloc 0 nlnno 0
+<b>77</b> [  6](sec  3)(fl 0x00)(ty   0)(scl   3) (nx 1) 0x00000000 .data
+<b>78</b> AUX scnlen 0x12 nreloc 0 nlnno 0 checksum 0xc0d84b87 assoc 0 comdat 0
+<b>79</b> [  8](sec  3)(fl 0x00)(ty   0)(scl   2) (nx 0) 0x00000000 _p
+<b>80</b> [  9](sec  3)(fl 0x00)(ty   0)(scl   2) (nx 0) 0x00000004 _i
+<b>81</b> [ 10](sec  3)(fl 0x00)(ty   0)(scl   3) (nx 0) 0x00000008 $SG2641
+<b>82</b> [ 11](sec  4)(fl 0x00)(ty   0)(scl   3) (nx 1) 0x00000000 .text
+<b>83</b> AUX scnlen 0x42 nreloc 5 nlnno 0 checksum 0x3672f956 assoc 0 comdat 0
+<b>84</b> [ 13](sec  4)(fl 0x00)(ty  20)(scl   2) (nx 0) 0x00000000 _func
+<b>85</b> [ 14](sec  0)(fl 0x00)(ty  20)(scl   2) (nx 0) 0x00000000 _printf
+<b>86</b> [ 15](sec  4)(fl 0x00)(ty  20)(scl   2) (nx 0) 0x00000030 _hello
+<b>87</b> 
+<b>88</b> 
+<b>89</b> RELOCATION RECORDS FOR [.text]:
+<b>90</b> OFFSET   TYPE              VALUE 
+<b>91</b> 0000000e dir32             _i-0x00000004
+<b>92</b> 00000014 dir32             $SG2641-0x00000008
+<b>93</b> 00000019 DISP32            _printf
+<b>94</b> 00000034 dir32             _i-0x00000004
+<b>95</b> 00000039 DISP32            _func
+<b>96</b> 
+<b>97</b> 
+</pre>
+</fieldset>
+
+cygwin objdump 2.22.52
+
+<fieldset>
+<legend>objdump.d</legend>
+<pre><b> 1</b> 
+<b> 2</b> hello.obj:     file format pe-i386
+<b> 3</b> 
+<b> 4</b> 
+<b> 5</b> Disassembly of section .text:
+<b> 6</b> 
+<b> 7</b> 00000000 &lt;_func&gt;:
+<b> 8</b>    0: 55                    push   %ebp
+<b> 9</b>    1: 8b ec                 mov    %esp,%ebp
+<b>10</b>    3: 8b 45 08              mov    0x8(%ebp),%eax
+<b>11</b>    6: c7 00 ef 56 00 00     movl   $0x56ef,(%eax)
+<b>12</b>    c: 8b 0d 00 00 00 00     mov    0x0,%ecx
+<b>13</b>   12: 51                    push   %ecx
+<b>14</b>   13: 68 00 00 00 00        push   $0x0
+<b>15</b>   18: e8 00 00 00 00        call   1d &lt;_func+0x1d&gt;
+<b>16</b>   1d: 83 c4 08              add    $0x8,%esp
+<b>17</b>   20: 5d                    pop    %ebp
+<b>18</b>   21: c3                    ret    
+<b>19</b>   22: cc                    int3   
+<b>20</b>   23: cc                    int3   
+<b>21</b>   24: cc                    int3   
+<b>22</b>   25: cc                    int3   
+<b>23</b>   26: cc                    int3   
+<b>24</b>   27: cc                    int3   
+<b>25</b>   28: cc                    int3   
+<b>26</b>   29: cc                    int3   
+<b>27</b>   2a: cc                    int3   
+<b>28</b>   2b: cc                    int3   
+<b>29</b>   2c: cc                    int3   
+<b>30</b>   2d: cc                    int3   
+<b>31</b>   2e: cc                    int3   
+<b>32</b>   2f: cc                    int3   
+<b>33</b> 
+<b>34</b> 00000030 &lt;_hello&gt;:
+<b>35</b>   30: 55                    push   %ebp
+<b>36</b>   31: 8b ec                 mov    %esp,%ebp
+<b>37</b>   33: 68 00 00 00 00        push   $0x0
+<b>38</b>   38: e8 00 00 00 00        call   3d &lt;_hello+0xd&gt;
+<b>39</b>   3d: 83 c4 04              add    $0x4,%esp
+<b>40</b>   40: 5d                    pop    %ebp
+<b>41</b>   41: c3                    ret    
+</pre>
+</fieldset>
+
+<fieldset>
+<legend>objdump.x</legend>
+<pre><b> 1</b> 
+<b> 2</b> hello.obj:     file format pe-i386
+<b> 3</b> hello.obj
+<b> 4</b> architecture: i386, flags 0x0000003d:
+<b> 5</b> HAS_RELOC, HAS_LINENO, HAS_DEBUG, HAS_SYMS, HAS_LOCALS
+<b> 6</b> start address 0x00000000
+<b> 7</b> 
+<b> 8</b> Characteristics 0x0
+<b> 9</b> 
+<b>10</b> Time/Date  Tue Jul  2 08:54:19 2013
+<b>11</b> Magic   0000
+<b>12</b> MajorLinkerVersion 0
+<b>13</b> MinorLinkerVersion 0
+<b>14</b> SizeOfCode  00000000
+<b>15</b> SizeOfInitializedData 00000000
+<b>16</b> SizeOfUninitializedData 00000000
+<b>17</b> AddressOfEntryPoint 00000000
+<b>18</b> BaseOfCode  00000000
+<b>19</b> BaseOfData  00000000
+<b>20</b> ImageBase  00000000
+<b>21</b> SectionAlignment 00000000
+<b>22</b> FileAlignment  00000000
+<b>23</b> MajorOSystemVersion 0
+<b>24</b> MinorOSystemVersion 0
+<b>25</b> MajorImageVersion 0
+<b>26</b> MinorImageVersion 0
+<b>27</b> MajorSubsystemVersion 0
+<b>28</b> MinorSubsystemVersion 0
+<b>29</b> Win32Version  00000000
+<b>30</b> SizeOfImage  00000000
+<b>31</b> SizeOfHeaders  00000000
+<b>32</b> CheckSum  00000000
+<b>33</b> Subsystem  00000000 (unspecified)
+<b>34</b> DllCharacteristics 00000000
+<b>35</b> SizeOfStackReserve 00000000
+<b>36</b> SizeOfStackCommit 00000000
+<b>37</b> SizeOfHeapReserve 00000000
+<b>38</b> SizeOfHeapCommit 00000000
+<b>39</b> LoaderFlags  00000000
+<b>40</b> NumberOfRvaAndSizes 00000000
+<b>41</b> 
+<b>42</b> The Data Directory
+<b>43</b> Entry 0 00000000 00000000 Export Directory [.edata (or where ever we found it)]
+<b>44</b> Entry 1 00000000 00000000 Import Directory [parts of .idata]
+<b>45</b> Entry 2 00000000 00000000 Resource Directory [.rsrc]
+<b>46</b> Entry 3 00000000 00000000 Exception Directory [.pdata]
+<b>47</b> Entry 4 00000000 00000000 Security Directory
+<b>48</b> Entry 5 00000000 00000000 Base Relocation Directory [.reloc]
+<b>49</b> Entry 6 00000000 00000000 Debug Directory
+<b>50</b> Entry 7 00000000 00000000 Description Directory
+<b>51</b> Entry 8 00000000 00000000 Special Directory
+<b>52</b> Entry 9 00000000 00000000 Thread Storage Directory [.tls]
+<b>53</b> Entry a 00000000 00000000 Load Configuration Directory
+<b>54</b> Entry b 00000000 00000000 Bound Import Directory
+<b>55</b> Entry c 00000000 00000000 Import Address Table Directory
+<b>56</b> Entry d 00000000 00000000 Delay Import Directory
+<b>57</b> Entry e 00000000 00000000 CLR Runtime Header
+<b>58</b> Entry f 00000000 00000000 Reserved
+<b>59</b> 
+<b>60</b> Sections:
+<b>61</b> Idx Name          Size      VMA       LMA       File off  Algn
+<b>62</b>   0 .drectve      0000002f  00000000  00000000  000000b4  2**0
+<b>63</b>                   CONTENTS, READONLY, DEBUGGING, EXCLUDE
+<b>64</b>   1 .debug$S      00000070  00000000  00000000  000000e3  2**0
+<b>65</b>                   CONTENTS, READONLY, DEBUGGING
+<b>66</b>   2 .data         00000012  00000000  00000000  00000153  2**2
+<b>67</b>                   CONTENTS, ALLOC, LOAD, DATA
+<b>68</b>   3 .text         00000042  00000000  00000000  00000165  2**4
+<b>69</b>                   CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+<b>70</b> SYMBOL TABLE:
+<b>71</b> [  0](sec -1)(fl 0x00)(ty   0)(scl   3) (nx 0) 0x00aa766f @comp.id
+<b>72</b> [  1](sec -1)(fl 0x00)(ty   0)(scl   3) (nx 0) 0x00000001 @feat.00
+<b>73</b> [  2](sec  1)(fl 0x00)(ty   0)(scl   3) (nx 1) 0x00000000 .drectve
+<b>74</b> AUX scnlen 0x2f nreloc 0 nlnno 0
+<b>75</b> [  4](sec  2)(fl 0x00)(ty   0)(scl   3) (nx 1) 0x00000000 .debug$S
+<b>76</b> AUX scnlen 0x70 nreloc 0 nlnno 0
+<b>77</b> [  6](sec  3)(fl 0x00)(ty   0)(scl   3) (nx 1) 0x00000000 .data
+<b>78</b> AUX scnlen 0x12 nreloc 0 nlnno 0 checksum 0xc0d84b87 assoc 0 comdat 0
+<b>79</b> [  8](sec  3)(fl 0x00)(ty   0)(scl   2) (nx 0) 0x00000000 _p
+<b>80</b> [  9](sec  3)(fl 0x00)(ty   0)(scl   2) (nx 0) 0x00000004 _i
+<b>81</b> [ 10](sec  3)(fl 0x00)(ty   0)(scl   3) (nx 0) 0x00000008 $SG2641
+<b>82</b> [ 11](sec  4)(fl 0x00)(ty   0)(scl   3) (nx 1) 0x00000000 .text
+<b>83</b> AUX scnlen 0x42 nreloc 5 nlnno 0 checksum 0x3672f956 assoc 0 comdat 0
+<b>84</b> [ 13](sec  4)(fl 0x00)(ty  20)(scl   2) (nx 0) 0x00000000 _func
+<b>85</b> [ 14](sec  0)(fl 0x00)(ty  20)(scl   2) (nx 0) 0x00000000 _printf
+<b>86</b> [ 15](sec  4)(fl 0x00)(ty  20)(scl   2) (nx 0) 0x00000030 _hello
+<b>87</b> 
+<b>88</b> 
+<b>89</b> RELOCATION RECORDS FOR [.text]:
+<b>90</b> OFFSET   TYPE              VALUE 
+<b>91</b> 0000000e dir32             _i+0xfffffffc
+<b>92</b> 00000014 dir32             $SG2641+0xfffffff8
+<b>93</b> 00000019 DISP32            _printf
+<b>94</b> 00000034 dir32             _i+0xfffffffc
+<b>95</b> 00000039 DISP32            _func
+</pre>
+</fieldset>
+
+<fieldset>
+<legend>table x - ./m vc2010/hello.obj</legend>
+<pre><b>  1</b> printf addr: 804a320
+<b>  2</b> hello addr: 0x976e810
+<b>  3</b> align addr: 976e810
+<b>  4</b> align 0x1000 hello addr: 0x976f000
+<b>  5</b> load win coff object: vc2010/hello.obj
+<b>  6</b> Machine: 0x14c
+...
+<b>173</b> vc i: 56ef
+</pre>
+</fieldset>
+
+source code:
+<a href="https://github.com/descent/progs/tree/master/load_obj">https://github.com/descent/progs/tree/master/load_obj</a>
+
+ref: 
+<a href="http://www.missyu.cn/2012/11/code-injection-into-running-linux-applicatio/">Code Injection into Running Linux Application 中文版</a>
+<a href="http://www.codeproject.com/Articles/33340/Code-Injection-into-Running-Linux-Application">Code Injection into Running Linux Application</a>
+<a href="http://shinh.skr.jp/binary/dtr.html">Dynamic Test Runner</a>
+<a href="https://thunked.org/programming/it-s-a-pe-no-it-s-an-elf-t222.html#p902">It's a PE! No, It's an ELF!</a>

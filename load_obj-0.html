@@ -1,0 +1,267 @@
+看到密技 Binary Hacks--駭客秘傳技巧一百招 #72 時, 讓我訝異萬分, 載入/執行一個 object file, 這念頭我想都沒想過, 真的做得到嗎？object file 可以執行？太神奇了。不過在看完整篇文章後,  我恍然大悟, 原來是這樣阿, 厲害厲害！
+
+這篇文章所需要的知識:
+<ul>
+<li><a href="http://descent-incoming.blogspot.tw/2012/08/blog-post.html" target="_blank">程式設計師的自我修養 - 連結、載入、程式庫</a> chapter 3, 4, 6, 7。</li>
+<li>Binary Hacks--駭客秘傳技巧一百招 #72</li>
+</ul>
+看書單就知道很硬, 所以得花點時間才能搞懂。
+
+本程式和 #72 範例使用 bfd library 不同, 我自行 parse elf object 得到所有需要 relocate symbol 的資訊, 並完成 relocation 的動作。
+
+為什麼會有這樣的念頭？其實我原本只想照著範例打完程式碼就好, 不過由於我略懂 elf, 看完文章後, 覺得應該可以透過 parse elf 來處理, 就這樣完成了這個程式。
+
+程式要做的事情就是把 hello.c compile 成 hello.o (gcc -c hello.c), 然後寫另外一支程式, 載入 hello.o 並執行 hello() 這個 function。在看完 #72 之前, 我根本沒想過原來可以用這樣的方式去執行 object file, 想出這招的人也太有想像力了。
+
+這招有什麼用呢？你有沒有發現, linux kernel module a.ko 可以用 insmod 載入, 然後呼叫其中的 function, 我苦思良久, 毫無頭緒, 我認為 linux kernel 的方法和 #72 應該是相同原理。
+
+<fieldset>
+<legend>hello.c</legend>
+<pre><b> 1</b> <span style="color: blue;"><b>#include <span style="color: green;">&lt;stdio.h&gt;</span></b></span>
+<b> 2</b> 
+<b> 3</b> <b>int</b> <span style="color: #2040a0;">p</span><span style="color: #4444ff;">=</span><span style="color: red;">0x9876</span><span style="color: #4444ff;">;</span>
+<b> 4</b> <b>int</b> <span style="color: #2040a0;">i</span><span style="color: #4444ff;">=</span><span style="color: red;">0x1234</span><span style="color: #4444ff;">;</span>
+<b> 5</b> 
+<b> 6</b> <b>void</b> <span style="color: #2040a0;">func</span><span style="color: #4444ff;">(</span><b>int</b> <span style="color: #4444ff;">*</span><span style="color: #2040a0;">j</span><span style="color: #4444ff;">)</span>
+<b> 7</b> <span style="color: #4444ff;"><b>{</b></span>
+<b> 8</b>   <span style="color: #4444ff;">*</span><span style="color: #2040a0;">j</span> <span style="color: #4444ff;">=</span> <span style="color: red;">0x56ef</span><span style="color: #4444ff;">;</span>
+<b> 9</b> <span style="color: blue;"><b>#ifdef _MSC_VER</b></span>
+<b>10</b>   <span style="color: #2040a0;">printf</span><span style="color: #4444ff;">(</span><span style="color: green;">"vc i: %x<span style="color: #77dd77;">\n</span>"</span>, <span style="color: #2040a0;">i</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>11</b> <span style="color: blue;"><b>#else</b></span>
+<b>12</b>   <span style="color: #2040a0;">printf</span><span style="color: #4444ff;">(</span><span style="color: green;">"gcc/linux i: %x<span style="color: #77dd77;">\n</span>"</span>, <span style="color: #2040a0;">i</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>13</b> <span style="color: blue;"><b>#endif</b></span>
+<b>14</b>   <b>return</b><span style="color: #4444ff;">;</span>
+<b>15</b> <span style="color: #4444ff;"><b>}</b></span>
+<b>16</b> 
+<b>17</b> <b>void</b> <span style="color: #2040a0;">hello</span><span style="color: #4444ff;">(</span><span style="color: #4444ff;">)</span>
+<b>18</b> <span style="color: #4444ff;"><b>{</b></span>
+<b>19</b>   //<span style="color: #2040a0;">puts</span><span style="color: #4444ff;">(</span><span style="color: green;">"hello"</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>20</b>   <span style="color: #2040a0;">func</span><span style="color: #4444ff;">(</span><span style="color: #4444ff;">&amp;</span><span style="color: #2040a0;">i</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>21</b> <span style="color: #4444ff;"><b>}</b></span>
+</pre>
+</fieldset>
+
+在 gcc 4.4 並不會產生 .rel.eh_frame section, gcc 4.7.2 才會有這個 section, 可以參考: <a href="http://refspecs.linuxfoundation.org/LSB_3.0.0/LSB-Core-generic/LSB-Core-generic/ehframechpt.html">Exception Frames</a>, 本範例只有用到 .rel.text。 
+
+流程大概是這樣:
+<ol>
+<li>load elf/coff object to memory.</li>
+<li>do the relocation.</li>
+<li>call the object hello function, hello will call func, func will call printf.</li>
+<li>back to linux shell prompt.</li>
+</ol>
+事前準備工作:
+<ul>
+<li>dump hello.o elf object by readelf</li>
+<li>disassembly hello.o by objdump</li>
+<li>dump hex content by hexdump </li>
+</ul>
+這就是最下方的三個表的內容, 在這個過程中, 時常需要對照這三個表, 你應該可想像在我寫這程式時, 終端機有好幾個畫面切來切去, 若你有雙螢幕的話, 會輕鬆不少。 
+<ol></ol>
+要怎麼開始呢？先來找出要 relocation 的地方:
+先看 hello.o.dis 紅色部份, 這五個地方就是需要重定位的部份, 需要填入正確的數值才能使這兩個 function (func, printf) 正常執行, 其它的就是 function 的參數, 沒做好 relocation 就會把錯誤的參數傳給 function 了。
+
+對照 table 1 L46~50 就提供了五個資訊來讓我們做這樣的動作。
+
+relocate func:
+hello.o.dis L26 是 call func, 所以得先要知道 func 的位址, 把&nbsp; e8 <span style="color: red;">fc ff ff ff</span> 的值改成 func 的位址才行。
+
+那來找出 func 的位址吧！table 1 L54 ~ 68 可以用來找到 func 位於哪裡,&nbsp; value:0, 它是在 .text section, 而 .text section 的 offset: 0x34 (ref table 1 L25), func offset: 0x34+0 搞定, 只要在加上 hello.o 被載入的記憶體位址, 就是 func address 了。
+ex: 若 hello.o 被載入 0x1000, 那 func address: 0x1000+0x34+0 = 0x1034
+
+那把 fc ff ff ff 改成 0x1034 就對了嗎？不是這樣的, 實際上要複雜一點, 它是這樣的:
+假設要 call 0x100 的位址, 實際上的指令是 (0x100, 0x110, 0x115 為記憶體位址)
+0x100
+...
+...
+0x110 call ???
+0x115 nop
+??? 是 0x100 - 0x115 = <span style="color: red;">-0x15</span> -&gt; call <span style="color: red;">-0x15</span> 才會去 call 0x100 的位址。
+所以先找出下一個指令的位址: 0x3a
+0x0 - 0x3a = 0xffffffc6 (-58)
+將 fc ff ff ff 改成 ff ff ff c6 就會正確呼叫 func()。
+
+relocate printf:
+printf 比較特別, 我直接用 printf_addr = &amp;printf; 將 printf_add 找出來, 這不是正規作法, 有點 hard code, 其他和 relocate func 一樣。
+
+relocate i: table 1 L46 可以找到 i 位於 symbol table 9th index, i value: 0x4, 屬於 .data section (section index 3), 所以 i offset: .data section offset + 0x4 = 0x70+0x4 = 0x74 (ref: hello.o.hex), 再來就是有兩個地方需要把這個值填入, .text section offset + 0x11, .text section offset + 0x31, 所以在 0x34 + 0x11 = 0x45, 0x34 + 0x31 = 0x65 (ref hello.o.hex), 要填上 i 的位址 (hello.o 的位址 + 0x74)。ex: 假如 hello.o 被載入0x1000, 0x1000+0x45, 0x1000+0x65 的 4 byte 要換成 0x1000+0x74。
+
+relocate .rodata: 和 i 一樣的作法。 
+
+我相信你應該有點混亂了, 這需要點毅力和耐心來對付, 當初我也花了不少心力看, 希望這篇文章有幫到忙。文章有些沒寫的很清楚的地方可以參考<b>程式設計師的自我修養 chapter 4</b>。
+
+<fieldset>
+<legend>table 1 readelf -a hello.o</legend>
+<pre><b> 1</b> ELF Header:
+<b> 2</b>   Magic:   7f 45 4c 46 01 01 01 00 00 00 00 00 00 00 00 00 
+<b> 3</b>   Class:                             ELF32
+<b> 4</b>   Data:                              2's complement, little endian
+<b> 5</b>   Version:                           1 (current)
+<b> 6</b>   OS/ABI:                            UNIX - System V
+<b> 7</b>   ABI Version:                       0
+<b> 8</b>   Type:                              REL (Relocatable file)
+<b> 9</b>   Machine:                           Intel 80386
+<b>10</b>   Version:                           0x1
+<b>11</b>   Entry point address:               0x0
+<b>12</b>   Start of program headers:          0 (bytes into file)
+<b>13</b>   Start of section headers:          256 (bytes into file)
+<b>14</b>   Flags:                             0x0
+<b>15</b>   Size of this header:               52 (bytes)
+<b>16</b>   Size of program headers:           0 (bytes)
+<b>17</b>   Number of program headers:         0
+<b>18</b>   Size of section headers:           40 (bytes)
+<b>19</b>   Number of section headers:         11
+<b>20</b>   Section header string table index: 8
+<b>21</b> 
+<b>22</b> Section Headers:
+<b>23</b>   [Nr] Name              Type            Addr     Off    Size   ES Flg Lk Inf Al
+<b>24</b>   [ 0]                   NULL            00000000 000000 000000 00      0   0  0
+<b>25</b>   [ 1] .text             PROGBITS        00000000 000034 00003c 00  AX  0   0  4
+<b>26</b>   [ 2] .rel.text         REL             00000000 0003a8 000028 08      9   1  4
+<b>27</b>   [ 3] .data             PROGBITS        00000000 000070 000008 00  WA  0   0  4
+<b>28</b>   [ 4] .bss              NOBITS          00000000 000078 000000 00  WA  0   0  4
+<b>29</b>   [ 5] .rodata           PROGBITS        00000000 000078 000011 00   A  0   0  1
+<b>30</b>   [ 6] .comment          PROGBITS        00000000 000089 000026 01  MS  0   0  1
+<b>31</b>   [ 7] .note.GNU-stack   PROGBITS        00000000 0000af 000000 00      0   0  1
+<b>32</b>   [ 8] .shstrtab         STRTAB          00000000 0000af 000051 00      0   0  1
+<b>33</b>   [ 9] .symtab           SYMTAB          00000000 0002b8 0000d0 10     10   8  4
+<b>34</b>   [10] .strtab           STRTAB          00000000 000388 00001f 00      0   0  1
+<b>35</b> Key to Flags:
+<b>36</b>   W (write), A (alloc), X (execute), M (merge), S (strings)
+<b>37</b>   I (info), L (link order), G (group), T (TLS), E (exclude), x (unknown)
+<b>38</b>   O (extra OS processing required) o (OS specific), p (processor specific)
+<b>39</b> 
+<b>40</b> There are no section groups in this file.
+<b>41</b> 
+<b>42</b> There are no program headers in this file.
+<b>43</b> 
+<b>44</b> Relocation section '.rel.text' at offset 0x3a8 contains 5 entries:
+<b>45</b>  Offset     Info    Type            Sym.Value  Sym. Name
+<span style="color: red;"><b>46</b> 00000011  00000901 R_386_32          00000004   i
+<b>47</b> 00000016  00000501 R_386_32          00000000   .rodata
+<b>48</b> 00000022  00000b02 R_386_PC32        00000000   printf
+<b>49</b> 00000031  00000901 R_386_32          00000004   i
+<b>50</b> 00000036  00000a02 R_386_PC32        00000000   func</span>
+<b>51</b> 
+<b>52</b> There are no unwind sections in this file.
+<b>53</b> 
+<span style="color: blue;"><b>54</b> Symbol table '.symtab' contains 13 entries:
+<b>55</b>    Num:    Value  Size Type    Bind   Vis      Ndx Name
+<b>56</b>      0: 00000000     0 NOTYPE  LOCAL  DEFAULT  UND 
+<b>57</b>      1: 00000000     0 FILE    LOCAL  DEFAULT  ABS hello.c
+<b>58</b>      2: 00000000     0 SECTION LOCAL  DEFAULT    1 
+<b>59</b>      3: 00000000     0 SECTION LOCAL  DEFAULT    3 
+<b>60</b>      4: 00000000     0 SECTION LOCAL  DEFAULT    4 
+<b>61</b>      5: 00000000     0 SECTION LOCAL  DEFAULT    5 
+<b>62</b>      6: 00000000     0 SECTION LOCAL  DEFAULT    7 
+<b>63</b>      7: 00000000     0 SECTION LOCAL  DEFAULT    6 
+<b>64</b>      8: 00000000     4 OBJECT  GLOBAL DEFAULT    3 p
+<b>65</b>      9: 00000004     4 OBJECT  GLOBAL DEFAULT    3 i
+<b>66</b>     10: 00000000    40 FUNC    GLOBAL DEFAULT    1 func
+<b>67</b>     11: 00000000     0 NOTYPE  GLOBAL DEFAULT  UND printf
+<b>68</b>     12: 00000028    20 FUNC    GLOBAL DEFAULT    1 hello</span>
+<b>69</b> 
+<b>70</b> No version information found in this file.
+</pre>
+</fieldset>
+
+<fieldset>
+<legend>hello.o.dis</legend>
+<pre><b> 1</b> 
+<b> 2</b> hello.o:     file format elf32-i386
+<b> 3</b> 
+<b> 4</b> 
+<b> 5</b> Disassembly of section .text:
+<b> 6</b> 
+<b> 7</b> 00000000 &lt;func&gt;:
+<b> 8</b>    0: 55                    push   %ebp
+<b> 9</b>    1: 89 e5                 mov    %esp,%ebp
+<b>10</b>    3: 83 ec 18              sub    $0x18,%esp
+<b>11</b>    6: 8b 45 08              mov    0x8(%ebp),%eax
+<b>12</b>    9: c7 00 ef 56 00 00     movl   $0x56ef,(%eax)
+<span style="color: red;"><b>13</b>    f: 8b 15 00 00 00 00     mov    0x0,%edx
+<b>14</b>   15: b8 00 00 00 00        mov    $0x0,%eax
+</span><b>15</b>   1a: 89 54 24 04           mov    %edx,0x4(%esp)
+<b>16</b>   1e: 89 04 24              mov    %eax,(%esp)
+<span style="color: red;"><b>17</b>   21: e8 fc ff ff ff        call   22 &lt;func+0x22&gt;</span>
+<b>18</b>   26: c9                    leave  
+<b>19</b>   27: c3                    ret    
+<b>20</b> 
+<b>21</b> 00000028 &lt;hello&gt;:
+<b>22</b>   28: 55                    push   %ebp
+<b>23</b>   29: 89 e5                 mov    %esp,%ebp
+<b>24</b>   2b: 83 ec 18              sub    $0x18,%esp
+<span style="color: red;"><b>25</b>   2e: c7 04 24 00 00 00 00  movl   $0x0,(%esp)
+<b>26</b>   35: e8 fc ff ff ff        call   36 &lt;hello+0xe&gt;
+</span><b>27</b>   3a: c9                    leave  
+<b>28</b>   3b: c3                    ret    
+</pre>
+</fieldset>
+
+<fieldset>
+<legend>hello.o.hex</legend>
+<pre>00000000  7f 45 4c 46 01 01 01 00  00 00 00 00 00 00 00 00  |.ELF............|
+00000010  01 00 03 00 01 00 00 00  00 00 00 00 00 00 00 00  |................|
+00000020  00 01 00 00 00 00 00 00  34 00 00 00 00 00 28 00  |........4.....(.|
+00000030  0b 00 08 00 55 89 e5 83  ec 18 8b 45 08 c7 00 ef  |....U......E....|
+00000040  56 00 00 8b 15 <span style="color: blue;">00 00 00  00</span> b8 00 00 00 00 89 54  |V..............T|
+00000050  24 04 89 04 24 e8 fc ff  ff ff c9 c3 55 89 e5 83  |$...$.......U...|
+00000060  ec 18 c7 04 24 <span style="color: blue;">00 00 00  00</span> e8 fc ff ff ff c9 c3  |....$...........|
+00000070  76 98 00 00 <span style="color: red;">34 12 00 00</span>  67 63 63 2f 6c 69 6e 75  |v...4...gcc/linu|
+00000080  78 20 69 3a 20 25 78 0a  00 00 47 43 43 3a 20 28  |x i: %x...GCC: (|
+00000090  55 62 75 6e 74 75 20 34  2e 34 2e 33 2d 34 75 62  |Ubuntu 4.4.3-4ub|
+000000a0  75 6e 74 75 35 2e 31 29  20 34 2e 34 2e 33 00 00  |untu5.1) 4.4.3..|
+000000b0  2e 73 79 6d 74 61 62 00  2e 73 74 72 74 61 62 00  |.symtab..strtab.|
+000000c0  2e 73 68 73 74 72 74 61  62 00 2e 72 65 6c 2e 74  |.shstrtab..rel.t|
+000000d0  65 78 74 00 2e 64 61 74  61 00 2e 62 73 73 00 2e  |ext..data..bss..|
+000000e0  72 6f 64 61 74 61 00 2e  63 6f 6d 6d 65 6e 74 00  |rodata..comment.|
+000000f0  2e 6e 6f 74 65 2e 47 4e  55 2d 73 74 61 63 6b 00  |.note.GNU-stack.|
+00000100  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+00000120  00 00 00 00 00 00 00 00  1f 00 00 00 01 00 00 00  |................|
+00000130  06 00 00 00 00 00 00 00  34 00 00 00 3c 00 00 00  |........4...&lt;...|
+00000140  00 00 00 00 00 00 00 00  04 00 00 00 00 00 00 00  |................|
+00000150  1b 00 00 00 09 00 00 00  00 00 00 00 00 00 00 00  |................|
+00000160  a8 03 00 00 28 00 00 00  09 00 00 00 01 00 00 00  |....(...........|
+00000170  04 00 00 00 08 00 00 00  25 00 00 00 01 00 00 00  |........%.......|
+00000180  03 00 00 00 00 00 00 00  70 00 00 00 08 00 00 00  |........p.......|
+00000190  00 00 00 00 00 00 00 00  04 00 00 00 00 00 00 00  |................|
+000001a0  2b 00 00 00 08 00 00 00  03 00 00 00 00 00 00 00  |+...............|
+000001b0  78 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |x...............|
+000001c0  04 00 00 00 00 00 00 00  30 00 00 00 01 00 00 00  |........0.......|
+000001d0  02 00 00 00 00 00 00 00  78 00 00 00 11 00 00 00  |........x.......|
+000001e0  00 00 00 00 00 00 00 00  01 00 00 00 00 00 00 00  |................|
+000001f0  38 00 00 00 01 00 00 00  30 00 00 00 00 00 00 00  |8.......0.......|
+00000200  89 00 00 00 26 00 00 00  00 00 00 00 00 00 00 00  |....&amp;...........|
+00000210  01 00 00 00 01 00 00 00  41 00 00 00 01 00 00 00  |........A.......|
+00000220  00 00 00 00 00 00 00 00  af 00 00 00 00 00 00 00  |................|
+00000230  00 00 00 00 00 00 00 00  01 00 00 00 00 00 00 00  |................|
+00000240  11 00 00 00 03 00 00 00  00 00 00 00 00 00 00 00  |................|
+00000250  af 00 00 00 51 00 00 00  00 00 00 00 00 00 00 00  |....Q...........|
+00000260  01 00 00 00 00 00 00 00  01 00 00 00 02 00 00 00  |................|
+00000270  00 00 00 00 00 00 00 00  b8 02 00 00 d0 00 00 00  |................|
+00000280  0a 00 00 00 08 00 00 00  04 00 00 00 10 00 00 00  |................|
+00000290  09 00 00 00 03 00 00 00  00 00 00 00 00 00 00 00  |................|
+000002a0  88 03 00 00 1f 00 00 00  00 00 00 00 00 00 00 00  |................|
+000002b0  01 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+000002c0  00 00 00 00 00 00 00 00  01 00 00 00 00 00 00 00  |................|
+000002d0  00 00 00 00 04 00 f1 ff  00 00 00 00 00 00 00 00  |................|
+000002e0  00 00 00 00 03 00 01 00  00 00 00 00 00 00 00 00  |................|
+000002f0  00 00 00 00 03 00 03 00  00 00 00 00 00 00 00 00  |................|
+00000300  00 00 00 00 03 00 04 00  00 00 00 00 00 00 00 00  |................|
+00000310  00 00 00 00 03 00 05 00  00 00 00 00 00 00 00 00  |................|
+00000320  00 00 00 00 03 00 07 00  00 00 00 00 00 00 00 00  |................|
+00000330  00 00 00 00 03 00 06 00  09 00 00 00 00 00 00 00  |................|
+00000340  04 00 00 00 11 00 03 00  0b 00 00 00 04 00 00 00  |................|
+00000350  04 00 00 00 11 00 03 00  0d 00 00 00 00 00 00 00  |................|
+00000360  28 00 00 00 12 00 01 00  12 00 00 00 00 00 00 00  |(...............|
+00000370  00 00 00 00 10 00 00 00  19 00 00 00 28 00 00 00  |............(...|
+00000380  14 00 00 00 12 00 01 00  00 68 65 6c 6c 6f 2e 63  |.........hello.c|
+00000390  00 70 00 69 00 66 75 6e  63 00 70 72 69 6e 74 66  |.p.i.func.printf|
+000003a0  00 68 65 6c 6c 6f 00 00  11 00 00 00 01 09 00 00  |.hello..........|
+000003b0  16 00 00 00 01 05 00 00  22 00 00 00 02 0b 00 00  |........".......|
+000003c0  31 00 00 00 01 09 00 00  36 00 00 00 02 0a 00 00  |1.......6.......|
+000003d0
+</pre>
+</fieldset>
+
