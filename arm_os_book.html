@@ -1,0 +1,76 @@
+<a href="https://picasaweb.google.com/lh/photo/EVCYo5IOyY78nah5iIp5BNMTjNZETYmyPJy0liipFm0?feat=embedwebsite" style="clear: left; float: left; margin-bottom: 1em; margin-right: 1em;"><img src="https://lh4.googleusercontent.com/-KzEJjHDbSac/TuWv5H3yEaI/AAAAAAAAXT8/XOOiKdvAcqU/s400/P1010071.JPG" /></a>20111212 購於台南成大若水堂, 39X6 = 234 NT。
+
+會買這本純粹是被裡頭的記憶體管理演算法吸引, 類似 linux slab 的方式來實作記憶體管理。
+
+當時我在學習 os 的撰寫, 會關注相關書籍, 雖然我主要學習平台是 x86, 但也不排斥看 arm 的相關書籍。
+
+本書簡單來說就是一步一步打造 arm os, 完成 os 所需的功能。
+
+這是本大驚奇, 薄薄一本, 它比我想像的還要有用, 對於學習寫 os, 裡頭提到的檔案系統、記憶體管理、中斷處理、分頁管理都有實作程式碼。
+
+3.3 在說明如何使用 inline assembly in gcc, 有用過的人一定會被那種奇怪的語法搞亂, 我總是記不住到底開怎麼用, 寫 os 難免會用到組合語言, 忘記了就回來翻翻。
+
+6.1.2.2 介紹了 linux 的 linked list 資料結構, 這個可和課本上的不同, 你一定想知道它特別在哪裡吧！ 
+
+3.1.2 介紹 freertos 的初始畫, 有 c runtime 的 bss 初始化, 還有 linker script 的說明, 讓我得以突破最困難的關卡, 就算是寫 x86 os, 此書還是能幫上不少忙, 因為這部份和使用什麼 cpu 較為無關, 也是因為過了這最困難的關卡, 我才能繼續往 os 的路上邁進。
+
+這是什麼呢？為什麼那麼重要? 這是從組合語言往 c 語言邁進的道路, 從什麼時候才可以用 c 語言呢？ 那就是要打造 c 語言執行環境, 而 bss 初始化是重點之一 (是的, 有<b>之一</b>), 而每個平台有不同的設定要做, 把相關事情都搞定, 才可以使用 c 語言。
+
+你一定可以想像我為了要<b>知道</b>這件事情, google 了多少資料, c runtime, c start code, 趴啦趴啦的關鍵字我試過很多, 但找到的東西不是看不懂就是不是我要的資料, 沒想到在這本簡體中文書籍就找到。之前嘗試了一堆反組譯 c code, 雖然不無小補, 但總是打不到核心, 這本書一舉為我解惑。
+
+市面上很多類似的書籍, 不過因為是 arm 平台, 得需要有個開發版來練習才行, 沒有開發板, 根本無法學習書中知識, 而有些書籍是用 armcc 來當作開發工具; 本書使用的是 skyeye 模擬器來練習 arm os, 以及使用 gnu cross compiler, 剛好符合我的學習需求。有了實作, 才能吸收書上知識, 而模擬器雖然不能百分之百和真實 arm 機器一樣, 但已經可以練習 os 程式了。
+
+模擬器是練習 os 的利器, 尤其是 debug 的功能, 儘管有著和真實世界的差異, 但還是能幫上不少忙。
+
+裡頭珍貴的部份是程式碼, 而且是小型的程式, 不像真實 os 那麼複雜, 總計有:
+<ul>
+<li>romfs 檔案系統</li>
+<li>process switch</li>
+<li>fork/exec</li>
+<li>記憶體管理程式和 paging</li>
+<li>讀取 elf</li>
+</ul>
+
+重點是薄薄一本, 265 頁, 讓人有容易看完的錯覺。XD
+
+不過若到在真實機器執行書上 os 要克服的問題有:
+uart, 在模擬器是假設 uart 已經初始完成, 真實機器上可得先克服這關才行, 這可不是容易的事情。
+
+這樣的書竟然只要 39 人民幣, 實在是太便宜了。
+
+官方網址: 
+<strike>http://www.leeos.org/</strike>
+<a href="http://leeosorg.appspot.com/" target="_blank">http://leeosorg.appspot.com/</a>
+
+這裡可以下載 toolchain 和範例程式碼。
+
+
+<span style="font-size: x-large;">compile skyeye 1.3.5</span>
+
+
+<a href="http://www.flatws.cn/article/program/shell/2011-05-06/24333.html">http://www.flatws.cn/article/program/shell/2011-05-06/24333.html</a>
+<a href="http://www.linuxidc.com/Linux/2013-02/79196.htm">http://www.linuxidc.com/Linux/2013-02/79196.htm</a>
+
+真奇怪, 還需要自己下載 libiconv (ftp://ftp.gnu.org/pub/gnu/libiconv)
+
+apt-get install python-dev
+
+<div>
+make install will install here:</div>
+<div>
+/opt/skyeye/</div>
+<div>
+
+</div>
+<div>
+use gdb in skyeye</div>
+<div>
+<a href="http://dabod.blogspot.tw/2006/07/gdb-skyeye.html">http://dabod.blogspot.tw/2006/07/gdb-skyeye.html</a></div>
+<div>
+
+</div>
+<div>
+run time error:</div>
+<div>
+<a href="http://blog.chinaunix.net/uid-26009923-id-3258932.html">http://blog.chinaunix.net/uid-26009923-id-3258932.html</a></div>
+
