@@ -1,0 +1,142 @@
+我好像忘記提 system call 的實作, 雖然我在 simple_os 已經實作過 system call, 不過那時候的程式碼是從書上抄來, 我打算在 arm cortex m3 重新實作一次, 果然遇到不少麻煩, 別人的東西就是別人的, 沒有親身體會這段, 就沒有烙印在自己身上的記憶。
+
+麻煩一
+在使用 svc 來實作 system call, 還是要保存 context, 也就是 context switch 要做的事情, 都要再做一次, 怎麼讓他們共用這段程式碼呢？
+
+麻煩二
+如何將 system call 的結果傳回給 proc_a (proc_a 是發動這個 system call 的 process)
+
+麻煩三
+如何從 proc_a 傳參數到 system call 裡頭呢？
+
+這個範例程式很醜, 架構也不美, 但它可是我從無到有實實在在的完成的, 對我來說, 意義非凡。
+
+我參考這篇的方法來實作:
+<a href="http://www.coactionos.com/embedded-design/133-effective-use-of-arm-cortex-m3-svcall.html" target="_blank">Effective Use of ARM Cortex-M3 SVCall</a>
+
+本來打算使用 <a href="http://descent-incoming.blogspot.tw/2011/12/oranges.html">Orange's 一個作業系統的實現</a> 上的實作方式, 我也想好怎麼開始了, 不過看到這個方法好像也不賴, 試試看。
+<b>
+</b> <b>Orange's 一個作業系統的實現</b>是這樣的完成 system call:
+
+程式碼請參閱 <a href="https://github.com/descent/simple_os" target="_blank">simple_os</a>
+&nbsp;asm_syscall.S
+
+&nbsp;.global get_ticks
+get_ticks:
+&nbsp; mov $_NR_GET_TICKS, %eax
+&nbsp; int $INT_VECTOR_SYS_CALL
+&nbsp; ret
+
+填入 system call 編號到 %eax, 觸發 0x90 中斷 (int 0x90), 這時候會跑到執行 sys_call, 再根據 sys_call_table, 編號去執行 sys_call_table 裡頭的 function (in syscall.c), 再把傳回值寫到 process stack frame 的 %eax 欄位, system call 結束後, process 的 %eax 自然就得到該 system call 的傳回值, 文字敘述很簡單, 把它變成程式碼就困難些了。
+
+</pre>
+<pre style="white-space: pre-wrap; font-family: serif">
+<b>  1</b> .text
+<b>  2</b> .global _start
+<b>  3</b> .code 16
+<b>  4</b> .syntax unified
+<b>  5</b> 
+<b>  6</b> @void run(char* sp);
+<b>  7</b> @ sp put in r0
+<b>  8</b> .global run
+<b>  9</b> run:
+<b> 10</b>   ldr     r4, [r0, #(4 * 14)]     @ Load process entry point into R4
+<b> 11</b>   add     r0, #(4 * 16)           @ emulate context restore
+<b> 12</b>   mov sp, r0
+<b> 13</b> 
+<b> 14</b>   bl asm_init_systick
+<b> 15</b> 
+<b> 16</b>   cpsie i @ Enable interrupts at processor level
+<b> 17</b>   bx r4 
+<b> 18</b> 
+<b> 19</b> 
+<b> 20</b> @ void asm_init_systick();
+<b> 21</b> .global asm_init_systick
+<b> 22</b> asm_init_systick:
+<b> 23</b> @ systick setting
+<b> 24</b> @ 0xe000ed24 check systick isr active
+<b> 25</b> @ 0xe000e018 check systick count
+<b> 26</b> @ ref: arm cortex-m3: 嵌入式系統設計入門 p8-12
+<b> 27</b> 
+<b> 28</b>   ldr r0, =0xe000e010 @ SysTick Ctrl &amp; Status Reg
+<b> 29</b>   mov r1, #0
+<b> 30</b>   str r1, [r0]
+<b> 31</b>   ldr r1, =0x3fff
+<b> 32</b>   str r1, [r0, #4]
+<b> 33</b>   str r1, [r0, #8]
+<b> 34</b>   mov r1, #0x7
+<b> 35</b>   str r1, [r0] @ enable systick
+<b> 36</b>   bx lr
+<b> 37</b> 
+<b> 38</b> #if 1
+
+L39 ~ 79 就是在處理 system call 的部份, 
+<b> 39</b> .type svc_isr, function
+<b> 40</b> .global svc_isr
+<b> 41</b> svc_isr:
+<b> 42</b>   cpsid i @Prevent interruption during svc
+<b> 43</b>   push {r4-r11}
+<b> 44</b>   @mov r12, r0
+<b> 45</b>   mov r0, sp
+<b> 46</b> 
+<b> 47</b>   ldr r3, =kernel_stack
+<b> 48</b>   mov sp, r3
+<b> 49</b>   push {lr}
+<b> 50</b> 
+<b> 51</b>   bl save_cur_proc_stack
+<b> 52</b>   
+<b> 53</b> 
+<b> 54</b>   @ run sys_call_func
+<b> 55</b>   @ get svc number
+<b> 56</b>   @ldr r1, =sys_call_table
+<b> 57</b> 
+<b> 58</b>   @ get process stack frame pointer to r0
+<b> 59</b>   bl restore_cur_proc_stack
+<b> 60</b>   push {r0}
+<b> 61</b> 
+<b> 62</b>   ldr r12, [r0, #32]
+<b> 63</b>   ldr r0, [r0, #36]
+<b> 64</b>   
+<b> 65</b>   blx r12 @ call system call, parameter address is in r0
+<b> 66</b>   @ write r0 to ready stack frame r0
+<b> 67</b>   pop {r2}
+<b> 68</b>   str r0, [r2, #32]
+<b> 69</b> 
+<b> 70</b> 
+<b> 71</b>   bl restore_cur_proc_stack
+<b> 72</b> 
+<b> 73</b>   pop {lr}
+<b> 74</b> 
+<b> 75</b>   mov sp, r0
+<b> 76</b>   pop {R4-R11}     // Restore r4-11 from new process stack
+<b> 77</b> 
+<b> 78</b>   cpsie i
+<b> 79</b>   bx lr
+<b> 80</b> #endif
+<b> 81</b> 
+<b> 82</b> @void pendsv_isr(void)
+<b> 83</b> .type pendsv_isr, function
+<b> 84</b> .global pendsv_isr
+<b> 85</b> pendsv_isr:
+<b> 86</b>   cpsid i @Prevent interruption during context switch
+<b> 87</b>   push {r4-r11}
+<b> 88</b>   mov r0, sp
+<b> 89</b> 
+<b> 90</b>   ldr r1, =kernel_stack
+<b> 91</b>   mov sp, r1
+<b> 92</b>   push {lr}
+<b> 93</b>   bl schedule
+<b> 94</b>   pop {lr}
+<b> 95</b> 
+<b> 96</b>   mov sp, r0
+<b> 97</b>   pop {R4-R11}     // Restore r4-11 from new process stack
+<b> 98</b> 
+<b> 99</b>   cpsie i
+<b>100</b>   bx lr
+<b>101</b> 
+<b>102</b> 
+<b>103</b> 
+<b>104</b> .section .stackares,&quot;aw&quot;,%progbits
+<b>105</b> .space  0x200, 0
+<b>106</b> kernel_stack:
+</pre>
