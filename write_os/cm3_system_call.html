@@ -9,27 +9,57 @@
 麻煩三
 如何從 proc_a 傳參數到 system call 裡頭呢？
 
-這個範例程式很醜, 架構也不美, 但它可是我從無到有實實在在的完成的, 對我來說, 意義非凡。
+這個範例程式很醜, 架構也不美, 但它可是我從無到有實實在在完成的, 對我來說, 意義非凡。
 
 我參考這篇的方法來實作:
 <a href="http://www.coactionos.com/embedded-design/133-effective-use-of-arm-cortex-m3-svcall.html" target="_blank">Effective Use of ARM Cortex-M3 SVCall</a>
 
 本來打算使用 <a href="http://descent-incoming.blogspot.tw/2011/12/oranges.html">Orange's 一個作業系統的實現</a> 上的實作方式, 我也想好怎麼開始了, 不過看到這個方法好像也不賴, 試試看。
-<b>
-</b> <b>Orange's 一個作業系統的實現</b>是這樣的完成 system call:
+<b>Orange's 一個作業系統的實現</b>是這樣完成 system call:
 
 程式碼請參閱 <a href="https://github.com/descent/simple_os" target="_blank">simple_os</a>
-&nbsp;asm_syscall.S
 
-&nbsp;.global get_ticks
+asm_syscall.S
+<pre style="white-space: pre-wrap; font-family: serif">
+.global get_ticks
 get_ticks:
-&nbsp; mov $_NR_GET_TICKS, %eax
-&nbsp; int $INT_VECTOR_SYS_CALL
-&nbsp; ret
+  mov $_NR_GET_TICKS, %eax
+  int $INT_VECTOR_SYS_CALL
+  ret
 
-填入 system call 編號到 %eax, 觸發 0x90 中斷 (int 0x90), 這時候會跑到執行 sys_call, 再根據 sys_call_table, 編號去執行 sys_call_table 裡頭的 function (in syscall.c), 再把傳回值寫到 process stack frame 的 %eax 欄位, system call 結束後, process 的 %eax 自然就得到該 system call 的傳回值, 文字敘述很簡單, 把它變成程式碼就困難些了。
+.global write
+write:
+  mov $_NR_WRITE, %eax
+  mov 4(%esp), %ebx
+  mov 8(%esp), %ecx
+  int $INT_VECTOR_SYS_CALL
+  ret
 
+.global sys_call
+sys_call:
+  call save
+  sti 
+  push %esi # why push %esi ??
+
+  pushl ready_process
+  push %edx
+  push %ecx
+  push %ebx
+  call *sys_call_table(, %eax, 4)
+  add $16, %esp
+  pop %esi # why pop %esi ??
+  mov %eax, P_EAX_OFFSET(%esi) # return value save to eax offset in process structure
+  cli
+  ret
 </pre>
+
+填入 system call 編號到 %eax, 觸發 0x90 中斷 (int 0x90), 這時候會跑到 sys_call, 再根據 sys_call_table, 編號去執行 sys_call_table 裡頭的 function (in syscall.c), 再把傳回值寫到 process stack frame 的 %eax 欄位, system call 結束後, process 的 %eax 自然就得到該 system call 的傳回值, 文字敘述很簡單, 把它變成程式碼就困難些了。
+
+如何把參數傳給 system call:
+以 write 為例子, 將傳進來的參數存到 %ebx, %ecx, 然後在執行 sys_call_table 裡頭的 function 之前 push 到 stack, 請參閱 sys_call。
+
+cm3 的例子是完成 get_tics(), 把 systick 累加的 ticks 值回傳。
+
 <pre style="white-space: pre-wrap; font-family: serif">
 <b>  1</b> .text
 <b>  2</b> .global _start
