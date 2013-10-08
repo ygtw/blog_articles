@@ -1,0 +1,297 @@
+遲來的 c++ 篇, 之前忙著搞懂 arm cortex m3 這顆 mcu, 無法分心在 c++ 上。這篇是精彩的 c/c++ 論戰 (中文的相信好看多了): <a href="http://blog.csdn.net/turingbook/article/details/1775488">Linux之父炮轰C++：糟糕程序员的垃圾语言</a> 
+
+雖然我很尊敬 Linus Torvalds 不過我可不會照單全收他的想法, 我很喜歡 c++, 來個 c++ 的版本。
+
+這裡用上 function overloaded。
+
+<fieldset>
+<legend>mycpp.cpp</legend>
+<pre style="white-space: pre-wrap;"><b> 1</b> <span style="color: blue;"><b>#include <span style="color: green;">"stm32.h"</span>
+</b></span>
+<b> 2</b> 
+<b> 3</b> <b>int</b> <span style="color: #2040a0;">print</span><span style="color: #4444ff;">(</span><b>int</b> <span style="color: #2040a0;">i</span><span style="color: #4444ff;">)</span>
+<b> 4</b> <span style="color: #4444ff;"><b>{</b></span>
+<b> 5</b>   <span style="color: #2040a0;">i</span><span style="color: #4444ff;">+</span><span style="color: #4444ff;">=</span><span style="color: red;">1</span><span style="color: #4444ff;">;</span>
+<b> 6</b> <span style="color: #4444ff;"><b>}</b></span>
+<b> 7</b> 
+<b> 8</b> <b>int</b> <span style="color: #2040a0;">print</span><span style="color: #4444ff;">(</span><b>char</b> <span style="color: #2040a0;">c</span><span style="color: #4444ff;">)</span>
+<b> 9</b> <span style="color: #4444ff;"><b>{</b></span>
+<b>10</b>  <span style="color: #2040a0;">c</span><span style="color: #4444ff;">-</span><span style="color: #4444ff;">=</span><span style="color: red;">1</span><span style="color: #4444ff;">;</span>
+<b>11</b> <span style="color: #4444ff;"><b>}</b></span>
+<b>12</b> 
+<b>13</b> 
+<b>14</b> <b>void</b> <span style="color: #2040a0;">mymain</span><span style="color: #4444ff;">(</span><b>void</b><span style="color: #4444ff;">)</span>
+<b>15</b> <span style="color: #4444ff;"><b>{</b></span>
+<b>16</b>   <span style="color: #2040a0;">print</span><span style="color: #4444ff;">(</span><span style="color: red;">35</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>17</b>   <span style="color: #2040a0;">print</span><span style="color: #4444ff;">(</span><span style="color: green;">'A'</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>18</b>   <b>while</b><span style="color: #4444ff;">(</span><span style="color: red;">1</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>19</b> <span style="color: #4444ff;"><b>}</b></span>
+<b>20</b> 
+</pre>
+</fieldset>
+
+<fieldset>
+<legend>stm32.ld</legend>
+<pre style="white-space: pre-wrap;"><b> 1</b> /*
+<b> 2</b> MEMORY
+<b> 3</b> {
+<b> 4</b>   FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 128K
+<b> 5</b>   SRAM (rwx) : ORIGIN = 0x20000000, LENGTH = 20K
+<b> 6</b> }
+<b> 7</b> */
+<b> 8</b> 
+<b> 9</b> /* Specify the memory areas */
+<b>10</b> /* form: STM32F4-Discovery_FW_V1.1.0/Project/Peripheral_Examples/IO_Toggle/TrueSTUDIO/IO_Toggle/stm32_flash.ld */
+<b>11</b> MEMORY
+<b>12</b> {
+<b>13</b>   FLASH (rx)      : ORIGIN = 0x08000000, LENGTH = 1024K
+<b>14</b>   SRAM (xrw)       : ORIGIN = 0x20000000, LENGTH = 192K
+<b>15</b>   MEMORY_B1 (rx)  : ORIGIN = 0x60000000, LENGTH = 0K
+<b>16</b> }
+<b>17</b> 
+<b>18</b> 
+<b>19</b> SECTIONS
+<b>20</b> {
+<b>21</b>   .text :
+<b>22</b>   {
+<b>23</b>     KEEP(*(.isr_vector .isr_vector.*))
+<b>24</b>     *(.text .text.*)
+<b>25</b>     *(.rodata .rodata*)
+<b>26</b>     _etext = .;
+<b>27</b>   } &gt; FLASH
+<b>28</b> 
+<b>29</b>   /* .ARM.exidx is sorted, so has to go in its own output section.  
+<b>30</b>         __exidx_start = .;
+<b>31</b>         .ARM.exidx :
+<b>32</b>         {
+<b>33</b>                 *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+<b>34</b>         } &gt;FLASH
+<b>35</b>         __exidx_end = .;
+<b>36</b>      if no -fno-exceptions -fno-rtti, g++ will procude the sections
+<b>37</b>   */
+<b>38</b> 
+<b>39</b>   .data : AT (_etext)
+<b>40</b>   {
+<b>41</b>     _data = .;
+<b>42</b>     *(.data .data.*)
+<b>43</b>     _edata = .;
+<b>44</b>   } &gt; SRAM
+<b>45</b>   .bss(NOLOAD) :
+<b>46</b>   {
+<b>47</b>     _bss = .;
+<b>48</b>     *(.bss .bss.*)
+<b>49</b>     *(COMMON)
+<b>50</b>     . = ALIGN(4);
+<b>51</b>     _ebss = .;
+<b>52</b>   } &gt; SRAM
+<b>53</b> 
+<b>54</b> 
+<b>55</b> 
+<b>56</b> 
+<b>57</b>   .stackarea(NOLOAD) :
+<b>58</b>   {
+<b>59</b>     . = ALIGN(8);
+<b>60</b>     *(.stackarea .stackares.*)
+<b>61</b>     . = ALIGN(8);
+<b>62</b>   } &gt; SRAM
+<b>63</b> 
+<b>64</b>   . = ALIGN(4);
+<b>65</b>   _end = .;
+<b>66</b> }
+</pre>
+</fieldset>
+
+<fieldset>
+<legend>stm32.h</legend>
+<pre style="white-space: pre-wrap;"><b> 1</b> #ifndef STM32_H
+<b> 2</b> #define STM32_H
+<b> 3</b> 
+<b> 4</b> #define STACK_SIZE 64
+<b> 5</b> extern unsigned long _etext;
+<b> 6</b> extern unsigned long _data;
+<b> 7</b> extern unsigned long _edata;
+<b> 8</b> extern unsigned long _bss;
+<b> 9</b> extern unsigned long _ebss;
+<b>10</b> 
+<b>11</b> extern "C"
+<b>12</b> {
+<b>13</b>   void mymain(void);
+<b>14</b> }
+<b>15</b> 
+<b>16</b> void ResetISR(void)
+<b>17</b> {
+<b>18</b>   unsigned long *pulSrc, *pulDest;
+<b>19</b> 
+<b>20</b>   pulSrc = &amp;_etext;
+<b>21</b>   for (pulDest = &amp;_data; pulDest &lt; &amp;_edata;)
+<b>22</b>     *pulDest++ = *pulSrc++;
+<b>23</b>   for (pulDest = &amp;_bss; pulDest &lt; &amp;_ebss;)
+<b>24</b>     *pulDest++ = 0;
+<b>25</b> 
+<b>26</b> 
+<b>27</b>   mymain();
+<b>28</b> }
+<b>29</b> 
+<b>30</b> void pendsv_isr(void)
+<b>31</b> {
+<b>32</b>   int i=5;
+<b>33</b> 
+<b>34</b>   ++i;
+<b>35</b> }
+<b>36</b> 
+<b>37</b> void svc_isr(void)
+<b>38</b> {
+<b>39</b> }
+<b>40</b> 
+<b>41</b> void systick_isr(void)
+<b>42</b> {
+<b>43</b> }
+<b>44</b> void int_isr(void)
+<b>45</b> {
+<b>46</b> }
+<b>47</b> 
+<b>48</b> typedef void (*pfnISR)(void);
+<b>49</b> __attribute__((section(".stackares")))
+<b>50</b> static unsigned long pulStack[STACK_SIZE];
+<b>51</b> 
+<b>52</b> __attribute__((section(".isr_vector")))
+<b>53</b> pfnISR VectorTable[]=
+<b>54</b> {
+<b>55</b>   (pfnISR)((unsigned long)pulStack+sizeof(pulStack)),
+<b>56</b>   ResetISR, // 1
+<b>57</b>   int_isr,
+<b>58</b>   int_isr,
+<b>59</b>   int_isr,
+<b>60</b>   int_isr,
+<b>61</b>   int_isr,
+<b>62</b>   int_isr,
+<b>63</b>   int_isr,
+<b>64</b>   int_isr,
+<b>65</b>   int_isr,
+<b>66</b>   svc_isr,    // 11
+<b>67</b>   int_isr,
+<b>68</b>   int_isr,
+<b>69</b>   pendsv_isr, // 14
+<b>70</b>   systick_isr // 15
+<b>71</b> };
+<b>72</b> 
+<b>73</b> #endif
+</pre>
+</fieldset>
+
+附上重要的編譯參數:
+<pre class="cmd">arm-none-eabi-g++ -fno-common -O0 -g -mcpu=cortex-m3 -mthumb -fno-exceptions -fno-rtti&nbsp; -c mycpp.cpp 
+arm-none-eabi-g++ -Wl,-T./stm32.ld -nostartfiles -o mycpp.elf mycpp.o
+arm-none-eabi-objcopy -O binary mycpp.elf mycpp.bin
+</pre>
+
+以下是一些有關開發 os kernel 相關的 gcc option
+<pre class="cmd">
+       -nostartfiles
+           Do not use the standard system startup files when linking.  The standard system libraries are used normally,
+           unless -nostdlib or -nodefaultlibs is used.
+
+       -nodefaultlibs
+           Do not use the standard system libraries when linking.  Only the libraries you specify will be passed to the
+           linker, options specifying linkage of the system libraries, such as "-static-libgcc" or "-shared-libgcc",
+           will be ignored.  The standard startup files are used normally, unless -nostartfiles is used.  The compiler
+           may generate calls to "memcmp", "memset", "memcpy" and "memmove".  These entries are usually resolved by
+           entries in libc.  These entry points should be supplied through some other mechanism when this option is
+           specified.
+
+       -nostdlib
+           Do not use the standard system startup files or libraries when linking.  No startup files and only the
+           libraries you specify will be passed to the linker, options specifying linkage of the system libraries, such
+           as "-static-libgcc" or "-shared-libgcc", will be ignored.  The compiler may generate calls to "memcmp",
+           "memset", "memcpy" and "memmove".  These entries are usually resolved by entries in libc.  These entry points
+           should be supplied through some other mechanism when this option is specified.
+
+           One of the standard libraries bypassed by -nostdlib and -nodefaultlibs is libgcc.a, a library of internal
+           subroutines that GCC uses to overcome shortcomings of particular machines, or special needs for some
+           languages.
+
+           In most cases, you need libgcc.a even when you want to avoid other standard libraries.  In other words, when
+           you specify -nostdlib or -nodefaultlibs you should usually specify -lgcc as well.  This ensures that you have
+           no unresolved references to internal GCC library subroutines.  (For example, __main, used to ensure C++
+           constructors will be called.)
+
+       -ffreestanding
+           Assert that compilation takes place in a freestanding environment.  This implies
+           -fno-builtin.  A freestanding environment is one in which the standard library may not
+           exist, and program startup may not necessarily be at "main".  The most obvious example is
+           an OS kernel.  This is equivalent to -fno-hosted.
+</pre>
+
+在<a href="http://descent-incoming.blogspot.tw/2013/04/for-stm32f4discovery-2-led-c-version.html">作業系統之前的程式 for stm32f4discovery (2)</a> - 點亮 led, c version 這篇裡頭, 我不小心使用了 
+<pre class="cmd">arm-none-eabi-objcopy <span style="color: red;">-R .data</span> -O binary $&lt; $@
+</pre>
+
+如果你知道這代表什麼意思, 相信你對執行檔的<span style="color: #3d85c6;">樣子</span>很了解, 簡單說: 這會讓全域變數的初始值通通不見。
+
+mycpp.cpp L13 i=5, i 不會是 5, 會是一個隨機值。但程式裡頭還是可以使用 i,
+ex:
+<pre class="cmd">i=1;
+i=9; 
+</pre>
+
+所以這次我把 -R .data 去掉, 就沒問題了, 有好必有壞, 這樣的方便性是犧牲檔案大小得來的 (因為 .data 的內容都不會包含在執行檔裡頭), 但是若需要使用 i=1; 來初始化, 就不一定是犧牲了, i=1 會多 12 byte。透過 gdb single step 這程式, c++ 程式執行狀況良好。
+
+source code: 老地方
+git commit 21f49647dc48da5b3c8d2fcf1544be25d67bb45a
+
+c++11 多了很多新的特性, 我們來試試看。
+
+<fieldset>
+<legend>mycpp.cpp</legend>
+<pre style="white-space: pre-wrap;"><b> 1</b> <span style="color: blue;"><b>#include <span style="color: green;">"stm32.h"</span>
+</b></span>
+<b> 2</b> 
+<b> 3</b> 
+<b> 4</b> <b>int</b> <span style="color: #2040a0;">print</span><span style="color: #4444ff;">(</span><b>int</b> <span style="color: #2040a0;">i</span><span style="color: #4444ff;">)</span>
+<b> 5</b> <span style="color: #4444ff;"><b>{</b></span>
+<b> 6</b>   <span style="color: #2040a0;">i</span><span style="color: #4444ff;">+</span><span style="color: #4444ff;">=</span><span style="color: red;">1</span><span style="color: #4444ff;">;</span>
+<b> 7</b> <span style="color: #4444ff;"><b>}</b></span>
+<b> 8</b> 
+<b> 9</b> <b>int</b> <span style="color: #2040a0;">print</span><span style="color: #4444ff;">(</span><b>char</b> <span style="color: #2040a0;">c</span><span style="color: #4444ff;">)</span>
+<b>10</b> <span style="color: #4444ff;"><b>{</b></span>
+<b>11</b>  <span style="color: #2040a0;">c</span><span style="color: #4444ff;">-</span><span style="color: #4444ff;">=</span><span style="color: red;">1</span><span style="color: #4444ff;">;</span>
+<b>12</b> <span style="color: #4444ff;"><b>}</b></span>
+<b>13</b> 
+<b>14</b> <b>int</b> <span style="color: #2040a0;">lambda_test</span><span style="color: #4444ff;">(</span><b>int</b> <span style="color: #2040a0;">girls</span> <span style="color: #4444ff;">=</span> <span style="color: red;">3</span>, <b>int</b> <span style="color: #2040a0;">boys</span> <span style="color: #4444ff;">=</span> <span style="color: red;">4</span><span style="color: #4444ff;">)</span>
+<b>15</b> <span style="color: #4444ff;"><b>{</b></span>
+<b>16</b>   <b>auto</b> <span style="color: #2040a0;">totalChild</span> <span style="color: #4444ff;">=</span> <span style="color: #4444ff;">[</span><span style="color: #4444ff;">]</span><span style="color: #4444ff;">(</span><b>int</b> <span style="color: #2040a0;">x</span>, <b>int</b> <span style="color: #2040a0;">y</span><span style="color: #4444ff;">)</span> <span style="color: #4444ff;">-</span><span style="color: #4444ff;">&gt;</span><b>int</b><span style="color: #4444ff;"><b>{</b></span><b>return</b> <span style="color: #2040a0;">x</span><span style="color: #4444ff;">+</span><span style="color: #2040a0;">y</span><span style="color: #4444ff;">;</span><span style="color: #4444ff;"><b>}</b></span><span style="color: #4444ff;">;</span>
+<b>17</b>   <b>return</b> <span style="color: #2040a0;">totalChild</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">girls</span>, <span style="color: #2040a0;">boys</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>18</b> <span style="color: #4444ff;"><b>}</b></span>
+<b>19</b> 
+<b>20</b> 
+<b>21</b> <b>void</b> <span style="color: #2040a0;">mymain</span><span style="color: #4444ff;">(</span><b>void</b><span style="color: #4444ff;">)</span>
+<b>22</b> <span style="color: #4444ff;"><b>{</b></span>
+<b>23</b>   <span style="color: #2040a0;">constexpr</span> <b>int</b> <span style="color: #2040a0;">d</span><span style="color: #4444ff;">=</span><span style="color: red;">1</span><span style="color: #4444ff;">;</span>
+<b>24</b>   <b>int</b> <span style="color: #2040a0;">x</span><span style="color: #4444ff;">=</span><span style="color: red;">3</span><span style="color: #4444ff;">;</span>
+<b>25</b>   <b>int</b> <span style="color: #2040a0;">y</span><span style="color: #4444ff;">=</span><span style="color: red;">9</span><span style="color: #4444ff;">;</span>
+<b>26</b> 
+<b>27</b>   <b>char</b> <span style="color: #2040a0;">path</span><span style="color: #4444ff;">[</span><span style="color: #4444ff;">]</span><span style="color: #4444ff;">=</span><span style="color: #2040a0;">R</span><span style="color: green;">"(/usr/local/aaa)"</span><span style="color: #4444ff;">;</span>
+<b>28</b>   <b>char</b> <span style="color: #2040a0;">wpath</span><span style="color: #4444ff;">[</span><span style="color: #4444ff;">]</span><span style="color: #4444ff;">=</span><span style="color: #2040a0;">R</span><span style="color: green;">"("</span>\<span style="color: #2040a0;">usr</span>\<span style="color: #2040a0;">local</span>\<span style="color: #2040a0;">aaa</span><span style="color: green;">")"</span><span style="color: #4444ff;">;</span>
+<b>29</b> 
+<b>30</b>   <b>int</b> <span style="color: #2040a0;">total</span> <span style="color: #4444ff;">=</span> <span style="color: #2040a0;">lambda_test</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">x</span>, <span style="color: #2040a0;">y</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>31</b>   <span style="color: #2040a0;">print</span><span style="color: #4444ff;">(</span><span style="color: red;">35</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>32</b>   <span style="color: #2040a0;">print</span><span style="color: #4444ff;">(</span><span style="color: green;">'A'</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>33</b>   <b>while</b><span style="color: #4444ff;">(</span><span style="color: red;">1</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>34</b> <span style="color: #4444ff;"><b>}</b></span>
+<b>35</b> 
+</pre>
+</fieldset>
+
+<pre class="cmd">arm-none-eabi-g++ -fno-common -O0 -g -mcpu=cortex-m3 -mthumb -fno-exceptions -fno-rtti -std=c++11  -c mycpp.cpp 
+arm-none-eabi-g++ -Wl,-T./stm32.ld -nostartfiles -o mycpp.elf mycpp.o
+arm-none-eabi-objcopy -O binary mycpp.elf mycpp.bin
+</pre>
+
+<pre class="cmd">descent@descent-u:cpp$ arm-none-eabi-g++ --version
+arm-none-eabi-g++ (32-bit ARM EABI Toolchain JBS-2013.05-23-v2013.05-1-gd66a29f) 4.7.3
+Copyright (C) 2012 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+</pre>
+
+可以耶, 並不需要特別補上什麼 c++ runtime library, 這裡用上 c++11 lambda, constexpr, raw string literal, c++98 函式預設參數。威力有沒有很強大呢？我不知道, 別問我。我是蠻喜歡 raw string literal。
