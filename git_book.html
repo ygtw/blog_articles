@@ -4,6 +4,10 @@ Git 权威指南 (Git 權威指南) 89 rmb (534 nt)
 <a href="https://picasaweb.google.com/lh/photo/ejCR5jJIe7itv1IhhqGKC9MTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="200" src="https://lh3.googleusercontent.com/-Z5IWMN5x62o/TxmS7MPl-dI/AAAAAAAAY3Y/srQcLrNBHkc/s640/P1310076.JPG" width="300" /></a><a href="https://picasaweb.google.com/lh/photo/oh254vB9lfRM_1bQ7MV-FNMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="200" src="https://lh5.googleusercontent.com/-8lrRyf0ekUY/TxmTD9_EtII/AAAAAAAAY34/eWROsq9NMx0/s400/P1310081.JPG" width="300" /></a>
 
 <h2>目录</h2>
+<table>
+<tr>
+<td>
+<pre>
 前　言
 第1篇　初识Git
 第1章　版本控制的前世和今生/ 2
@@ -217,6 +221,10 @@ Git 权威指南 (Git 權威指南) 89 rmb (534 nt)
 23.3　在子模组中修改和子模组的更新/ 340
 23.4　隐性子模组/ 343
 23.5　子模组的管理问题/ 345
+</pre>
+</td>
+<td>
+<pre>
 第24章　子树合并/ 347
 24.1　引入外部版本库/ 347
 24.2　子目录方式合并外部版本库/ 349
@@ -433,8 +441,12 @@ C.2　 Git 和SVN 命令对照/ 589
 附录D　Git 与 Hg 面对面/ 592
 D.1　面对面访谈录/ 592
 D.2　Git和Hg  命令对照/ 593
+</pre>
+</td>
+</tr>
+</table>
 
-目錄長到嚇人, 你滾的手指痛了吧? 我篇幅倒是佔用的蠻過癮的。不過每章的長度不長, 蠻容易閱讀。20120120 購於成大若水堂購書, 看看書底中國讀者的推薦:
+目錄長到嚇人, 你滾的手指痛了吧? 我篇幅倒是佔用的蠻過癮的 (我已經想辦法縮了啦)。不過每章的長度不長, 蠻容易閱讀。20120120 購於成大若水堂購書, 看看書底中國讀者的推薦:
 
 <b>徐继哲</b>，<a href="http://www.zeuux.org/">哲思社区</a> 创始人
 <fieldset>
@@ -517,6 +529,22 @@ git checkout HEAD .    使用 HEAD 指向的 master branch 的內容覆蓋 index
 7, 8 兩章在談 master/head 指來指去的問題, 我相信大多人都沒搞懂這是在指些什麼? 21 頁, 我看得輕鬆愉快, 相信你也可以。第七章介紹 reset, 第八章介紹 checkout, 在執行這兩個命令後, master/head 很容易會搞亂。
 
 7.2 介紹了 reflog 這個指令, 可以在移動 master 時, 輕易回復 master 指到的位置。
+
+7.3 介紹 git reset [--soft | --mixed | --hard] 你和我一樣總是搞亂嗎?
+<pre class="cmd">
+--hard 
+用 commit 換掉 index
+用 commit 換掉 working tree
+
+--soft
+index, working tree 不動
+
+--mixed
+用 commit 換掉 index
+working tree 不動
+</pre>
+
+呼, 多了一個 index, 複雜度就變高了。
 
 <pre class="cmd">git check -&gt; 改變 head
 git reset -&gt; 改變 master
