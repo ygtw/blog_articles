@@ -1,0 +1,250 @@
+<a href="https://picasaweb.google.com/lh/photo/ySO2LK73oH9R6cHlAXDsCcnPsuF7KO6TaX3PVGp2uRQ?feat=embedwebsite" style="clear: left; float: left; margin-bottom: 1em; margin-right: 1em;"><img height="400" src="https://lh4.googleusercontent.com/-mjbLURN8EJw/ULVujmK034I/AAAAAAAAjFc/brrnCYv_6GM/s400/P1340003.JPG" width="300" /></a>在<a href="http://descent-incoming.blogspot.tw/search/label/before_os_x86" target="_blank">作業系統之前的程式</a>這系列文的學習經驗 (x86), 我想依樣畫葫蘆拿到 arm 的學習上, 重新學習一個完全不一樣的平台。
+
+這是一個辛苦的開始, 縱使有了 x86 的學習經驗, 也無法帶來太多的助益, 仍然需要閱讀大量的資料, 而程式的撰寫也只是最基本的練習。
+
+但在開始第一個作業系統之前的程式 for stm32f4discovery 之前, 得先來打造開發環境, 這是與 x86 native toolchain 不同的地方, 別小看這部份, 這可不是一件容易的事, 最主要的部份就是 arm toolchain (cross compiler) 和燒錄程式碼到&nbsp;stm32f4discovery flash 的工具。
+
+目前市面上琳琅滿目的開發板, 要從中挑選實在不容易。左圖就是 stm32f4discovery, 這是在 jserv 的<a href="http://wiki.csie.ncku.edu.tw/" target="_blank">進階嵌入式系統開發與實作</a>課程 (201209~201301) 使用的開發板, 以 700 NT 購得。就是參加了這個課程, 所以才選定這塊開發板, 照著課程的資源來學習, 最是省事。
+
+選擇板子時會有一個問題, 怎麼把程式碼燒錄到那塊板子上呢？這是個大問題。而這塊開發板珍貴的地方就是內建 ST-LINK/V2, 可以使用類似 jtag 的除錯方式, 不用另外買個 jtag, 就可以燒錄程式碼到 flash, 再也不怕燒爛 flash, 當然還要有可用的軟體來配合才行。我知道還有一塊版子也有類似的功能, freescale m0+ 系列, 使用的是 opensda, 不過我不確定 openocd 是不是可以支援 opensda。
+
+stm32f4 mcu 全系列可參考<a href="http://www.st.com/web/en/catalog/mmc/FM141/SC1169/SS1577">這裡</a>。 
+
+這是以 ARM Cortex-M4 為核心的開發版。沒有 mmu, &nbsp;所以不能練習 page mapping 這是我覺得比較可惜的部份; 但有個記憶體保護單元 (MPU), 可以保護某個記憶體區塊。這塊板子用的是 stm32 的 STM32F407VG, 其<a href="http://www.st.com/web/en/catalog/mmc/FM141/SC1169/SS1577/LN11/PF252140">基本規格</a>:
+
+時脈: 168 MHz
+flash &amp; ram size:
+STM32F407VGT6 microcontroller featuring 1 MB of Flash memory, 192 KB of RAM in
+an LQFP100 package.
+
+我還真不習慣只有 192KB 的記憶體。
+
+usb 有兩邊, 插上 CN1 之後接到 pc, 就可看到 led 燈的閃爍效果 (如上圖), 代表這是一塊正常的板子。開發程式, 燒錄程式也都是接在 CN1 上, 這是 ST-LINK/V2 chip 提供的功能。
+
+這塊板子相關的 datasheet 和 sample code:&nbsp;<a href="http://www.st.com/web/en/catalog/tools/PF252419">datasheet for stm32f4 discovery</a>
+
+stm32f4 - discovery 用的是 stm32f407, 詳細的 mcu 資訊要找這顆的 datasheet。
+stm32f407 datasheet: <a href="http://www.st.com/st-web-ui/static/active/en/resource/technical/document/reference_manual/DM00031020.pdf">http://www.st.com/st-web-ui/static/active/en/resource/technical/document/reference_manual/DM00031020.pdf</a>
+
+以下連結已經失效:
+<a href="http://www.st.com/internet/com/TECHNICAL_RESOURCES/TECHNICAL_LITERATURE/REFERENCE_MANUAL/DM00031020.pdf"><strike>http://www.st.com/internet/com/TECHNICAL_RESOURCES/TECHNICAL_LITERATURE/REFERENCE_MANUAL/DM00031020.pdf</strike></a>
+<div>
+<strike>
+</strike></div>
+<strike>用原廠準備的環境 (on ms windows)</strike>, STM 沒提供自己的開發工具, 請參考: <a href="http://www.emcu.it/STM32/What_should_I_use_to_develop_on_STM32/What_should_I_use_to_develop_on_STM32.html">http://www.emcu.it/STM32/What_should_I_use_to_develop_on_STM32/What_should_I_use_to_develop_on_STM32.html</a>, stm 有支援這些開發工具, 一定可以減輕開發環境的先前準備工作, free 的版本幾乎都會有些限制, 例如執行檔大小不能超過 32K。而我習慣 linux 和 vi + makefile 的工作環境, 打造這樣的開發環境並不輕鬆, 否則也不會特地 blog 一篇, 來照著課程自虐吧！
+
+在 linux 上的開發方式：
+<img height="118" src="https://lh5.googleusercontent.com/-f5vAbd2E2J0/UWt7AtO_YWI/AAAAAAAAl0k/yzcTl23F96Q/s800/smt32_dev.jpg" width="341" />
+
+toolchain &amp; qemu stm32 模擬器:&nbsp;<a href="http://wiki.csie.ncku.edu.tw/embedded/Lab1">http://wiki.csie.ncku.edu.tw/embedded/Lab1</a>
+toolchain build from source (fb 顏某): 
+<a href="https://github.com/jsnyder/arm-eabi-toolchain">https://github.com/jsnyder/arm-eabi-toolchain</a>
+
+使用 openocd/stlink 來將程式寫到&nbsp;stm32f4 discovery flash (openocd/stlink/serialusb) :
+<a href="http://wiki.csie.ncku.edu.tw/embedded/Lab6">http://wiki.csie.ncku.edu.tw/embedded/Lab6</a>
+
+<pre class="cmd">sudo apt-get install automake* libtool libusb-1.0-0-dev
+git clone http://github.com/texane/stlink.git
+cd stlink
+./autogen.sh
+./configure --prefix=/usr
+make
+sudo make install
+sudo cp 49-stlinkv2.rules /etc/udev/rules.d/
+</pre>
+
+stlink gui
+<pre class="cmd">git clone git://github.com/texane/stlink.git
+sudo apt-get install libgtk-3-dev
+cd stlink
+./configure --with-gtk &amp;&amp; make
+cd gui &amp;&amp; ./stlink-gui
+</pre>
+
+<pre class="cmd">cd openocd
+./bootstrap
+./configure --prefix=/opt/openocd \
+    --enable-jlink \
+    --enable-amtjtagaccel \
+    --enable-buspirate \
+    --enable-stlink \
+    --disable-libftdi
+echo -e "all:\ninstall:" &gt; doc/Makefile
+make
+sudo make install
+</pre>
+
+ref: <a href="http://openocd.sourceforge.net/">http://openocd.sourceforge.net/</a>
+new git url: 
+<a href="git://git.code.sf.net/p/openocd/code" target="_new">git://git.code.sf.net/p/openocd/code</a> 
+
+<a href="https://github.com/texane/stlink">https://github.com/texane/stlink</a> 的 readme 有些有用的資訊, 可瀏覽一下。
+
+這個 free ide 可以參考:
+<a href="http://www.coocox.org/index.html">http://www.coocox.org/index.html</a> 
+
+原來 arm 除了 armcc 還有 arm gcc。
+ref: <a href="https://launchpad.net/gcc-arm-embedded/+download">https://launchpad.net/gcc-arm-embedded/+download</a>
+
+function reference: 
+<a href="http://stm32.kosyak.info/doc/struct_g_p_i_o___init_type_def.html">http://stm32.kosyak.info/doc/struct_g_p_i_o___init_type_def.html</a>
+
+有了模擬器就不一定要把程式寫到版子上的 flash, flash 壽命有限, 減少讀寫次數不是壞主意。不過模擬器模擬的是 <a href="https://www.olimex.com/Products/ARM/ST/STM32-P103/" target="_blank">stm32-p103</a>, 我使用的是&nbsp;stm32f4 discovery, IO 部份可能有些不同, 僅能用來練習 arm coretex m 系列不含 IO 的程式, 而 qemu 似乎沒有模擬 svc。若要寫 stm32f4 開發版的程式, 還是得寫入 flash/ram 來測試, 只能在模擬器執行的程式, 那有什麼意思呢!
+
+中文教學文件: <a href="http://wiki.csie.ncku.edu.tw/embedded/2012w7">http://wiki.csie.ncku.edu.tw/embedded/2012w7</a>
+
+恭喜! 看完這些文件和打造工作環境就去了半條命了吧！在 linux 下打造這些環境就要花上不少時間。不過真正的困難才剛開始, 先來練習模擬器上的程式。
+
+簡單的版本很簡單, 難的版本很難, 跟著 <a href="http://wiki.csie.ncku.edu.tw/embedded/Lab1">http://wiki.csie.ncku.edu.tw/embedded/Lab1</a> 把 main.c compile 起來吧！
+
+<fieldset>
+<legend>main.c</legend>
+<pre><b> 1</b> <span style="color: blue;"><b>#define USE_STDPERIPH_DRIVER
+</b></span><b> 2</b> <span style="color: blue;"><b>#include <span style="color: green;">"stm32f10x.h"</span>
+</b></span><b> 3</b> <span style="color: blue;"><b>#include <span style="color: green;">"stm32_p103.h"</span>
+</b></span><b> 4</b> 
+<b> 5</b> <b>void</b> <span style="color: #2040a0;">busyLoop</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">uint32_t</span> <span style="color: #2040a0;">delay</span> <span style="color: #4444ff;">)</span>
+<b> 6</b> <span style="color: #4444ff;"><b>{</b></span>
+<b> 7</b>   <b>while</b><span style="color: #4444ff;">(</span><span style="color: #2040a0;">delay</span><span style="color: #4444ff;">)</span> <span style="color: #2040a0;">delay</span><span style="color: #4444ff;">-</span><span style="color: #4444ff;">-</span><span style="color: #4444ff;">;</span>
+<b> 8</b> <span style="color: #4444ff;"><b>}</b></span>
+<b> 9</b> 
+<b>10</b> <b>int</b> <span style="color: #2040a0;">main</span><span style="color: #4444ff;">(</span><b>void</b><span style="color: #4444ff;">)</span>
+<b>11</b> <span style="color: #4444ff;"><b>{</b></span>
+<b>12</b>     <span style="color: #2040a0;">init_led</span><span style="color: #4444ff;">(</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>13</b> 
+<b>14</b>     <b>while</b><span style="color: #4444ff;">(</span><span style="color: red;">1</span><span style="color: #4444ff;">)</span> <span style="color: #4444ff;"><b>{</b></span>
+<b>15</b>        <span style="color: #2040a0;">GPIOC</span><span style="color: #4444ff;">-</span><span style="color: #4444ff;">&gt;</span><span style="color: #2040a0;">BRR</span> <span style="color: #4444ff;">=</span> <span style="color: red;">0x00001000</span><span style="color: #4444ff;">;</span>
+<b>16</b>        <span style="color: #2040a0;">busyLoop</span><span style="color: #4444ff;">(</span><span style="color: red;">500000</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>17</b>        <span style="color: #2040a0;">GPIOC</span><span style="color: #4444ff;">-</span><span style="color: #4444ff;">&gt;</span><span style="color: #2040a0;">BSRR</span> <span style="color: #4444ff;">=</span> <span style="color: red;">0x00001000</span><span style="color: #4444ff;">;</span>
+<b>18</b>        <span style="color: #2040a0;">busyLoop</span><span style="color: #4444ff;">(</span><span style="color: red;">500000</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>19</b>     <span style="color: #4444ff;"><b>}</b></span>
+<b>20</b> <span style="color: #4444ff;"><b>}</b></span>
+</pre>
+</fieldset>
+
+這個簡單的程式隱藏很多很多的細節, 會讓我們誤以為寫個 mcu 程式很簡單 (使用廠商給的 library 來開發有點像在 os 下的應用程式開發, 也不是壞事, 只不過這標題是作業系統之前的程式, 自然不用這樣的開發方式, 得把隱藏在 library 下的秘密挖出來), 塞個 main 在裡頭就可以了, 不過光打造開發環境就很辛苦了, 讓自己輕鬆一下吧！這支程式不能在&nbsp;stm32f4 - discovery 正確執行, 別浪費時間寫到 flash 中, 在模擬器練習即可。這是暖身用的。
+
+用這樣的方式來啟動 qemu stm32 模擬器
+
+<pre class="cmd">qemu_stm32/arm-softmmu/qemu-system-arm -M stm32-p103 -kernel mymain.bin -S -gdb tcp::1234
+qemu-system-arm -M lm3s6965evb -kernel list.bin -S -gdb tcp::1234
+</pre>
+lm3s6965evb 是 ti 的版子
+ref:
+http://www.techtraining.eng.br/files/uploads/2013/04/18/lm3s6965-evm.pdf
+
+
+若你也把 <a href="http://www.triplespark.net/elec/pdev/arm/stm32.html">Programming STM32 F2, F4 ARMs under Linux: A Tutorial from Scratch</a> 裡頭的程式跑過一次, 就可體會整個開發流程了。
+
+openocd load file to memory:
+<pre class="cmd">&gt; load_image&nbsp; /home/descent/git/jserv-course/stm32_prog/factorial.bin 0x20000000
+24 bytes written at address 0x20000000
+downloaded 24 bytes in 0.008389s (2.794 KiB/s)
+&gt; mdb 0x20000000 24
+0x20000000: 00 08 00 20 09 00 00 00 0a 20 00 21 09 18 01 38 7f f4 fc af ff f7 fe bf 
+</pre>
+
+這樣就可以不用寫到 flash, 直接 load 到 sram 測試。
+ref: <a href="http://openocd.sourceforge.net/doc/html/General-Commands.html">http://openocd.sourceforge.net/doc/html/General-Commands.html</a>
+
+<span style="color: red;">openocd 似乎有些問題, 若遇到奇怪的問題可使用 st-util 配合 gdb 來 debug。</span>
+arm-none-eabi-gdb
+target remote localhost:4242
+
+也可以指定 gdb port
+root@w-linux:descent# st-util -p 1234
+arm-none-eabi-gdb
+target remote localhost:1234
+
+<fieldset>
+<legend>toolchain 比一比</legend>
+18M stlink/
+descent@w-linux:jserv-course$ du -sh openocd
+88M openocd
+descent@w-linux:jserv-course$ du -sh /usr/local/csl/
+130M /usr/local/csl/
+
+-rwxr-xr-x 1 descent descent 510M 2013-04-15 15:07 mdk470a.exe</fieldset>
+
+以下無關本主題
+<hr />
+
+
+Bus 002 Device 003: ID 0483:3748 SGS Thomson Microelectronics ST-LINK/V2
+git://github.com/texane/stlink.git
+
+apt-get install gdb-multiarch
+
+openocd
+apt-get install libjim-dev
+
+st-link 類似 jtag 的功能
+
+stm32f4 discovery board datasheet: <a href="http://www.st.com/internet/evalboard/product/252419.jsp#APPLICATION_NOTES">http://www.st.com/internet/evalboard/product/252419.jsp#APPLICATION_NOTES</a>
+
+
+boot0, boot1&nbsp; 可參考這份 pdf:
+<a href="http://www.kamami.pl/dl/stm32f4discovery_user_manual.pdf">http://www.kamami.pl/dl/stm32f4discovery_user_manual.pdf</a> 
+
+ref: RM0090 Reference manual p57
+
+<b><span style="font-size: large;">Boot configuration</span></b>
+Due to its fixed memory map, the code area starts from address 0x0000 0000 (accessed through the ICode/DCode buses) while the data area (SRAM) starts from address 0x2000 0000 (accessed through the system bus). The CortexTM-M4F CPU always fetches the reset vector on the ICode bus, which implies to have the boot space available only in the code area (typically, Flash memory). STM32F4xx microcontrollers implement a special mechanism to be able to boot from other memories (like the internal SRAM).
+
+In the STM32F4xx, three different boot modes can be selected through the BOOT[1:0] pins as shown in Table 3.
+
+Table 3.&nbsp;&nbsp; Boot Modes
+<table border="1"><tbody>
+<tr>  <td colspan="2">Boot modes Boot mode selection pins</td><td rowspan="2">Boot mode</td><td rowspan="2">Aliasing</td> </tr>
+<tr> <td>BOOT1</td><td>BOOT0</td> </tr>
+<tr><td>X</td>  <td>0</td>  <td>Main Flash memory</td> <td>Main Flash memory is selected as the boot space</td></tr>
+<tr><td>0</td><td>1</td><td>System memory</td><td>System memory is selected as the boot space</td></tr>
+<tr><td>1</td><td>1</td><td>Embedded SRAM</td><td>Embedded SRAM is selected as the boot space</td></tr>
+</tbody></table>
+
+
+The values on the BOOT pins are latched on the 4th rising edge of SYSCLK after a reset. It is up to the user to set the BOOT1 and BOOT0 pins after reset to select the required boot mode.
+
+BOOT0 is a dedicated pin while BOOT1 is shared with a GPIO pin. Once BOOT1 has been sampled, the corresponding GPIO pin is free and can be used for other purposes.
+
+The BOOT pins are also resampled when the device exits the Standby mode. Consequently, they must be kept in the required Boot mode configuration when the device is in the Standby mode. After this startup delay is over, the CPU fetches the top-of-stack value from address 0x0000 0000, then starts code execution from the boot memory starting from 0x0000 0004.
+
+Note:
+When the device boots from SRAM, in the application initialization code, you have to relocate the vector table in SRAM using the NVIC exception table and the offset register.
+
+<span style="font-size: large;"><b>Embedded bootloader</b></span>
+The embedded bootloader mode is used to reprogram the Flash memory using one of the<b> </b>following serial interfaces:
+<ul>
+<li>USART1(PA9/PA10)</li>
+<li>USART3(PB10/11 and PC10/11)</li>
+<li>CAN2(PB5/13)</li>
+<li>USB OTG FS(PA11/12) in Device mode (DFU: device firmware upgrade).</li>
+</ul>
+The USART peripherals operate at the internal 16 MHz oscillator (HSI) frequency, while the CAN and USB OTG FS require an external clock (HSE) multiple of 1 MHz (ranging from 4 to 26 MHz).
+
+The embedded bootloader code is located in system memory. It is programmed by ST during production. For additional information, refer to application note AN2606.
+
+<iframe allowfullscreen="" frameborder="0" height="360" src="http://www.youtube.com/embed/x6VFtDMwjXQ" width="640"></iframe>
+
+stm32 qemu version:&nbsp;<a href="https://github.com/beckus/qemu_stm32">https://github.com/beckus/qemu_stm32</a>
+
+ref:
+<ol>
+<li><a href="http://wiki.csie.ncku.edu.tw/embedded/2012w7">http://wiki.csie.ncku.edu.tw/embedded/2012w7</a></li>
+<li><a href="http://wiki.csie.ncku.edu.tw/embedded/Lab6">http://wiki.csie.ncku.edu.tw/embedded/Lab6</a></li>
+<li><a href="http://www.seng.de/downloads/HowTo_ToolChain_STM32_Ubuntu.pdf">HowTo_ToolChain_STM32_Ubuntu</a> </li>
+<li><a href="http://cms.mcuapps.com/techinfo/emulators/st-link/">http://cms.mcuapps.com/techinfo/emulators/st-link/</a></li>
+<li><a href="http://forum.ubuntu.org.cn/viewtopic.php?t=384021&amp;p=2839453">http://forum.ubuntu.org.cn/viewtopic.php?t=384021&amp;p=2839453</a></li>
+<li><a href="http://www.amobbs.com/forum-3020-1.html">http://www.amobbs.com/forum-3020-1.html</a> </li>
+<li><a href="http://bluefish.blog.51cto.com/214870/166562">STM32 的 BOOT 概述</a></li>
+<li><a href="http://www.scienceprog.com/flashing-programs-to-stm32-embedded-bootloader/">Flashing programs to STM32. Embedded Bootloader</a></li>
+<li><a href="http://jeremyherbert.net/get/stm32f4_getting_started">Getting Started with the STM32F4 and GCC</a></li>
+<li><a href="http://blog.sina.com.cn/s/blog_6ebd49350100x0n1.html" target="_blank">STM32 BOOT 位理解及设置</a></li>
+<li><a href="http://www.triplespark.net/elec/pdev/arm/stm32.html">Programming STM32 F2, F4 ARMs under Linux: A Tutorial from Scratch</a></li>
+<li><a href="http://www.waveshare.net/shop/STM32F4DISCOVERY.htm">http://www.waveshare.net/shop/STM32F4DISCOVERY.htm</a> </li>
+<li><a href="http://www.360doc.com/content/11/1229/15/8093902_175834034.shtml">STM32 笔记（七）IAR 平台，在内存中调试 STM32</a></li>
+<li><a href="http://www.uplinux.com/shizi/wenxian/111.html">ARM9 2410 移植之在 Linux 下, 用 OpenJTAG+OpenOCD 燒寫 NAND Flash
+</a></li>
+<li>book: Eclipse,OpenOCD,OpenJTAGv3.3 嵌入式开发教程</li>
+</ol>
+
