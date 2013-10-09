@@ -129,10 +129,9 @@ function reference:
 <pre class="cmd">qemu_stm32/arm-softmmu/qemu-system-arm -M stm32-p103 -kernel mymain.bin -S -gdb tcp::1234
 qemu-system-arm -M lm3s6965evb -kernel list.bin -S -gdb tcp::1234
 </pre>
-lm3s6965evb 是 ti 的版子
+lm3s6965evb 是 ti 的版子, 官方 qemu 即內建, 不用另外找 patch, 在我測試 cm3 和週邊無關的程式碼時, 相當方便。
 ref:
 http://www.techtraining.eng.br/files/uploads/2013/04/18/lm3s6965-evm.pdf
-
 
 若你也把 <a href="http://www.triplespark.net/elec/pdev/arm/stm32.html">Programming STM32 F2, F4 ARMs under Linux: A Tutorial from Scratch</a> 裡頭的程式跑過一次, 就可體會整個開發流程了。
 
