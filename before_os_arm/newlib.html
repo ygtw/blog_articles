@@ -1,0 +1,31 @@
+<a href="https://github.com/jsnyder/arm-eabi-toolchain">https://github.com/jsnyder/arm-eabi-toolchain</a> 這個 toolchain 會使用 newlib 來當作 standard c library, 我的版本是這個:
+arm-eabi-toolchain/newlib-2013.05/
+
+如何證明有使用 c lib 呢？
+試著使用 setjmp/longjmp 並用下列方式編譯:
+arm-none-eabi-gcc -Wl,-T./stm32.ld -nostartfiles  -o myc.elf myc.o 
+可以成功, 我實在很驚訝, 作業系統之前的程式怎麼有 standard c library 可用, 我一直以為無法使用 standard c library, 雖然我知道有些和平台無關的 function 是可以拿來用的, ex: memset, strcpy ... 但我沒想到有這麼好的運氣可以使用 standard c library。
+
+當然有些底層的東西得要自己補完, 例如令人害怕的 printf。
+
+要怎麼完全不用 library 全部都自己手工寫呢? 加上 -nostdlib -nodefaultlibs 即可, 這樣就要自己把 setjmp/longjmp 生出來, 成就感十足。
+
+相關 gcc options:
+<ul>
+<li>-nodefaultlibs</li>
+<li>-nostdlib</li>
+<li>-ffreestanding</li>
+<li>-nostartfiles</li>
+</ul>
+
+Bionic 是 Android C Library, 也可參考裡頭的實作。
+
+newlib ref:
+<ul>
+<li><a href="http://sourceware.org/newlib/">http://sourceware.org/newlib/</a></li>
+<li><a href="ftp://sourceware.org/pub/newlib/index.html">ftp://sourceware.org/pub/newlib/index.html</a></li>
+<li><a href="http://blog.csdn.net/qb_2008/article/details/8228061">http://blog.csdn.net/qb_2008/article/details/8228061</a></li>
+<li><a href="http://wenku.baidu.com/view/e85042fa941ea76e58fa04ae.html">http://wenku.baidu.com/view/e85042fa941ea76e58fa04ae.html</a></li>
+<li><a href="http://www.embecosm.com/appnotes/ean9/ean9-howto-newlib-1.0.html" target="_blank">Howto: Porting newlib A Simple Guide</a></li>
+</ul>
+
