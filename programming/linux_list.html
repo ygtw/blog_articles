@@ -1,0 +1,289 @@
+我不確定是不是和 linux list 一樣, 這是<a href="http://descent-incoming.blogspot.tw/2013/09/books-arm.html" target="_blank">一步步写嵌入式操作系统:ARM编程的方法与实践</a>提到的 list 資料結構, 應該是從 linux 那個取經而來。有點複雜, 花了點腦力才搞懂。 
+
+我並不是要說明 list_entry macro, 書上解說的很詳細, 但我還是沒能理解, 寫個小範例來測試。
+
+<fieldset>
+<legend>list.c</legend>
+<pre style="white-space: pre-wrap;"><b>  1</b> #include &lt;stdio.h&gt;
+<b>  2</b> 
+<b>  3</b> struct list_head {
+<b>  4</b>  struct list_head *next, *prev;
+<b>  5</b> };
+<b>  6</b> 
+<b>  7</b> struct page {
+<b>  8</b>  unsigned int vaddr;
+<b>  9</b>  unsigned int flags;
+<b> 10</b>  int order;
+<b> 11</b>  //struct kmem_cache *cachep;
+<b> 12</b>  struct list_head list;//to string the buddy member
+<b> 13</b> };
+<b> 14</b> 
+<b> 15</b> 
+<b> 16</b> static inline void INIT_LIST_HEAD(struct list_head *list)
+<b> 17</b> {
+<b> 18</b>  list-&gt;next = list;
+<b> 19</b>  list-&gt;prev = list;
+<b> 20</b> }
+<b> 21</b> 
+<b> 22</b> static inline void __list_add(struct list_head *new_lst,
+<b> 23</b>          struct list_head *prev,
+<b> 24</b>          struct list_head *next)
+<b> 25</b> {
+<b> 26</b>  next-&gt;prev = new_lst;
+<b> 27</b>  new_lst-&gt;next = next;
+<b> 28</b>  new_lst-&gt;prev = prev;
+<b> 29</b>  prev-&gt;next = new_lst;
+<b> 30</b> }
+<b> 31</b> 
+<b> 32</b> static inline void list_add(struct list_head *new_lst, struct list_head *head)
+<b> 33</b> {
+<b> 34</b>  __list_add(new_lst, head, head-&gt;next);
+<b> 35</b> }
+<b> 36</b> 
+<b> 37</b> static inline void list_add_tail(struct list_head *new_lst, struct list_head *head)
+<b> 38</b> {
+<b> 39</b>  __list_add(new_lst, head-&gt;prev, head);
+<b> 40</b> }
+<b> 41</b> 
+<b> 42</b> static inline void __list_del(struct list_head * prev, struct list_head * next)
+<b> 43</b> {
+<b> 44</b>  next-&gt;prev = prev;
+<b> 45</b>  prev-&gt;next = next;
+<b> 46</b> }
+<b> 47</b> 
+<b> 48</b> static inline void list_del(struct list_head * entry)
+<b> 49</b> {
+<b> 50</b>  __list_del(entry-&gt;prev,entry-&gt;next);
+<b> 51</b> }
+<b> 52</b> 
+<b> 53</b> 
+<b> 54</b> static inline void list_remove_chain(struct list_head *ch,struct list_head *ct){
+<b> 55</b>  ch-&gt;prev-&gt;next=ct-&gt;next;
+<b> 56</b>  ct-&gt;next-&gt;prev=ch-&gt;prev;
+<b> 57</b> }
+<b> 58</b> 
+<b> 59</b> static inline void list_add_chain(struct list_head *ch,struct list_head *ct,struct list_head *head){
+<b> 60</b>   ch-&gt;prev=head;
+<b> 61</b>   ct-&gt;next=head-&gt;next;
+<b> 62</b>   head-&gt;next-&gt;prev=ct;
+<b> 63</b>   head-&gt;next=ch;
+<b> 64</b> }
+<b> 65</b> 
+<b> 66</b> static inline void list_add_chain_tail(struct list_head *ch,struct list_head *ct,struct list_head *head){
+<b> 67</b>   ch-&gt;prev=head-&gt;prev;
+<b> 68</b>   head-&gt;prev-&gt;next=ch;
+<b> 69</b>   head-&gt;prev=ct;
+<b> 70</b>   ct-&gt;next=head;
+<b> 71</b> }
+<b> 72</b> 
+<b> 73</b> 
+<b> 74</b> static inline int list_empty(const struct list_head *head)
+<b> 75</b> {
+<b> 76</b>  return head-&gt;next == head;
+<b> 77</b> }
+<b> 78</b> 
+<b> 79</b> 
+<b> 80</b> #define offsetof(TYPE, MEMBER) ((unsigned int) &amp;((TYPE *)0)-&gt;MEMBER)
+<b> 81</b> 
+<b> 82</b> 
+<b> 83</b> #define container_of(ptr, type, member) ({   \
+<b> 84</b>  const typeof( ((type *)0)-&gt;member ) *__mptr = (ptr); \
+<b> 85</b>   (type *)( (char *)__mptr - offsetof(type,member) );})
+<b> 86</b> 
+<b> 87</b> 
+<b> 88</b> #define list_entry(ptr,type,member) \
+<b> 89</b>     container_of(ptr, type, member)
+<b> 90</b> 
+<b> 91</b> 
+<b> 92</b> 
+<b> 93</b> #define list_for_each(pos, head) \
+<b> 94</b>  for (pos = (head)-&gt;next; pos != (head); pos = pos-&gt;next)
+<b> 95</b> 
+<b> 96</b> 
+<b> 97</b> int main(int argc, const char *argv[])
+<b> 98</b> {
+<b> 99</b>   struct page p1, p2;
+<b>100</b> 
+<b>101</b>   p1.list.next = p2.list.prev;
+<b>102</b>   struct list_head *lh = &amp;p1.list;
+<b>103</b>   //struct list_head *lh = &amp;p1.list;
+<b>104</b> 
+<b>105</b>   struct page *p3=0;
+<b>106</b>   ((struct page *)0)-&gt;list ;
+<b>107</b>   printf("%p\n", &amp;((struct page *)0)-&gt;list);
+<b>108</b>   printf("%p\n", (char *)lh);
+<b>109</b>   printf("%p\n", ( (char *)lh - ((unsigned int) &amp;((struct page *)0)-&gt;list) ) );
+<b>110</b>   printf("%p\n", &amp;p1);
+<b>111</b>         
+<b>112</b>   //list_entry(lh,struct page,list);
+<b>113</b>   return 0;
+<b>114</b> }
+
+<b>200</b>   ({ const typeof( ((struct page *)0)-&gt;list ) *__mptr = (lh); 
+<b>201</b>   (struct page *)( (char *)__mptr - ((unsigned int) &amp;((struct page *)0)-&gt;list) );});
+<b>202</b>   return 0;
+</pre>
+</fieldset>
+
+L112 展開是 L200~202 的結果, 我分別從 L105~110 做了單獨的測試。最主要是要補充書上沒提到的小例子, 有了這個小例子, 搭配書上的講解 (6.1.2.2 page 148), 應該就能了解。
+
+一開始被 0 取址所迷惑, 以為這樣會 core dump, 不過應該是要做寫入的動作才會 core dump, 讀取位址 0 是沒問題的。
+
+<pre class="cmd">descent@debian-vm:part2$ ./list 
+0xc
+0xbfe84500
+0xbfe844f4
+0xbfe844f4
+</pre>
+
+真是厲害, 我看過的版本是使用 c macro, 造出類似 c++ template 的技巧。
+
+c++ 有 template, 就不用這麼轉腦袋了, 當然一樣有型別檢查。
+
+<fieldset><legend>list.cpp</legend>
+<pre style="white-space: pre-wrap;">
+<b> 1</b> // template linked list test in os kernel
+<b> 2</b> #include &lt;cstdio&gt;
+<b> 3</b> 
+<b> 4</b> using namespace std;
+<b> 5</b> 
+<b> 6</b> #include &quot;stm32.h&quot;
+<b> 7</b> 
+<b> 8</b> template &lt;typename type&gt;
+<b> 9</b> class List
+<b>10</b> {
+<b>11</b>   public:
+<b>12</b>     List(type *item)
+<b>13</b>     {
+<b>14</b>       set_item(item);
+<b>15</b>       prev_ = next_ = 0;
+<b>16</b>     }
+<b>17</b>     void add_next(List *n)
+<b>18</b>     {
+<b>19</b>       next_ = n;
+<b>20</b>     }
+<b>21</b>     type *item(){return item_;}
+<b>22</b>     void set_item(type *item)
+<b>23</b>     {
+<b>24</b>       item_ = item;
+<b>25</b>     }
+<b>26</b>     List *next(){return next_;}
+<b>27</b>   private:
+<b>28</b>     type *item_;
+<b>29</b>     List *prev_;
+<b>30</b>     List *next_;
+<b>31</b> };
+<b>32</b> 
+<b>33</b> struct page 
+<b>34</b> {
+<b>35</b>  unsigned int vaddr;
+<b>36</b>  unsigned int flags;
+<b>37</b>  int order;
+<b>38</b> };
+<b>39</b> 
+<b>40</b> 
+<b>41</b> void mymain()
+<b>42</b> {
+<b>43</b>   page p1, p2;
+<b>44</b>   List&lt;page&gt; node1(&amp;p1), node2(&amp;p2);
+<b>45</b>   List&lt;page&gt; *head;
+<b>46</b> 
+<b>47</b> #if 0
+<b>48</b>   printf(&quot;%p\n&quot;, &amp;p1);
+<b>49</b>   printf(&quot;%p\n&quot;, &amp;p2);
+<b>50</b> #endif
+<b>51</b> 
+<b>52</b>   //node1.set_item(p1);
+<b>53</b>   //node2.set_item(p2);
+<b>54</b> 
+<b>55</b>   node1.add_next(&amp;node2);
+<b>56</b>   head = &amp;node1;
+<b>57</b>   page *cur_page = 0;
+<b>58</b>   for (List&lt;page&gt; *cur=head ; cur ; cur=cur-&gt;next())
+<b>59</b>   {
+<b>60</b>     cur_page =  cur-&gt;item();
+<b>61</b>     //printf(&quot;%p\n&quot;, cur-&gt;item());
+<b>62</b>   }
+<b>63</b>   while(1);
+<b>64</b> 
+<b>65</b> #if 0
+<b>66</b> 
+<b>67</b>   p1.list.next = p2.list.prev;
+<b>68</b>   struct list_head *lh = &amp;amp;p1.list;
+<b>69</b>   //struct list_head *lh = &amp;amp;p1.list;
+<b>70</b> 
+<b>71</b>   struct page *p3=0;
+<b>72</b>   ((struct page *)0)-&amp;gt;list ;
+<b>73</b>   printf(&quot;%p\n&quot;, &amp;amp;((struct page *)0)-&amp;gt;list);
+<b>74</b>   printf(&quot;%p\n&quot;, (char *)lh);
+<b>75</b>   printf(&quot;%p\n&quot;, ( (char *)lh - ((unsigned int) &amp;amp;((struct page *)0)-&amp;gt;list) ) );
+<b>76</b>   printf(&quot;%p\n&quot;, &amp;amp;p1);
+<b>77</b>         
+<b>78</b>   //list_entry(lh,struct page,list);
+<b>79</b>   return 0;
+<b>80</b> #endif
+<b>81</b> }
+<b>82</b> 
+<b>83</b> #if 0
+<b>84</b>   ({ const typeof( ((struct page *)0)-&amp;gt;list ) *__mptr = (lh); 
+<b>85</b>   (struct page *)( (char *)__mptr - ((unsigned int) &amp;amp;((struct page *)0)-&amp;gt;list) );});
+<b>86</b>   return 0;
+<b>87</b> #endif
+</pre>
+</fieldset>
+
+這是要在 os 層級使用的, 來試試看能否成功。
+
+<pre class="cmd">
+arm-none-eabi-g++ -fno-common -O0 -g -mcpu=cortex-m3 -mthumb -fno-exceptions -fno-rtti  -c list.cpp 
+arm-none-eabi-g++ -Wl,-T./stm32.ld -nostartfiles -o list.elf list.o
+arm-none-eabi-objcopy -O binary list.elf list.bin
+</pre>
+
+<pre class="cmd">
+qemu-system-arm -M lm3s6965evb -kernel list.bin -S -gdb tcp::1234
+</pre>
+透過 qemu/gdb 可觀察到 p1, p2 位址, 和使用 List 取出的是一樣的。藉由 template, 可以塞進各種型別。
+
+<fieldset><legend>gdb</legend>
+<pre style="white-space: pre-wrap;">
+<b> 1</b> (gdb) target remote :1234
+<b> 2</b> Remote debugging using :1234
+<b> 3</b> ResetISR () at stm32.h:21
+<b> 4</b> 21      {
+<b> 5</b> (gdb) b mymain
+<b> 6</b> Breakpoint 1 at 0x10e: file list.cpp, line 44.
+<b> 7</b> (gdb) c
+<b> 8</b> Continuing.
+<b> 9</b> 
+<b>10</b> Breakpoint 1, mymain () at list.cpp:44
+<b>11</b> 44        List&lt;page&gt; node1(&amp;p1), node2(&amp;p2);
+<b>12</b> (gdb) p &amp;p1
+<b>13</b> $1 = (page *) 0x200000d0
+<b>14</b> (gdb) p &amp;p2
+<b>15</b> $2 = (page *) 0x200000c4
+<b>16</b> (gdb) n
+<b>17</b> 55        node1.add_next(&amp;node2);
+<b>18</b> (gdb) n
+<b>19</b> 56        head = &amp;node1;
+<b>20</b> (gdb) n
+<b>21</b> 57        page *cur_page = 0;
+<b>22</b> (gdb) n
+<b>23</b> 58        for (List&lt;page&gt; *cur=head ; cur ; cur=cur-&gt;next())
+<b>24</b> (gdb) n
+<b>25</b> 60          cur_page =  cur-&gt;item();
+<b>26</b> (gdb) p cur_page 
+<b>27</b> $3 = (page *) 0x0 &lt;VectorTable&gt;
+<b>28</b> (gdb) n
+<b>29</b> 58        for (List&lt;page&gt; *cur=head ; cur ; cur=cur-&gt;next())
+<b>30</b> (gdb) p cur_page 
+<b>31</b> $4 = (page *) 0x200000d0
+<b>32</b> (gdb) n
+<b>33</b> 60          cur_page =  cur-&gt;item();
+<b>34</b> (gdb) n
+<b>35</b> 58        for (List&lt;page&gt; *cur=head ; cur ; cur=cur-&gt;next())
+<b>36</b> (gdb) p cur_page 
+<b>37</b> $5 = (page *) 0x200000c4
+<b>38</b> (gdb) 
+</pre>
+</fieldset>
