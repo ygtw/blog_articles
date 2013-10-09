@@ -287,3 +287,45 @@ qemu-system-arm -M lm3s6965evb -kernel list.bin -S -gdb tcp::1234
 <b>38</b> (gdb) 
 </pre>
 </fieldset>
+
+以下的 gdb 環境為 stm32f4 discovery board, 和模擬器的值一模一樣。
+<fieldset><legend>gdb stm32f4 discovery board</legend>
+<pre style="white-space: pre-wrap;">
+<b> 1</b> $1 = {vaddr = 3204496768, flags = 134218252, order = 536870912}
+<b> 2</b> (gdb) p &amp;p1
+<b> 3</b> $2 = (page *) 0x200000d0
+<b> 4</b> (gdb) p &amp;p2
+<b> 5</b> $3 = (page *) 0x200000c4
+<b> 6</b> (gdb) n
+<b> 7</b> 55	  node1.add_next(&amp;node2);
+<b> 8</b> (gdb) n
+<b> 9</b> 56	  head = &amp;node1;
+<b>10</b> (gdb) n
+<b>11</b> 57	  page *cur_page = 0;
+<b>12</b> (gdb) n
+<b>13</b> 58	  for (List&lt;page&gt; *cur=head ; cur ; cur=cur-&gt;next())
+<b>14</b> (gdb) n
+<b>15</b> p 60	    cur_page =  cur-&gt;item();
+<b>16</b> (gdb) p cur_page
+<b>17</b> $4 = (page *) 0x0
+<b>18</b> (gdb) n
+<b>19</b> 58	  for (List&lt;page&gt; *cur=head ; cur ; cur=cur-&gt;next())
+<b>20</b> (gdb) p cur_page
+<b>21</b> $5 = (page *) 0x200000d0
+<b>22</b> (gdb) n
+<b>23</b> 60	    cur_page =  cur-&gt;item();
+<b>24</b> (gdb) n
+<b>25</b> 58	  for (List&lt;page&gt; *cur=head ; cur ; cur=cur-&gt;next())
+<b>26</b> (gdb) p cur_page
+<b>27</b> $6 = (page *) 0x200000c4
+<b>28</b> (gdb) n
+<b>29</b> 63	  while(1);
+<b>30</b> (gdb) n
+<b>31</b> ^Cmymain () at list.cpp:63
+<b>32</b> 63	  while(1);
+<b>33</b> Error while handling inferior event:
+<b>34</b> Quit
+<b>35</b> mymain () at list.cpp:63
+<b>36</b> 63	  while(1);
+</pre>
+</fieldset>
