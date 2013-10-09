@@ -456,7 +456,7 @@ D.2　Git和Hg  命令对照/ 593
 
 不過購買此本書不久後, 台灣 o'reilly 在 2012/1/29  出了一本 - <a href="http://books.gotop.com.tw/OreillyBooks/OreillySearch.aspx?argBookName=git">版本控制使用 Git</a> (目前已經有第二版), 我沒有槌心肝 (20120120 購入, 你看看才差幾天), 雖然我偏好繁體中文, 但這本簡體中文實在寫的不錯。我大概翻了一下<b>版本控制使用 Git</b> 的內容, 無法評論這兩本哪一本好, 個人覺得也寫得不錯。不過 <b>Git 权威指南</b>對我來說, 的確是一本很好的 git 學習書籍。20130826 補充: 到現在好像也就這麼一本繁體中文 git 書籍。
 
-<a href="https://picasaweb.google.com/lh/photo/VlsQc0fTuitCMfGjyTdRzdMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="400" src="https://lh6.googleusercontent.com/-ZHpfCWYvsDQ/TxmS_yj5ttI/AAAAAAAAY3o/8HVK1NMmHsI/s400/P1310079.JPG" style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;" width="300" /></a>git 不算是容易學習的軟體, 不要小看學習他的難度, 網路片斷的資料實在難以讓人有個完整的學習。就算有完整電子書, 你能在螢幕上完整看完嗎？印出來是個好方法, 但大多是 html 格式的電子書, 輸出紙張的效果可能不是很好 (pro git 中文版有 epub 格式, 是個好選擇)。我知道有人可以拼拼湊湊就把 git 學好, 我不是這樣的人, 我相信大多數人也需要一本好的書籍來學習 git, 速食主義實在荼毒我們太深。
+<a href="https://picasaweb.google.com/lh/photo/VlsQc0fTuitCMfGjyTdRzdMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="400" src="https://lh6.googleusercontent.com/-ZHpfCWYvsDQ/TxmS_yj5ttI/AAAAAAAAY3o/8HVK1NMmHsI/s400/P1310079.JPG" style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;" width="300" /></a>git 不算是容易學習的軟體, 不要小看學習他的難度, 網路片斷的資料實在難以讓人有個完整的學習。就算有完整電子書, 你能在螢幕上完整看完嗎？印出來是個好方法, 但大多是 html 格式的電子書, 輸出紙張的效果可能不是很好 (pro git 中文版有 epub 格式, 是個好選擇)。我知道有人可以拼拼湊湊就把 git 學好, 我不是這樣的人, 我相信大多數人也需要一本好的書籍來學習 git, 速食主義實在荼毒我們太深, 希望我這篇的描述可以吸引你去找一本書來學習 git。
 
 我在 2001 左右開始使用 rcs, 接著是 cvs, svn, 但我遇上 git 則完全沒辦法, 之前的學習經驗都派不上用場, 沒有去看相關資料, 並不是那麼好上手, 所以我只勉勉強強的使用, 大部份還是使用 svn, 直到我看完本書才能上手。
 
@@ -502,7 +502,7 @@ git checkout -- file   使用 index 的內容覆蓋 working tree
 git checkout HEAD .    使用 HEAD 指向的 master branch 的內容覆蓋 index 和 working tree
 </pre>
 
-這幾個指令是不是常常困擾你呢？「好像是這樣又好像是那樣, 會不會把我還沒改的檔案蓋掉阿? 真擔心, 還是先存到別的目錄好了。」第五章可以先掃過一遍, 等有實際使用經驗, 再看一次, 相信就更能理解。
+這幾個指令是不是常常困擾你呢?「好像是這樣又好像是那樣, 會不會把我還沒改的檔案蓋掉阿? 真擔心, 還是先存到別的目錄好了。」第五章可以先掃過一遍, 等有實際使用經驗, 再看一次, 相信就更能理解。
 
 <pre class="cmd">descent@descent-u:t0$ git status -s
 <span style="color: red;">M</span><span style="color: #f1c232;">M</span> tt
@@ -524,7 +524,10 @@ git checkout HEAD .    使用 HEAD 指向的 master branch 的內容覆蓋 index
  U = updated but unmerged
 </pre>
 
-第六章在談 git object, 大概解釋一下 git 怎麼把檔案存起來, 存在哪, 雖然短短 10 頁, 卻很受用, 建議先讀過一遍<b>略懂</b>即可, 畢竟我們主要是操作 git, 不是要學怎麼做一個 git。不過介紹 head 和 master 的關係這部份就很重要。
+第六章在談 git object, 大概解釋一下 git 怎麼把檔案存起來, 存在哪, 雖然短短 10 頁, 卻很受用, 建議先讀過一遍<b>略懂</b>即可, 畢竟我們主要是操作 git, 不是要學怎麼做一個 git。不過介紹 head 和 master 的關係這部份就很重要 (p86)。
+
+6.1 描述 commit, tree, blob 是什麼? 他們放在 .git/objects 的哪裡, 使用 git cat-file -p, git cat-file -t 來觀察這些 git objects。
+6.2 會告訴我們 sha1 是怎麼計算出來的, 讀完這節, 你也可以自己算出這個 sha1。
 
 7, 8 兩章在談 master/head 指來指去的問題, 我相信大多人都沒搞懂這是在指些什麼? 21 頁, 我看得輕鬆愉快, 相信你也可以。第七章介紹 reset, 第八章介紹 checkout, 在執行這兩個命令後, master/head 很容易會搞亂。
 
@@ -562,7 +565,7 @@ git reset -&gt; 改變 master
 
 第 14 章管理 git repository 基本上可先跳過, 這並不會影響使用 git, 當初我看的時候也是跳來跳去, 違反我從頭看到尾的原則。
 
-第 16 章談到最令我們害怕的事情, merge conflict, 16.2 ~ 16.5 總共提了 4 個例子, 當然, 在真實世界裡, 會遇到比較複雜的 merge conflict, 這得靠自己想辦法。
+第 16 章談到最令我們害怕的事情, merge conflict, 16.2 ~ 16.5 總共提了 4 個例子, 介紹 merge 這個指令。當然, 在真實世界裡, 會遇到比較複雜的 merge conflict, 這得靠自己想辦法。
 
 git tag 也沒想像中的簡單, 看看第 17 章 git 里程碑。
 
@@ -574,7 +577,13 @@ git tag 也沒想像中的簡單, 看看第 17 章 git 里程碑。
 
 第 6 篇的 34, 35 兩章在說明如何將 cvs, svn 遷移到 git, 在我使用 git 時, 我便把之前的 svn repository 轉移到 git。
 
+附錄 A 有很用心的 git 指令索引, 指出在哪一頁哪個章節提到。
+
+附錄 B， C， D 以對話的方式比較了 cvs, svn, hg 的優劣 (我覺得 git 是大獲全勝), 並附上 git 和 cvs, svn, hg 的指令對照表, 很有趣, 輕鬆一下學習 git 的心情。
+
 這本書說實在很貴, 我認為其技術資料沒這麼高貴, 但他有效的幫我在短時間內學習 git, 花的錢不算白費。
+
+你大概可以看出我花了很大心力在學 git, 因為我認為這是一個值得投資的軟體 (又跨平台, 這點很重要), 但我不希望重演 rcs, cvs, svn, git, ??? 的戲碼, 不僅浪費我的投資, 轉換各種 repository 可是很痛苦的。
 
 本書網站: <a href="http://www.worldhello.net/gotgit/">http://www.worldhello.net/gotgit/</a>
 
