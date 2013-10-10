@@ -1,0 +1,61 @@
+
+開頭兩行就難倒我
+mov             ip, sp
+stmea           a1!, { v1-v7, fp, ip, lr }
+
+r10 sl Stack limit
+r11 fp Argument pointer
+r12 ip Temporary workspace
+r13 sp Stack pointer
+r14 lr Link register Workspace
+
+Table 2. Predeclared core registers
+Register names
+Meaning
+r0-r15 and R0-R15
+General purpose registers.
+a1-a4
+Argument, result or scratch registers. These are synonyms for R0 to R3
+v1-v8
+Variable registers. These are synonyms for R4 to R11.
+sb and SB
+Static base register. This is a synonym for R9.
+ip and IP
+Intra procedure call scratch register. This is a synonym for R12.
+sp and SP
+Stack pointer. This is a synonym for R13.
+lr and LR
+Link register. This is a synonym for R14.
+pc and PC
+Program counter. This is a synonym for R15.
+
+ref:
+http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0473c/CJAJBFHC.html
+http://forums.leaflabs.com/topic.php?id=1298
+
+ip (r12):
+http://blog.csdn.net/gooogleman/article/details/3529413
+http://forums.arm.com/index.php?/topic/12986-about-r12/
+
+
+
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│0x1b0 <setjmp>          stmia  r0!, {r4, r5, r6, r7, r8, r9, r10, r11, r12, sp, lr}                                 │
+│0x1b4 <setjmp>        mov    r0, #0                                                                               │
+│0x1b8 <setjmp>        tst    lr, #1                                                                               │
+│0x1bc <setjmp>       moveq  pc, lr                                                                               │
+│0x1c0 <setjmp>       bx     lr                                                                                   │
+
+│0x1c4 <longjmp>         ldm    r0!, {r4, r5, r6, r7, r8, r9, r10, r11, r12, sp, lr}                                 │
+│0x1c8 <longjmp>       movs   r0, r1                                                                               │
+│0x1cc <longjmp>       moveq  r0, #1                                                                               │
+│0x1d0 <longjmp>      tst    lr, #1                                                                               │
+│0x1d4 <longjmp>      moveq  pc, lr                                                                               │
+│0x1d8 <longjmp>      bx     lr   
+
+
+
+
+
+
+</longjmp></longjmp></longjmp></longjmp></longjmp></longjmp></setjmp></setjmp></setjmp></setjmp></setjmp>
