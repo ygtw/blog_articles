@@ -1,0 +1,326 @@
+setjmp/longjmp 我實在沒怎麼用過這些東西, 在 c++ 上有 exception 可用, 這兩個傢伙一點都派不上用場, 在純 c 裡頭才會需要。
+
+不過我想知道「這是」怎麼做的, 我已經會 context switch, 沒道理這兩個 function 的實作我做不出來。我想了一下, 應該很簡單, 而實際上也真的很簡單, 讓 souce code 來說話。
+
+參考 newlib 的實作: <a href="http://sourceware.org/newlib/">http://sourceware.org/newlib/</a>
+
+x64 (沒研究, 看不懂, 跳過)
+<fieldset>
+<legend>src/newlib/libc/machine/x86_64/setjmp.S</legend>
+<pre style="white-space: pre-wrap;"><b> 1</b> /*
+<b> 2</b>&nbsp; * ====================================================
+<b> 3</b>&nbsp; * Copyright (C) 2007 by Ellips BV. All rights reserved.
+<b> 4</b>&nbsp; *
+<b> 5</b>&nbsp; * Permission to use, copy, modify, and distribute this
+<b> 6</b>&nbsp; * software is freely granted, provided that this notice
+<b> 7</b>&nbsp; * is preserved.
+<b> 8</b>&nbsp; * ====================================================
+<b> 9</b>&nbsp; */
+<b>10</b> 
+<b>11</b>&nbsp; /*
+<b>12</b>&nbsp; **&nbsp; jmp_buf:
+<b>13</b>&nbsp; **&nbsp;&nbsp; rbx rbp r12 r13 r14 r15 rsp rip
+<b>14</b>&nbsp; **&nbsp;&nbsp; 0&nbsp;&nbsp; 8&nbsp;&nbsp; 16&nbsp; 24&nbsp; 32&nbsp; 40&nbsp; 48&nbsp; 56
+<b>15</b>&nbsp; */
+<b>16</b> 
+<b>17</b>&nbsp;&nbsp; #include "x86_64mach.h"
+<b>18</b> 
+<b>19</b>&nbsp;&nbsp; .global SYM (setjmp)
+<b>20</b>&nbsp;&nbsp; .global SYM (longjmp)
+<b>21</b>&nbsp;&nbsp; SOTYPE_FUNCTION(setjmp)
+<b>22</b>&nbsp;&nbsp; SOTYPE_FUNCTION(longjmp)
+<b>23</b> 
+<b>24</b> SYM (setjmp):
+<b>25</b>&nbsp;&nbsp; movq&nbsp;&nbsp;&nbsp; rbx,&nbsp; 0 (rdi)
+<b>26</b>&nbsp;&nbsp; movq&nbsp;&nbsp;&nbsp; rbp,&nbsp; 8 (rdi)
+<b>27</b>&nbsp;&nbsp; movq&nbsp;&nbsp;&nbsp; r12, 16 (rdi)
+<b>28</b>&nbsp;&nbsp; movq&nbsp;&nbsp;&nbsp; r13, 24 (rdi)
+<b>29</b>&nbsp;&nbsp; movq&nbsp;&nbsp;&nbsp; r14, 32 (rdi)
+<b>30</b>&nbsp;&nbsp; movq&nbsp;&nbsp;&nbsp; r15, 40 (rdi)
+<b>31</b>&nbsp;&nbsp; leaq&nbsp;&nbsp;&nbsp; 8 (rsp), rax
+<b>32</b>&nbsp;&nbsp; movq&nbsp;&nbsp;&nbsp; rax, 48 (rdi)
+<b>33</b>&nbsp;&nbsp; movq&nbsp;&nbsp;&nbsp; (rsp), rax
+<b>34</b>&nbsp;&nbsp; movq&nbsp;&nbsp;&nbsp; rax, 56 (rdi)
+<b>35</b>&nbsp;&nbsp; movq&nbsp;&nbsp;&nbsp; $0, rax
+<b>36</b>&nbsp;&nbsp; ret
+<b>37</b> 
+<b>38</b> SYM (longjmp):
+<b>39</b>&nbsp;&nbsp; movq&nbsp;&nbsp;&nbsp; rsi, rax&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* Return value */
+<b>40</b> 
+<b>41</b>&nbsp;&nbsp; movq&nbsp;&nbsp;&nbsp;&nbsp; 8 (rdi), rbp
+<b>42</b> 
+<b>43</b>&nbsp;&nbsp; __CLI
+<b>44</b>&nbsp;&nbsp; movq&nbsp;&nbsp;&nbsp; 48 (rdi), rsp
+<b>45</b>&nbsp;&nbsp; pushq&nbsp;&nbsp; 56 (rdi)
+<b>46</b>&nbsp;&nbsp; movq&nbsp;&nbsp;&nbsp;&nbsp; 0 (rdi), rbx
+<b>47</b>&nbsp;&nbsp; movq&nbsp;&nbsp;&nbsp; 16 (rdi), r12
+<b>48</b>&nbsp;&nbsp; movq&nbsp;&nbsp;&nbsp; 24 (rdi), r13
+<b>49</b>&nbsp;&nbsp; movq&nbsp;&nbsp;&nbsp; 32 (rdi), r14
+<b>50</b>&nbsp;&nbsp; movq&nbsp;&nbsp;&nbsp; 40 (rdi), r15
+<b>51</b>&nbsp;&nbsp; __STI
+<b>52</b> 
+<b>53</b>&nbsp;&nbsp; ret</pre>
+</fieldset>
+
+msp430 (不知道在寫什麼, 跳過)
+<fieldset>
+<legend>src/newlib/libc/machine/msp430/setjmp.S</legend>
+<pre style="white-space: pre-wrap;"><b>  1</b> /* Copyright (c) 2013  Red Hat, Inc. All rights reserved.
+<b>  2</b> 
+<b>  3</b>    This copyrighted material is made available to anyone wishing to use,
+<b>  4</b>    modify, copy, or redistribute it subject to the terms and conditions
+<b>  5</b>    of the BSD License.   This program is distributed in the hope that
+<b>  6</b>    it will be useful, but WITHOUT ANY WARRANTY expressed or implied,
+<b>  7</b>    including the implied warranties of MERCHANTABILITY or FITNESS FOR
+<b>  8</b>    A PARTICULAR PURPOSE.  A copy of this license is available at
+<b>  9</b>    http://www.opensource.org/licenses. Any Red Hat trademarks that are
+<b> 10</b>    incorporated in the source code or documentation are not subject to
+<b> 11</b>    the BSD License and may only be used or replicated with the express
+<b> 12</b>    permission of Red Hat, Inc.
+<b> 13</b> */
+<b> 14</b> 
+<b> 15</b> # setjmp/longjmp for msp430.  The jmpbuf looks like this:
+<b> 16</b> #
+<b> 17</b> # Register Jmpbuf offset
+<b> 18</b> #               small   large 
+<b> 19</b> # r0 (pc) 0x00     0x00
+<b> 20</b> # r1 (sp) 0x02  0x04 
+<b> 21</b> # r4  0x04  0x08
+<b> 22</b> # r5  0x06  0x0c
+<b> 23</b> # r6  0x08  0x10
+<b> 24</b> # r7  0x0a  0x14
+<b> 25</b> # r8  0x0c  0x18
+<b> 26</b> # r9  0x0e  0x1c
+<b> 27</b> # r10  0x10  0x20
+<b> 28</b> 
+<b> 29</b>  .text
+<b> 30</b>  .global setjmp
+<b> 31</b> setjmp:
+<b> 32</b>  ; Upon entry r12 points to the jump buffer.
+<b> 33</b>  ; Returns 0 to caller.
+<b> 34</b>  
+<b> 35</b> #if   defined __MSP430X_LARGE__
+<b> 36</b>  mova   @r1, r13
+<b> 37</b>  mova    r13, 0(r12)
+<b> 38</b>  mova r1,  4(r12)
+<b> 39</b>  mova r4,  8(r12)
+<b> 40</b>  mova r5,  12(r12)
+<b> 41</b>  mova r6,  16(r12)
+<b> 42</b>  mova r7,  20(r12)
+<b> 43</b>  mova r8,  24(r12)
+<b> 44</b>  mova r9,  28(r12)
+<b> 45</b>  mova r10, 32(r12)
+<b> 46</b>  clr    r12
+<b> 47</b>  reta
+<b> 48</b> #else
+<b> 49</b>  ;; Get the return address off the stack
+<b> 50</b>  mov.w  @r1,  r13
+<b> 51</b>  mov.w   r13, 0(r12)
+<b> 52</b>  mov.w r1,  2(r12)
+<b> 53</b>  mov.w r4,  4(r12)
+<b> 54</b>  mov.w r5,  6(r12)
+<b> 55</b>  mov.w r6,  8(r12)
+<b> 56</b>  mov.w r7,  10(r12)
+<b> 57</b>  mov.w r8,  12(r12)
+<b> 58</b>  mov.w r9,  14(r12)
+<b> 59</b>  mov.w r10, 16(r12)
+<b> 60</b>  clr    r12
+<b> 61</b>  ret
+<b> 62</b> #endif 
+<b> 63</b> 
+<b> 64</b>  
+<b> 65</b>  .global longjmp
+<b> 66</b> longjmp:
+<b> 67</b>  ; Upon entry r12 points to the jump buffer and
+<b> 68</b>         ; r13 contains the value to be returned by setjmp.
+<b> 69</b> 
+<b> 70</b> #if   defined __MSP430X_LARGE__
+<b> 71</b>  mova @r12+, r14
+<b> 72</b>  mova @r12+, r1
+<b> 73</b>  mova @r12+, r4
+<b> 74</b>  mova @r12+, r5
+<b> 75</b>  mova @r12+, r6
+<b> 76</b>  mova @r12+, r7
+<b> 77</b>  mova @r12+, r8
+<b> 78</b>  mova @r12+, r9
+<b> 79</b>  mova @r12+, r10
+<b> 80</b> #else
+<b> 81</b>  mov.w @r12+, r14
+<b> 82</b>  mov.w @r12+, r1
+<b> 83</b>  mov.w @r12+, r4
+<b> 84</b>  mov.w @r12+, r5
+<b> 85</b>  mov.w @r12+, r6
+<b> 86</b>  mov.w @r12+, r7
+<b> 87</b>  mov.w @r12+, r8
+<b> 88</b>  mov.w @r12+, r9
+<b> 89</b>  mov.w @r12+, r10
+<b> 90</b> #endif
+<b> 91</b>  ; If caller attempts to return 0, return 1 instead.
+<b> 92</b>  cmp.w   #0, r13
+<b> 93</b>  jne .Lnot_zero
+<b> 94</b>  mov.w #1, r13
+<b> 95</b> .Lnot_zero:
+<b> 96</b>  mov.w r13, r12
+<b> 97</b> 
+<b> 98</b> #if   defined __MSP430X_LARGE__
+<b> 99</b>  adda     #4, r1
+<b>100</b>  mova r14, r0
+<b>101</b> #else
+<b>102</b>  add.w    #2, r1
+<b>103</b>  mov.w r14, r0
+<b>104</b> #endif
+</pre>
+</fieldset>
+
+
+x86, 跳過 ... A, 再跳這篇就結束了!
+終於來到我熟悉的 32bit x86, 來看看 jmp_buf 到底是什麼？真是太簡單了, 就是一塊區域, 用來存這些暫存器。
+
+jmp_buf 可以看成一個指標指向一塊記憶體, setjmp 會接收這個指標當參數, 然後把暫存器存在這裡。 
+
+<fieldset>
+<legend>include/machine/setjmp-dj.h</legend>
+<pre style="white-space: pre-wrap;"><b> 1</b> /*
+<b> 2</b>  * Copyright (C) 1991 DJ Delorie
+<b> 3</b>  * All rights reserved.
+<b> 4</b>  *
+<b> 5</b>  * Redistribution, modification, and use in source and binary forms is permitted
+<b> 6</b>  * provided that the above copyright notice and following paragraph are
+<b> 7</b>  * duplicated in all such forms.
+<b> 8</b>  *
+<b> 9</b>  * This file is distributed WITHOUT ANY WARRANTY; without even the implied
+<b>10</b>  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+<b>11</b>  */
+<b>12</b> 
+<b>13</b> /* Modified to use SETJMP_DJ_H rather than SETJMP_H to avoid
+<b>14</b>    conflicting with setjmp.h.  Ian Taylor, Cygnus support, April,
+<b>15</b>    1993.  */
+<b>16</b> 
+<b>17</b> #ifndef _SETJMP_DJ_H_
+<b>18</b> #define _SETJMP_DJ_H_
+<b>19</b> 
+<b>20</b> #ifdef __cplusplus
+<b>21</b> extern "C" {
+<b>22</b> #endif
+<b>23</b> 
+<span style="color: red;"><b>24</b> typedef struct {
+<b>25</b>   unsigned long eax;
+<b>26</b>   unsigned long ebx;
+<b>27</b>   unsigned long ecx;
+<b>28</b>   unsigned long edx;
+<b>29</b>   unsigned long esi;
+<b>30</b>   unsigned long edi;
+<b>31</b>   unsigned long ebp;
+<b>32</b>   unsigned long esp;
+<b>33</b>   unsigned long eip;
+<b>34</b> } jmp_buf[1];</span>
+<b>35</b> 
+<b>36</b> extern int setjmp(jmp_buf);
+<b>37</b> extern void longjmp(jmp_buf, int);
+<b>38</b> 
+<b>39</b> #ifdef __cplusplus
+<b>40</b> }
+<b>41</b> #endif
+<b>42</b> 
+<b>43</b> #endif
+</pre>
+</fieldset>
+
+希望這張圖有幫到忙, 圖上方是高位址, 在執行 setjmp 時的 stack frame。
+
+<a href="https://picasaweb.google.com/lh/photo/EsN2-bwwR1j6TWGaRFfQVKIDbKz5UZarlyW53DBH82Q?feat=embedwebsite"><img height="800" src="https://lh5.googleusercontent.com/-1tH45S-t3PI/UkEv-56wX9I/AAAAAAAAsnw/1rKtohBZJdA/s800/P1350039.JPG" width="600" /></a>
+
+所以 setjmp 就是把這些暫存器存起來, 那 eip 存什麼呢？就存 return address (L20, 21), 然後 longjmp <b>會想辦法</b>跳到這裡, 不過 offset 24 應該是 %ebp, 28 應該是 %esp, 把上面的這兩個欄位對就即可, 不過不影響程式的正確性, 因為 longjmp 也寫反了。
+
+<fieldset>
+<legend>src/newlib/libc/sys/sysvi386/_setjmp.S</legend>
+<pre style="white-space: pre-wrap;"><b> 1</b> /
+<b> 2</b> / our buffer looks like:
+<b> 3</b> /  eax,ebx,ecx,edx,esi,edi,esp,ebp,pc
+<b> 4</b> 
+<b> 5</b>  .globl _setjmp
+<b> 6</b>  .globl setjmp
+<b> 7</b> _setjmp:
+<b> 8</b> setjmp:
+<b> 9</b>  pushl %ebx
+<b>10</b>  movl 8(%esp), %ebx
+<b>11</b>  movl %eax, (%ebx)
+<b>12</b>  popl %eax
+<b>13</b>  movl %eax, 4(%ebx)
+<b>14</b>  movl %ecx, 8(%ebx)
+<b>15</b>  movl %edx, 12(%ebx)
+<b>16</b>  movl %esi, 16(%ebx)
+<b>17</b>  movl %edi, 20(%ebx)
+<b>18</b>  movl %esp, 24(%ebx)
+<b>19</b>  movl %ebp, 28(%ebx)
+<span style="color: blue;"><b>20</b>  movl (%esp), %eax
+<b>21</b>  movl %eax, 32(%ebx)</span>
+<b>22</b>  xorl %eax, %eax
+<b>23</b>  ret
+</pre>
+</fieldset>
+
+<fieldset>
+<legend>src/newlib/libc/sys/sysvi386/_longjmp.S</legend>
+<pre style="white-space: pre-wrap;"><b> 1</b> /
+<b> 2</b> / our buffer looks like:
+<b> 3</b> /  eax,ebx,ecx,edx,esi,edi,esp,ebp,pc
+<b> 4</b> /
+<b> 5</b> / _longjmp is called with two parameters:  jmp_buf*,int
+<b> 6</b> / jmp_buf* is at 4(%esp), int is at 8(%esp)
+<b> 7</b> / retaddr is, of course, at (%esp)
+<b> 8</b> 
+<b> 9</b>  .globl _longjmp
+<b>10</b>  .globl longjmp
+<b>11</b> _longjmp:
+<b>12</b> longjmp:
+<b>13</b>  movl 4(%esp), %ebx / address of buf
+<b>14</b>  movl 8(%esp), %eax / store return value
+<b>15</b> 
+<b>16</b>  movl 24(%ebx), %esp / restore stack
+<b>17</b>  movl 32(%ebx), %edi
+<b>18</b> / Next line sets up return address.
+<span style="color: red;"><b>19</b>  movl %edi, 0(%esp) </span>
+<b>20</b>  movl 8(%ebx), %ecx
+<b>21</b>  movl 12(%ebx), %edx
+<b>22</b>  movl 16(%ebx), %esi
+<b>23</b>  movl 20(%ebx), %edi
+<b>24</b>  movl 28(%ebx), %ebp
+<b>25</b>  movl 4(%ebx), %ebx
+<b>26</b>  testl %eax,%eax
+<b>27</b>  jne bye
+<b>28</b>  incl %eax  / eax hold 0 if we are here
+<b>29</b> bye:
+<b>30</b>  ret
+</pre>
+</fieldset>
+
+L19 設定這次的 function return address, 這樣離開時, 就會回到 setjmp 存的位址。
+
+知一可以求五, 舉一可以反三, 相信你可以做出 arm cortex m3 的版本。
+
+這裡 src/newlib/libc/machine/arm/setjmp.S 可以偷看哦！
+
+
+
+
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│0x1b0 <setjmp>          stmia  r0!, {r4, r5, r6, r7, r8, r9, r10, r11, r12, sp, lr}                                 │
+│0x1b4 <setjmp>        mov    r0, #0                                                                               │
+│0x1b8 <setjmp>        tst    lr, #1                                                                               │
+│0x1bc <setjmp>       moveq  pc, lr                                                                               │
+│0x1c0 <setjmp>       bx     lr                                                                                   │
+
+│0x1c4 <longjmp>         ldm    r0!, {r4, r5, r6, r7, r8, r9, r10, r11, r12, sp, lr}                                 │
+│0x1c8 <longjmp>       movs   r0, r1                                                                               │
+│0x1cc <longjmp>       moveq  r0, #1                                                                               │
+│0x1d0 <longjmp>      tst    lr, #1                                                                               │
+│0x1d4 <longjmp>      moveq  pc, lr                                                                               │
+│0x1d8 <longjmp>      bx     lr   
+
+
+
+
+
+
+</longjmp></longjmp></longjmp></longjmp></longjmp></longjmp></setjmp></setjmp></setjmp></setjmp></setjmp>
