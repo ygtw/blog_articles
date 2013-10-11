@@ -1,4 +1,4 @@
-arm-eabi-toolchain/newlib-2013.05/newlib/libc/machine/arm/setjmp.S
+arm-eabi-toolchain/newlib-2013.05/newlib/libc/machine/arm/setjmp.S (L173, L174)
 
 開頭兩行就難倒我
 mov             ip, sp
@@ -38,6 +38,102 @@ ip (r12):
 http://blog.csdn.net/gooogleman/article/details/3529413
 http://forums.arm.com/index.php?/topic/12986-about-r12/
 
+<fieldset><legend>arm-eabi-toolchain/newlib-2013.05/newlib/libc/machine/arm/setjmp.S</legend>
+<pre style="white-space: pre-wrap;">
+<b>  1</b> /* This is a simple version of setjmp and longjmp.
+<b>  2</b> 
+<b>  3</b>    Nick Clifton, Cygnus Solutions, 13 June 1997.  */
+<b>  4</b> 
+<b>  5</b> /* ANSI concatenation macros.  */
+<b>  6</b> #define CONCAT(a, b)  CONCAT2(a, b)
+<b>  7</b> #define CONCAT2(a, b) a##b
+<b>  8</b> 
+<b>106</b> 
+<b>107</b> #ifdef __APCS_26__
+<b>108</b> #define RET  movs            pc, lr
+<b>109</b> #elif defined(__thumb2__)
+<b>110</b> #define RET  bx lr
+<b>111</b> #else
+<b>112</b> #define RET  tst             lr, #1; \
+<b>113</b>              moveq           pc, lr ; \
+<b>114</b> .word           0xe12fff1e   /* bx lr */
+<b>115</b> #endif
+<b>116</b> 
+<b>149</b>      
+<b>150</b> .macro FUNC_START name
+<b>151</b>      .text
+<b>152</b>      .align 2
+<b>153</b>      MODE
+<b>154</b>      .globl SYM (\name)
+<b>155</b>      TYPE (\name)
+<b>156</b> SYM (\name):
+<b>157</b>      PROLOGUE \name
+<b>158</b> .endm
+<b>159</b> 
+<b>160</b> .macro FUNC_END name
+<b>161</b>      RET
+<b>162</b>      SIZE (\name)
+<b>163</b> .endm
+<b>164</b>      
+<b>165</b> /* --------------------------------------------------------------------
+<b>166</b>                  int setjmp (jmp_buf); 
+<b>167</b>    -------------------------------------------------------------------- */
+<b>168</b>      
+<b>169</b>      FUNC_START setjmp
+<b>170</b> 
+<b>171</b>      /* Save all the callee-preserved registers into the jump buffer.  */
+<b>172</b> #ifdef __thumb2__
+<b>173</b>      mov             ip, sp
+<b>174</b>      stmea           a1!, { v1-v7, fp, ip, lr }
+<b>175</b> #else
+<b>176</b>      stmea           a1!, { v1-v7, fp, ip, sp, lr }
+<b>177</b> #endif
+<b>178</b>      
+<b>179</b> #if 0        /* Simulator does not cope with FP instructions yet.  */
+<b>180</b> #ifndef __SOFTFP__
+<b>181</b>      /* Save the floating point registers.  */
+<b>182</b>      sfmea           f4, 4, [a1]
+<b>183</b> #endif
+<b>184</b> #endif               
+<b>185</b>      /* When setting up the jump buffer return 0.  */
+<b>186</b>      mov             a1, #0
+<b>187</b> 
+<b>188</b>      FUNC_END setjmp
+<b>189</b>      
+<b>190</b> /* --------------------------------------------------------------------
+<b>191</b>              volatile void longjmp (jmp_buf, int);
+<b>192</b>    -------------------------------------------------------------------- */
+<b>193</b>      
+<b>194</b>      FUNC_START longjmp
+<b>195</b> 
+<b>196</b>      /* If we have stack extension code it ought to be handled here.  */
+<b>197</b>      
+<b>198</b>      /* Restore the registers, retrieving the state when setjmp() was called.  */
+<b>199</b> #ifdef __thumb2__
+<b>200</b>      ldmfd           a1!, { v1-v7, fp, ip, lr }
+<b>201</b>      mov             sp, ip
+<b>202</b> #else
+<b>203</b>      ldmfd           a1!, { v1-v7, fp, ip, sp, lr }
+<b>204</b> #endif
+<b>205</b>      
+<b>206</b> #if 0        /* Simulator does not cope with FP instructions yet.  */
+<b>207</b> #ifndef __SOFTFP__
+<b>208</b>      /* Restore floating point registers as well.  */
+<b>209</b>      lfmfd           f4, 4, [a1]
+<b>210</b> #endif
+<b>211</b> #endif       
+<b>212</b>      /* Put the return value into the integer result register.
+<b>213</b>         But if it is zero then return 1 instead.  */ 
+<b>214</b>      movs            a1, a2
+<b>215</b> #ifdef __thumb2__
+<b>216</b>      it              eq
+<b>217</b> #endif
+<b>218</b>      moveq           a1, #1
+<b>219</b> 
+<b>220</b>      FUNC_END longjmp
+<b>221</b> #endif
+</pre>
+</fieldset>
 
 <fieldset>
 <legend>
