@@ -1,3 +1,4 @@
+arm-eabi-toolchain/newlib-2013.05/newlib/libc/machine/arm/setjmp.S
 
 開頭兩行就難倒我
 mov             ip, sp
@@ -38,24 +39,23 @@ http://blog.csdn.net/gooogleman/article/details/3529413
 http://forums.arm.com/index.php?/topic/12986-about-r12/
 
 
+<fieldset>
+<legend>
+gdb 的觀察結果 (newlib setjmp/longjmp)
+</legend>
+<pre style="white-space: pre-wrap;">
+<b> 1</b> 0x1b0 &lt;setjmp&gt;  stmia  r0!, {r4, r5, r6, r7, r8, r9, r10, r11, r12, sp, lr}         
+<b> 2</b> 0x1b4 &lt;setjmp&gt;  mov    r0, #0                                                       
+<b> 3</b> 0x1b8 &lt;setjmp&gt;  tst    lr, #1                                                       
+<b> 4</b> 0x1bc &lt;setjmp&gt;  moveq  pc, lr                                                       
+<b> 5</b> 0x1c0 &lt;setjmp&gt;  bx     lr                                                           
+<b> 6</b> 
+<b> 7</b> 0x1c4 &lt;longjmp&gt;  ldm    r0!, {r4, r5, r6, r7, r8, r9, r10, r11, r12, sp, lr}        
+<b> 8</b> 0x1c8 &lt;longjmp&gt;  movs   r0, r1                                                      
+<b> 9</b> 0x1cc &lt;longjmp&gt;  moveq  r0, #1                                                      
+<b>10</b> 0x1d0 &lt;longjmp&gt;  tst    lr, #1                                                      
+<b>11</b> 0x1d4 &lt;longjmp&gt;  moveq  pc, lr                                                      
+<b>12</b> 0x1d8 &lt;longjmp&gt;  bx     lr 
+</pre>
+</fieldset>
 
-┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│0x1b0 <setjmp>          stmia  r0!, {r4, r5, r6, r7, r8, r9, r10, r11, r12, sp, lr}                                 │
-│0x1b4 <setjmp>        mov    r0, #0                                                                               │
-│0x1b8 <setjmp>        tst    lr, #1                                                                               │
-│0x1bc <setjmp>       moveq  pc, lr                                                                               │
-│0x1c0 <setjmp>       bx     lr                                                                                   │
-
-│0x1c4 <longjmp>         ldm    r0!, {r4, r5, r6, r7, r8, r9, r10, r11, r12, sp, lr}                                 │
-│0x1c8 <longjmp>       movs   r0, r1                                                                               │
-│0x1cc <longjmp>       moveq  r0, #1                                                                               │
-│0x1d0 <longjmp>      tst    lr, #1                                                                               │
-│0x1d4 <longjmp>      moveq  pc, lr                                                                               │
-│0x1d8 <longjmp>      bx     lr   
-
-
-
-
-
-
-</longjmp></longjmp></longjmp></longjmp></longjmp></longjmp></setjmp></setjmp></setjmp></setjmp></setjmp>
