@@ -137,7 +137,7 @@ http://forums.arm.com/index.php?/topic/12986-about-r12/
 
 <fieldset>
 <legend>
-gdb 的觀察結果 (newlib setjmp/longjmp)
+gdb 的觀察結果 (newlib setjmp/longjmp) link 到錯誤的 libc.a
 </legend>
 <pre style="white-space: pre-wrap;">
 <b> 1</b> 0x1b0 &lt;setjmp&gt;  stmia  r0!, {r4, r5, r6, r7, r8, r9, r10, r11, r12, sp, lr}         
@@ -154,4 +154,31 @@ gdb 的觀察結果 (newlib setjmp/longjmp)
 <b>12</b> 0x1d8 &lt;longjmp&gt;  bx     lr 
 </pre>
 </fieldset>
+
+<fieldset><legend>gdb_stmf4discovery</legend>
+<pre style="white-space: pre-wrap;">
+<b> 1</b>   &gt;│0x8000130 &lt;setjmp&gt;      mov    r12, sp                                                      
+<b> 2</b>    │0x8000132 &lt;setjmp+2&gt;    stmia.w        r0!, {r4, r5, r6, r7, r8, r9, r10, r11, r12, lr}     
+<b> 3</b>    │0x8000136 &lt;setjmp+6&gt;    mov.w  r0, #0                                                       
+<b> 4</b>    │0x800013a &lt;setjmp+10&gt;   bx     lr                                                           
+<b> 5</b>    │0x800013c &lt;longjmp&gt;     ldmia.w        r0!, {r4, r5, r6, r7, r8, r9, r10, r11, r12, lr}     
+<b> 6</b>    │0x8000140 &lt;longjmp+4&gt;   mov    sp, r12                                                       
+<b> 7</b>    │0x8000142 &lt;longjmp+6&gt;   movs   r0, r1                                                        
+<b> 8</b>    │0x8000144 &lt;longjmp+8&gt;   it     eq                                                             
+<b> 9</b>    │0x8000146 &lt;longjmp+10&gt;  moveq  r0, #1                                                       
+<b>10</b>    │0x8000148 &lt;longjmp+12&gt;  bx     lr        
+</pre>
+</fieldset>
+
+提外話:
+
+newlib 有 4 個 libc.a
+./arm-none-eabi/lib/libc.a
+./arm-none-eabi/lib/armv6-m/libc.a
+./arm-none-eabi/lib/thumb/libc.a
+./arm-none-eabi/lib/thumb2/libc.a
+
+這個編譯參數沒加上 -mcpu=cortex-m3 -mthumb 會 link 到錯誤的 libc.a
+arm-none-eabi-gcc -Wl,-T./stm32.ld -nostartfiles -fno-common -mcpu=cortex-m3 -mthumb -o t0.elf t0.o
+花了我好大一番功夫找到這個錯誤。
 
