@@ -3,7 +3,8 @@ arm-eabi-toolchain/newlib-2013.05/
 
 如何證明有使用 c lib 呢？
 試著使用 setjmp/longjmp 並用下列方式編譯:
-arm-none-eabi-gcc -Wl,-T./stm32.ld -nostartfiles  -o myc.elf myc.o 
+arm-none-eabi-gcc -Wl,-T./stm32.ld -nostartfiles  -o myc.elf myc.o
+ref:&nbsp; <a href="https://github.com/descent/stm32f4_prog/tree/master/myjmp">https://github.com/descent/stm32f4_prog/tree/master/myjmp</a>
 可以成功, 我實在很驚訝, 作業系統之前的程式怎麼有 standard c library 可用, 我一直以為無法使用 standard c library, 雖然我知道有些和平台無關的 function 是可以拿來用的, ex: memset, strcpy ... 但我沒想到有這麼好的運氣可以使用 standard c library。
 
 當然有些底層的東西得要自己補完, 例如令人害怕的 printf。
