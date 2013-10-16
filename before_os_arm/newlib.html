@@ -19,6 +19,8 @@ ref:&nbsp; <a href="https://github.com/descent/stm32f4_prog/tree/master/myjmp">h
 <li>-nostartfiles</li>
 </ul>
 
+newlib 提供了很好的範例讓我們參考一個 standard c library 是怎麼做出來的, 不用和 glibc 這種大怪物奮鬥, 若能自己編譯起來執行, 相信底層功力會大增。newlib/newlib/libc/machine/i386/ 下有我們熟悉的 memcmp, memset 的 source code; arm 的部份在 newlib/newlib/libc/machine/arm, 當然, 有可能缺東缺西, 可參考 ref 裡的 Howto: Porting newlib A Simple Guide 補上自己所需要的 funcion。不過開發 os 倒不需要用上 standard c library, 相關所需要的 library 本來就要自己打造。
+
 Bionic 是 Android C Library, 也可參考裡頭的實作。
 
 newlib ref:
