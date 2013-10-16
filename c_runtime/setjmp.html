@@ -295,6 +295,9 @@ jmp_buf 可以看成一個指標指向一塊記憶體, setjmp 會接收這個指
 </pre>
 </fieldset>
 
+newlib/newlib/libc/machine/i386/setjmp.S
+這是另外一個版本, 有點不同。
+
 L19 設定這次的 function return address, 這樣離開時, 就會回到 setjmp 存的位址。
 
 知一可以求五, 舉一可以反三, 相信你可以做出 arm cortex m3 的版本。
