@@ -1,4 +1,4 @@
-我好像忘記提 system call 的實作, 雖然我在 simple_os 已經實作過 system call, 不過那時候的程式碼是從書上抄來, 我打算在 arm cortex m3 重新實作一次, 果然遇到不少麻煩, 別人的東西就是別人的, 沒有親身體會這段, 就沒有烙印在自己身上的記憶。
+我好像忘記提 system call 的實作, 雖然我在 simple_os 已經實作過 system call, 不過那時候的程式碼是從書上抄來, 我打算在 arm cortex m3 重新實作一次, 果然遇到不少麻煩, 別人的東西就是別人的, 沒有親身體會這段, 就沒有烙印在自己身上的記憶。現在來補上這塊拼圖。
 
 麻煩一
 在使用 svc 來實作 system call, 還是要保存 context, 也就是 context switch 要做的事情, 都要再做一次, 怎麼讓他們共用這段程式碼呢？
@@ -53,7 +53,7 @@ sys_call:
   ret
 </pre>
 
-填入 system call 編號到 %eax, 觸發 0x90 中斷 (int 0x90), 這時候會跑到 sys_call, 再根據 sys_call_table, 編號去執行 sys_call_table 裡頭的 function (in syscall.c), 再把傳回值寫到 process stack frame 的 %eax 欄位, system call 結束後, process 的 %eax 自然就得到該 system call 的傳回值, 文字敘述很簡單, 把它變成程式碼就困難些了。
+填入 system call 編號到 %eax, 觸發 0x90 中斷 (int 0x90), 這時候會跑到 sys_call (透過 IDT 設定的結果), 再根據 sys_call_table, 編號去執行 sys_call_table 裡頭的 function (ref: syscall.c), 再把傳回值寫到 process stack frame 的 %eax 欄位, system call 結束後, process 的 %eax 自然就得到該 system call 的傳回值, 文字敘述很簡單, 把它變成程式碼就困難些了。
 
 如何把參數傳給 system call:
 以 write 為例子, 將傳進來的參數存到 %ebx, %ecx, 然後在執行 sys_call_table 裡頭的 function 之前 push 到 stack, 請參閱 sys_call。
@@ -215,5 +215,8 @@ asm_func.S L39 ~ 79 就是在處理 system call 的部份,
 <a href="https://picasaweb.google.com/lh/photo/TaEPtNvc0rqYVZ7gM-r_rNMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img src="https://lh4.googleusercontent.com/-vEQ1YM-wfI4/UlIw0-KaofI/AAAAAAAAs_s/M5rUC6JRIfA/s800/P1350042.JPG" height="600" width="800" /></a>
 </center>
 
-get_ticks() 是 system call, 將 sys_get_ticks(), arg 傳給 service_call, 再來便是上圖所敘述的那樣完成。
+get_ticks() 是 system call, 將 {sys_get_ticks(), arg} 當成參數傳給 service_call(), service_call() 會執行 svc 觸發 svc exception, 再來便是上圖所敘述從 svc_isr 開始到返回。
 
+這邊需要知道 cm3 c function 和組合語言如何傳遞參數, r0~r3 用來傳遞參數, 如果有第五個參數, 就要用 stack 來傳遞, 返回值則存在 r0。這裡同樣會有 context 的切換, 所以如果沒搞懂 context switch 如何實作, 這邊應該也是看不懂, 金字塔知識就是這樣堆積起來的。
+
+三個麻煩順利解決 (你說麻煩一沒解決是吧, 管他的, 做出來最重要, 美感的話再說了), 痛快。
