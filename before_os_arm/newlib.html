@@ -7,6 +7,8 @@ arm-none-eabi-gcc -Wl,-T./stm32.ld -nostartfiles  -o myc.elf myc.o
 ref:&nbsp; <a href="https://github.com/descent/stm32f4_prog/tree/master/myjmp">https://github.com/descent/stm32f4_prog/tree/master/myjmp</a>
 可以成功, 我實在很驚訝, 作業系統之前的程式怎麼有 standard c library 可用, 我一直以為無法使用 standard c library, 雖然我知道有些和平台無關的 function 是可以拿來用的, ex: memset, strcpy ... 但我沒想到有這麼好的運氣可以使用 standard c library。
 
+我非常不建議寫 os kernel 的人使用 standard c library, 每行程式都儘可能由自己完成才是, 否則你就會在 os 技術拼圖上缺了一角, 都搞到這麼底層了, 把所有秘密掀開來, 知道所有一切的結果, 會讓人很充實、開心。
+
 當然有些底層的東西得要自己補完, 例如令人害怕的 printf。
 
 要怎麼完全不用 library 全部都自己手工寫呢? 加上 -nostdlib -nodefaultlibs 即可, 這樣就要自己把 setjmp/longjmp 生出來, 成就感十足。
