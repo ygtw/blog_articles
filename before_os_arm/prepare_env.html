@@ -129,6 +129,104 @@ function reference:
 <pre class="cmd">qemu_stm32/arm-softmmu/qemu-system-arm -M stm32-p103 -kernel mymain.bin -S -gdb tcp::1234
 qemu-system-arm -M lm3s6965evb -kernel list.bin -S -gdb tcp::1234
 </pre>
+
+開啟另外一個終端機:
+<fieldset><legend>arm-none-eabi-gdb</legend>
+<pre style="white-space: pre-wrap;">
+<b> 1</b> descent@descent-u:cpp$ arm-none-eabi-gdb mycpp11.elf 
+<b> 2</b> GNU gdb (32-bit ARM EABI Toolchain JBS-2013.05-23-v2013.05-1-gd66a29f) 7.4.50.20120716-cvs
+<b> 3</b> Copyright (C) 2012 Free Software Foundation, Inc.
+<b> 4</b> License GPLv3+: GNU GPL version 3 or later &lt;http://gnu.org/licenses/gpl.html&gt;
+<b> 5</b> This is free software: you are free to change and redistribute it.
+<b> 6</b> There is NO WARRANTY, to the extent permitted by law.  Type &quot;show copying&quot;
+<b> 7</b> and &quot;show warranty&quot; for details.
+<b> 8</b> This GDB was configured as &quot;--host=x86_64-unknown-linux-gnu --target=arm-none-eabi&quot;.
+<b> 9</b> For bug reporting instructions, please see:
+<b>10</b> &lt;https://github.com/jsnyder/arm-eabi-toolchain&gt;...
+<b>11</b> Reading symbols from /home/descent/my-git/jserv-course/stm32f4_prog/cpp/mycpp11.elf...done.
+<b>12</b> (gdb) l
+<b>13</b> 1       #include &quot;stm32.h&quot;
+<b>14</b> 2       
+<b>15</b> 3       
+<b>16</b> 4       int print(int i)
+<b>17</b> 5       {
+<b>18</b> 6         i+=1;
+<b>19</b> 7       }
+<b>20</b> 8       
+<b>21</b> 9       int print(char c)
+<b>22</b> 10      {
+<b>23</b> (gdb) target remote :1234
+<b>24</b> Remote debugging using :1234
+<b>25</b> ResetISR () at stm32.h:21
+<b>26</b> 21      {
+<b>27</b> (gdb) b mymain
+<b>28</b> Breakpoint 1 at 0x18e: file mycpp11.cpp, line 23.
+<b>29</b> (gdb) c
+<b>30</b> Continuing.
+<b>31</b> 
+<b>32</b> Breakpoint 1, mymain () at mycpp11.cpp:23
+<b>33</b> 23        constexpr int d=1;
+<b>34</b> (gdb) n
+<b>35</b> 24        int x=3;
+<b>36</b> (gdb) n
+<b>37</b> 25        int y=9;
+<b>38</b> (gdb) n
+<b>39</b> 27        char path[]=R&quot;(/usr/local/aaa)&quot;;
+<b>40</b> (gdb) n
+<b>41</b> 28        char wpath[]=R&quot;(&quot;\usr\local\aaa&quot;)&quot;;
+<b>42</b> (gdb) n
+<b>43</b> 30        int total = lambda_test(x, y);
+<b>44</b> (gdb) n
+<b>45</b> 31        print(35);
+<b>46</b> (gdb) n
+<b>47</b> 32        print('A');
+<b>48</b> (gdb) n
+<b>49</b> 33        int arr[]={1,2,3,4,5};
+<b>50</b> (gdb) n
+<b>51</b> 34        for (int &amp;e : arr)
+<b>52</b> (gdb) n
+<b>53</b> 36          print(e);
+<b>54</b> (gdb) n
+<b>55</b> 34        for (int &amp;e : arr)
+<b>56</b> (gdb) n
+<b>57</b> 36          print(e);
+<b>58</b> (gdb) p e
+<b>59</b> $1 = (int &amp;) @0x2000008c: 2
+<b>60</b> (gdb) display e
+<b>61</b> 1: e = (int &amp;) @0x2000008c: 2
+<b>62</b> (gdb) n
+<b>63</b> 34        for (int &amp;e : arr)
+<b>64</b> 1: e = (int &amp;) @0x2000008c: 2
+<b>65</b> (gdb) n
+<b>66</b> 36          print(e);
+<b>67</b> 1: e = (int &amp;) @0x20000090: 3
+<b>68</b> (gdb) n
+<b>69</b> 34        for (int &amp;e : arr)
+<b>70</b> 1: e = (int &amp;) @0x20000090: 3
+<b>71</b> (gdb) n
+<b>72</b> 36          print(e);
+<b>73</b> 1: e = (int &amp;) @0x20000094: 4
+<b>74</b> (gdb) n
+<b>75</b> 34        for (int &amp;e : arr)
+<b>76</b> 1: e = (int &amp;) @0x20000094: 4
+<b>77</b> (gdb) n
+<b>78</b> 36          print(e);
+<b>79</b> 1: e = (int &amp;) @0x20000098: 5
+<b>80</b> (gdb) n
+<b>81</b> 34        for (int &amp;e : arr)
+<b>82</b> 1: e = (int &amp;) @0x20000098: 5
+<b>83</b> (gdb) n
+<b>84</b> 38        while(1);
+<b>85</b> (gdb) quit
+<b>86</b> A debugging session is active.
+<b>87</b> 
+<b>88</b>         Inferior 1 [Remote target] will be killed.
+<b>89</b> 
+<b>90</b> Quit anyway? (y or n) y
+</pre>
+</fieldset>
+這樣就像是在 x86-pc/linux 下使用 gdb。
+
 lm3s6965evb 是 ti 的版子, 官方 qemu 即內建, 不用另外找 patch, 在我測試 cm3 和週邊無關的程式碼時, 相當方便。
 ref:
 http://www.techtraining.eng.br/files/uploads/2013/04/18/lm3s6965-evm.pdf
