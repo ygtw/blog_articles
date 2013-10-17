@@ -1,6 +1,47 @@
-setjmp/longjmp 我實在沒怎麼用過這些東西, 在 c++ 上有 exception 可用, 這兩個傢伙一點都派不上用場, 在純 c 裡頭才會需要。
+setjmp/longjmp 我實在很陌生, 沒怎麼用過這對 function, 我不知道什麼場合會出動他們, 知道在 c 上可以用他們模擬類似 c++ 的 exception。c++ 上有 exception 可用, 這兩個傢伙一點都派不上用場, 在純 c 裡頭才會需要。
 
-不過我想知道「這是」怎麼做的, 我已經會 context switch, 沒道理這兩個 function 的實作我做不出來。我想了一下, 應該很簡單, 而實際上也真的很簡單, 讓 souce code 來說話。
+不過我想知道「這是」怎麼做的, 我已經理解 context switch, 沒道理這兩個 function 的實作我做不出來。我想了一下, 應該很簡單, 而實際上也真的很簡單, 讓 souce code 來說話。
+
+不過在這之前先來看看怎麼用 setjmp/longjmp。
+
+<fieldset><legend>t0.c</legend>
+<pre style="white-space: pre-wrap;">
+<b> 1</b> #include &lt;stdio.h&gt;
+<b> 2</b> #include &lt;stdlib.h&gt;
+<b> 3</b> #include &lt;setjmp.h&gt;
+<b> 4</b> 
+<b> 5</b> jmp_buf mark;
+<b> 6</b> 
+<b> 7</b> int main(int argc, char *argv[])
+<b> 8</b> {
+<b> 9</b>   int ret = setjmp(mark);
+<b>10</b>   printf(&quot;ret: %d\n&quot;, ret);
+<b>11</b>   if (ret == 0)
+<b>12</b>   {
+<b>13</b>     printf(&quot;init setjmp\n&quot;);
+<b>14</b>   }
+<b>15</b>   else
+<b>16</b>   {
+<b>17</b>     printf(&quot;exit\n&quot;);
+<b>18</b>     exit(0);
+<b>19</b>   }
+<b>20</b>   printf(&quot;xxx\n&quot;);
+<b>21</b>   longjmp(mark, 5);
+<b>22</b>   return 0;
+<b>23</b> }
+</pre>
+</fieldset>
+
+<pre class="cmd">
+執行結果:
+ret: 0
+init setjmp
+xxx
+ret: 5
+exit
+<pre>
+
+第一次執行 setjmp (L9), setjmp 會記住 L9 的位置, 而 ret 會設為 0, 在執行 longjmp (L21) 之後, 會跳到 L9, 並且將 ret 設為 5 (longjmp 傳入的 5)。有點神奇, 是嗎？
 
 參考 newlib 的實作: <a href="http://sourceware.org/newlib/">http://sourceware.org/newlib/</a>
 
@@ -172,11 +213,8 @@ msp430 (不知道在寫什麼, 跳過)
 </pre>
 </fieldset>
 
-
 x86, 跳過 ... A, 再跳這篇就結束了!
-終於來到我熟悉的 32bit x86, 來看看 jmp_buf 到底是什麼？真是太簡單了, 就是一塊區域, 用來存這些暫存器。
-
-jmp_buf 可以看成一個指標指向一塊記憶體, setjmp 會接收這個指標當參數, 然後把暫存器存在這裡。 
+終於來到我熟悉的 32bit x86, 來看看 jmp_buf 到底是什麼？真是太簡單了, 就是一塊記憶體區域, 用來存這些暫存器的值。jmp_buf 可以看成一個指標指向一塊記憶體, setjmp 會接收這個指標當參數, 然後把暫存器存在這裡。 
 
 <fieldset>
 <legend>include/machine/setjmp-dj.h</legend>
