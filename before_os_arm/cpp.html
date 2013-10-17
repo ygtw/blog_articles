@@ -252,49 +252,54 @@ git commit 21f49647dc48da5b3c8d2fcf1544be25d67bb45a
 
 c++11 多了很多新的特性, 我們來試試看。
 
-<fieldset>
-<legend>mycpp.cpp</legend>
-<pre style="white-space: pre-wrap;"><b> 1</b> <span style="color: blue;"><b>#include <span style="color: green;">"stm32.h"</span></b></span>
+<fieldset><legend>mycpp11.cpp</legend>
+<pre style="white-space: pre-wrap;">
+<b> 1</b> #include &quot;stm32.h&quot;
 <b> 2</b> 
 <b> 3</b> 
-<b> 4</b> <b>int</b> <span style="color: #2040a0;">print</span><span style="color: #4444ff;">(</span><b>int</b> <span style="color: #2040a0;">i</span><span style="color: #4444ff;">)</span>
-<b> 5</b> <span style="color: #4444ff;"><b>{</b></span>
-<b> 6</b>   <span style="color: #2040a0;">i</span><span style="color: #4444ff;">+</span><span style="color: #4444ff;">=</span><span style="color: red;">1</span><span style="color: #4444ff;">;</span>
-<b> 7</b> <span style="color: #4444ff;"><b>}</b></span>
+<b> 4</b> int print(int i)
+<b> 5</b> {
+<b> 6</b>   i+=1;
+<b> 7</b> }
 <b> 8</b> 
-<b> 9</b> <b>int</b> <span style="color: #2040a0;">print</span><span style="color: #4444ff;">(</span><b>char</b> <span style="color: #2040a0;">c</span><span style="color: #4444ff;">)</span>
-<b>10</b> <span style="color: #4444ff;"><b>{</b></span>
-<b>11</b>  <span style="color: #2040a0;">c</span><span style="color: #4444ff;">-</span><span style="color: #4444ff;">=</span><span style="color: red;">1</span><span style="color: #4444ff;">;</span>
-<b>12</b> <span style="color: #4444ff;"><b>}</b></span>
+<b> 9</b> int print(char c)
+<b>10</b> {
+<b>11</b>  c-=1;
+<b>12</b> }
 <b>13</b> 
-<b>14</b> <b>int</b> <span style="color: #2040a0;">lambda_test</span><span style="color: #4444ff;">(</span><b>int</b> <span style="color: #2040a0;">girls</span> <span style="color: #4444ff;">=</span> <span style="color: red;">3</span>, <b>int</b> <span style="color: #2040a0;">boys</span> <span style="color: #4444ff;">=</span> <span style="color: red;">4</span><span style="color: #4444ff;">)</span>
-<b>15</b> <span style="color: #4444ff;"><b>{</b></span>
-<b>16</b>   <b>auto</b> <span style="color: #2040a0;">totalChild</span> <span style="color: #4444ff;">=</span> <span style="color: #4444ff;">[</span><span style="color: #4444ff;">]</span><span style="color: #4444ff;">(</span><b>int</b> <span style="color: #2040a0;">x</span>, <b>int</b> <span style="color: #2040a0;">y</span><span style="color: #4444ff;">)</span> <span style="color: #4444ff;">-</span><span style="color: #4444ff;">&gt;</span><b>int</b><span style="color: #4444ff;"><b>{</b></span><b>return</b> <span style="color: #2040a0;">x</span><span style="color: #4444ff;">+</span><span style="color: #2040a0;">y</span><span style="color: #4444ff;">;</span><span style="color: #4444ff;"><b>}</b></span><span style="color: #4444ff;">;</span>
-<b>17</b>   <b>return</b> <span style="color: #2040a0;">totalChild</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">girls</span>, <span style="color: #2040a0;">boys</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
-<b>18</b> <span style="color: #4444ff;"><b>}</b></span>
+<b>14</b> int lambda_test(int girls = 3, int boys = 4)
+<b>15</b> {
+<b>16</b>   auto totalChild = [](int x, int y) -&gt;int{return x+y;};
+<b>17</b>   return totalChild(girls, boys);
+<b>18</b> }
 <b>19</b> 
 <b>20</b> 
-<b>21</b> <b>void</b> <span style="color: #2040a0;">mymain</span><span style="color: #4444ff;">(</span><b>void</b><span style="color: #4444ff;">)</span>
-<b>22</b> <span style="color: #4444ff;"><b>{</b></span>
-<b>23</b>   <span style="color: #2040a0;">constexpr</span> <b>int</b> <span style="color: #2040a0;">d</span><span style="color: #4444ff;">=</span><span style="color: red;">1</span><span style="color: #4444ff;">;</span>
-<b>24</b>   <b>int</b> <span style="color: #2040a0;">x</span><span style="color: #4444ff;">=</span><span style="color: red;">3</span><span style="color: #4444ff;">;</span>
-<b>25</b>   <b>int</b> <span style="color: #2040a0;">y</span><span style="color: #4444ff;">=</span><span style="color: red;">9</span><span style="color: #4444ff;">;</span>
+<b>21</b> void mymain(void)
+<b>22</b> {
+<b>23</b>   constexpr int d=1;
+<b>24</b>   int x=3;
+<b>25</b>   int y=9;
 <b>26</b> 
-<b>27</b>   <b>char</b> <span style="color: #2040a0;">path</span><span style="color: #4444ff;">[</span><span style="color: #4444ff;">]</span><span style="color: #4444ff;">=</span><span style="color: #2040a0;">R</span><span style="color: green;">"(/usr/local/aaa)"</span><span style="color: #4444ff;">;</span>
-<b>28</b>   <b>char</b> <span style="color: #2040a0;">wpath</span><span style="color: #4444ff;">[</span><span style="color: #4444ff;">]</span><span style="color: #4444ff;">=</span><span style="color: #2040a0;">R</span><span style="color: green;">"("</span>\<span style="color: #2040a0;">usr</span>\<span style="color: #2040a0;">local</span>\<span style="color: #2040a0;">aaa</span><span style="color: green;">")"</span><span style="color: #4444ff;">;</span>
+<b>27</b>   char path[]=R&quot;(/usr/local/aaa)&quot;;
+<b>28</b>   char wpath[]=R&quot;(&quot;\usr\local\aaa&quot;)&quot;;
 <b>29</b> 
-<b>30</b>   <b>int</b> <span style="color: #2040a0;">total</span> <span style="color: #4444ff;">=</span> <span style="color: #2040a0;">lambda_test</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">x</span>, <span style="color: #2040a0;">y</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
-<b>31</b>   <span style="color: #2040a0;">print</span><span style="color: #4444ff;">(</span><span style="color: red;">35</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
-<b>32</b>   <span style="color: #2040a0;">print</span><span style="color: #4444ff;">(</span><span style="color: green;">'A'</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
-<b>33</b>   <b>while</b><span style="color: #4444ff;">(</span><span style="color: red;">1</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
-<b>34</b> <span style="color: #4444ff;"><b>}</b></span>
-<b>35</b> 
+<b>30</b>   int total = lambda_test(x, y);
+<b>31</b>   print(35);
+<b>32</b>   print('A');
+<b>33</b>   int arr[]={1,2,3,4,5};
+<b>34</b>   for (int &amp;e : arr)
+<b>35</b>   {
+<b>36</b>     print(e);
+<b>37</b>   }
+<b>38</b>   while(1);
+<b>39</b> }
+<b>40</b> 
 </pre>
 </fieldset>
 
-<pre class="cmd">arm-none-eabi-g++ -fno-common -O0 -g -mcpu=cortex-m3 -mthumb -fno-exceptions -fno-rtti -std=c++11  -c mycpp.cpp 
-arm-none-eabi-g++ -Wl,-T./stm32.ld -nostartfiles -o mycpp.elf mycpp.o
-arm-none-eabi-objcopy -O binary mycpp.elf mycpp.bin
+<pre class="cmd">arm-none-eabi-g++ -fno-common -O0 -g -mcpu=cortex-m3 -mthumb  -fno-exceptions -fno-rtti -std=c++11  -c mycpp11.cpp 
+arm-none-eabi-g++ -Wl,-T./stm32.ld -nostartfiles -fno-common -mcpu=cortex-m3 -mthumb -o mycpp11.elf mycpp11.o
+arm-none-eabi-objcopy -O binary mycpp11.elf mycpp11.bin
 </pre>
 
 <pre class="cmd">descent@descent-u:cpp$ arm-none-eabi-g++ --version
@@ -304,4 +309,4 @@ This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 </pre>
 
-可以耶, 並不需要特別補上什麼 c++ runtime library, 這裡用上 c++11 lambda, constexpr, raw string literal, c++98 函式預設參數。威力有沒有很強大呢？我不知道, 別問我。我是蠻喜歡 raw string literal。
+可以耶, 並不需要特別補上什麼 c++ runtime library, 這裡用上 c++11 lambda, constexpr, raw string literal, c++98 函式預設參數。威力有沒有很強大呢? 我不知道, 別問我。我是蠻喜歡 raw string literal。呃 ... 還有 L34 那個 for loop。
