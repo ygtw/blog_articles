@@ -1,6 +1,6 @@
 我不確定是不是和 linux list 一樣, 這是<a href="http://descent-incoming.blogspot.tw/2013/09/books-arm.html" target="_blank">一步步写嵌入式操作系统:ARM编程的方法与实践</a>提到的 list 資料結構, 應該是從 linux 那個取經而來。有點複雜, 花了點腦力才搞懂。 
 
-我並不是要說明 list_entry macro, 書上解說的很詳細, 但我還是沒能理解, 寫個小範例來測試。
+我並不是要說明 list_entry macro, 書上解說的很詳細 (p148~154, 8 頁的說明, 我怎麼可能在 blog 解釋的比書上還好呢), 但我還是沒能理解, 寫個小範例來配合書上的說明。
 
 <fieldset>
 <legend>list.c</legend>
@@ -136,18 +136,16 @@ L112 展開是 L200~202 的結果, 我分別從 L105~110 做了單獨的測試�
 0xbfe844f4
 </pre>
 
-真是厲害, 我看過的版本是使用 c macro, 造出類似 c++ template 的技巧。
+真是厲害, 我看過的版本是使用 c macro, 造出類似 c++ template 的技巧;c++ 有 template, 就不用這麼轉腦袋了, 當然一樣有型別檢查, 而且和課本的書像多了。下面的程式碼是 c++ template 的版本。
 
-c++ 有 template, 就不用這麼轉腦袋了, 當然一樣有型別檢查。
-
-<fieldset><legend>list.cpp</legend>
-<pre style="white-space: pre-wrap;">
-<b> 1</b> // template linked list test in os kernel
+<fieldset>
+<legend>list.cpp</legend>
+<pre style="white-space: pre-wrap;"><b> 1</b> // template linked list test in os kernel
 <b> 2</b> #include &lt;cstdio&gt;
 <b> 3</b> 
 <b> 4</b> using namespace std;
 <b> 5</b> 
-<b> 6</b> #include &quot;stm32.h&quot;
+<b> 6</b> #include "stm32.h"
 <b> 7</b> 
 <b> 8</b> template &lt;typename type&gt;
 <b> 9</b> class List
@@ -189,8 +187,8 @@ c++ 有 template, 就不用這麼轉腦袋了, 當然一樣有型別檢查。
 <b>45</b>   List&lt;page&gt; *head;
 <b>46</b> 
 <b>47</b> #if 0
-<b>48</b>   printf(&quot;%p\n&quot;, &amp;p1);
-<b>49</b>   printf(&quot;%p\n&quot;, &amp;p2);
+<b>48</b>   printf("%p\n", &amp;p1);
+<b>49</b>   printf("%p\n", &amp;p2);
 <b>50</b> #endif
 <b>51</b> 
 <b>52</b>   //node1.set_item(p1);
@@ -202,7 +200,7 @@ c++ 有 template, 就不用這麼轉腦袋了, 當然一樣有型別檢查。
 <b>58</b>   for (List&lt;page&gt; *cur=head ; cur ; cur=cur-&gt;next())
 <b>59</b>   {
 <b>60</b>     cur_page =  cur-&gt;item();
-<b>61</b>     //printf(&quot;%p\n&quot;, cur-&gt;item());
+<b>61</b>     //printf("%p\n", cur-&gt;item());
 <b>62</b>   }
 <b>63</b>   while(1);
 <b>64</b> 
@@ -214,10 +212,10 @@ c++ 有 template, 就不用這麼轉腦袋了, 當然一樣有型別檢查。
 <b>70</b> 
 <b>71</b>   struct page *p3=0;
 <b>72</b>   ((struct page *)0)-&amp;gt;list ;
-<b>73</b>   printf(&quot;%p\n&quot;, &amp;amp;((struct page *)0)-&amp;gt;list);
-<b>74</b>   printf(&quot;%p\n&quot;, (char *)lh);
-<b>75</b>   printf(&quot;%p\n&quot;, ( (char *)lh - ((unsigned int) &amp;amp;((struct page *)0)-&amp;gt;list) ) );
-<b>76</b>   printf(&quot;%p\n&quot;, &amp;amp;p1);
+<b>73</b>   printf("%p\n", &amp;amp;((struct page *)0)-&amp;gt;list);
+<b>74</b>   printf("%p\n", (char *)lh);
+<b>75</b>   printf("%p\n", ( (char *)lh - ((unsigned int) &amp;amp;((struct page *)0)-&amp;gt;list) ) );
+<b>76</b>   printf("%p\n", &amp;amp;p1);
 <b>77</b>         
 <b>78</b>   //list_entry(lh,struct page,list);
 <b>79</b>   return 0;
@@ -234,20 +232,18 @@ c++ 有 template, 就不用這麼轉腦袋了, 當然一樣有型別檢查。
 
 這是要在 os 層級使用的, 來試試看能否成功。
 
-<pre class="cmd">
-arm-none-eabi-g++ -fno-common -O0 -g -mcpu=cortex-m3 -mthumb -fno-exceptions -fno-rtti  -c list.cpp 
+<pre class="cmd">arm-none-eabi-g++ -fno-common -O0 -g -mcpu=cortex-m3 -mthumb -fno-exceptions -fno-rtti  -c list.cpp 
 arm-none-eabi-g++ -Wl,-T./stm32.ld -nostartfiles -o list.elf list.o
 arm-none-eabi-objcopy -O binary list.elf list.bin
 </pre>
 
-<pre class="cmd">
-qemu-system-arm -M lm3s6965evb -kernel list.bin -S -gdb tcp::1234
+<pre class="cmd">qemu-system-arm -M lm3s6965evb -kernel list.bin -S -gdb tcp::1234
 </pre>
 透過 qemu/gdb 可觀察到 p1, p2 位址, 和使用 List 取出的是一樣的。藉由 template, 可以塞進各種型別。
 
-<fieldset><legend>gdb</legend>
-<pre style="white-space: pre-wrap;">
-<b> 1</b> (gdb) target remote :1234
+<fieldset>
+<legend>gdb</legend>
+<pre style="white-space: pre-wrap;"><b> 1</b> (gdb) target remote :1234
 <b> 2</b> Remote debugging using :1234
 <b> 3</b> ResetISR () at stm32.h:21
 <b> 4</b> 21      {
@@ -289,9 +285,9 @@ qemu-system-arm -M lm3s6965evb -kernel list.bin -S -gdb tcp::1234
 </fieldset>
 
 以下的 gdb 環境為 stm32f4 discovery board, 和模擬器的值一模一樣。
-<fieldset><legend>gdb stm32f4 discovery board</legend>
-<pre style="white-space: pre-wrap;">
-<b> 1</b> $1 = {vaddr = 3204496768, flags = 134218252, order = 536870912}
+<fieldset>
+<legend>gdb stm32f4 discovery board</legend>
+<pre style="white-space: pre-wrap;"><b> 1</b> $1 = {vaddr = 3204496768, flags = 134218252, order = 536870912}
 <b> 2</b> (gdb) p &amp;p1
 <b> 3</b> $2 = (page *) 0x200000d0
 <b> 4</b> (gdb) p &amp;p2
@@ -329,3 +325,4 @@ qemu-system-arm -M lm3s6965evb -kernel list.bin -S -gdb tcp::1234
 <b>36</b> 63	  while(1);
 </pre>
 </fieldset>
+
