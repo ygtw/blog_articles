@@ -1,12 +1,12 @@
 我好像忘記提 system call 的實作, 雖然我在 simple_os 已經實作過 system call, 不過那時候的程式碼是從書上抄來, 我打算在 arm cortex m3 重新實作一次, 果然遇到不少麻煩, 別人的東西就是別人的, 沒有親身體會這段, 就沒有烙印在自己身上的記憶。現在來補上這塊拼圖。
 
-麻煩一
+<b>麻煩一</b>
 在使用 svc 來實作 system call, 還是要保存 context, 也就是 context switch 要做的事情, 都要再做一次, 怎麼讓他們共用這段程式碼呢？
 
-麻煩二
+<b>麻煩二</b>
 如何將 system call 的結果傳回給 proc_a (proc_a 是發動這個 system call 的 process)
 
-麻煩三
+<b>麻煩三</b>
 如何從 proc_a 傳參數到 system call 裡頭呢？
 
 這個範例程式很醜, 架構也不美, 但它可是我從無到有實實在在完成的, 對我來說, 意義非凡。
@@ -14,14 +14,13 @@
 我參考這篇的方法來實作:
 <a href="http://www.coactionos.com/embedded-design/133-effective-use-of-arm-cortex-m3-svcall.html" target="_blank">Effective Use of ARM Cortex-M3 SVCall</a>
 
-本來打算使用 <a href="http://descent-incoming.blogspot.tw/2011/12/oranges.html">Orange's 一個作業系統的實現</a> 上的實作方式, 我也想好怎麼開始了, 不過看到這個方法好像也不賴, 試試看。
+本來打算使用 <a href="http://descent-incoming.blogspot.tw/2011/12/oranges.html">Orange's 一個作業系統的實現</a> 上的實作方式, 我也想好怎麼開始了, 不過後來看到這個方法好像也不賴, 試試看。
 <b>Orange's 一個作業系統的實現</b>是這樣完成 system call:
 
 程式碼請參閱 <a href="https://github.com/descent/simple_os" target="_blank">simple_os</a>
 
 asm_syscall.S
-<pre style="white-space: pre-wrap; font-family: serif">
-.global get_ticks
+<pre style="font-family: serif; white-space: pre-wrap;">.global get_ticks
 get_ticks:
   mov $_NR_GET_TICKS, %eax
   int $INT_VECTOR_SYS_CALL
@@ -58,11 +57,12 @@ sys_call:
 如何把參數傳給 system call:
 以 write 為例子, 將傳進來的參數存到 %ebx, %ecx, 然後在執行 sys_call_table 裡頭的 function 之前 push 到 stack, 請參閱 sys_call。
 
-cm3 的例子是完成 get_tics(), 把 systick 累加的 ticks 值回傳。
+好了, 該輪到 cm3 的<strike>實現</strike>實作 (我不厭其煩地加上這些刪除線, 希望有人能理解我的苦心) 了
+一樣拿 get_tics() 來開刀, 這是蠻適合的一個例子, 在 cm3 上, 就是把 systick_isr 累加的 ticks 回傳給<strike>調用</strike>呼叫的那個 process。
 
-<fieldset><legend>asm_func.S</legend>
-<pre style="white-space: pre-wrap;">
-<b>  1</b> .text
+<fieldset>
+<legend>asm_func.S</legend>
+<pre style="white-space: pre-wrap;"><b>  1</b> .text
 <b>  2</b> .global _start
 <b>  3</b> .code 16
 <b>  4</b> .syntax unified
@@ -100,7 +100,7 @@ cm3 的例子是完成 get_tics(), 把 systick 累加的 ticks 值回傳。
 <b> 36</b>   bx lr
 <b> 37</b> 
 <b> 38</b> #if 1
-<b> 39</b> .type svc_isr, function
+<span style="color: blue;"><b> 39</b> .type svc_isr, function
 <b> 40</b> .global svc_isr
 <b> 41</b> svc_isr:
 <b> 42</b>   cpsid i @Prevent interruption during svc
@@ -140,7 +140,7 @@ cm3 的例子是完成 get_tics(), 把 systick 累加的 ticks 值回傳。
 <b> 76</b>   pop {R4-R11}     // Restore r4-11 from new process stack
 <b> 77</b> 
 <b> 78</b>   cpsie i
-<b> 79</b>   bx lr
+<b> 79</b>   bx lr</span>
 <b> 80</b> #endif
 <b> 81</b> 
 <b> 82</b> @void pendsv_isr(void)
@@ -165,15 +165,15 @@ cm3 的例子是完成 get_tics(), 把 systick 累加的 ticks 值回傳。
 <b>101</b> 
 <b>102</b> 
 <b>103</b> 
-<b>104</b> .section .stackares,&quot;aw&quot;,%progbits
+<b>104</b> .section .stackares,"aw",%progbits
 <b>105</b> .space  0x200, 0
 <b>106</b> kernel_stack:
 </pre>
 </fieldset>
 
-<fieldset><legend>syscall.cpp</legend>
-<pre style="white-space: pre-wrap;">
-<b> 1</b> #include &quot;asm_syscall.h&quot;
+<fieldset>
+<legend>syscall.cpp</legend>
+<pre style="white-space: pre-wrap;"><b> 1</b> #include "asm_syscall.h"
 <b> 2</b> 
 <b> 3</b> typedef void* SystemCall;
 <b> 4</b> 
@@ -195,7 +195,7 @@ cm3 的例子是完成 get_tics(), 把 systick 累加的 ticks 值回傳。
 <b>20</b> // ref: http://www.coactionos.com/embedded-design/133-effective-use-of-arm-cortex-m3-svcall.html
 <b>21</b> int service_call(FuncPtr func_ptr, Arg *arg)
 <b>22</b> {
-<b>23</b>   __asm__ volatile(&quot;svc 0&quot;);
+<b>23</b>   __asm__ volatile("svc 0");
 <b>24</b> }
 <b>25</b> 
 <b>26</b> int get_ticks()
@@ -212,11 +212,13 @@ cm3 的例子是完成 get_tics(), 把 systick 累加的 ticks 值回傳。
 
 asm_func.S L39 ~ 79 就是在處理 system call 的部份, 
 <center>
-<a href="https://picasaweb.google.com/lh/photo/TaEPtNvc0rqYVZ7gM-r_rNMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img src="https://lh4.googleusercontent.com/-vEQ1YM-wfI4/UlIw0-KaofI/AAAAAAAAs_s/M5rUC6JRIfA/s800/P1350042.JPG" height="600" width="800" /></a>
+<a href="https://picasaweb.google.com/lh/photo/TaEPtNvc0rqYVZ7gM-r_rNMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="600" src="https://lh4.googleusercontent.com/-vEQ1YM-wfI4/UlIw0-KaofI/AAAAAAAAs_s/M5rUC6JRIfA/s800/P1350042.JPG" width="800" /></a>
 </center>
 
 get_ticks() 是 system call, 將 {sys_get_ticks(), arg} 當成參數傳給 service_call(), service_call() 會執行 svc 觸發 svc exception, 再來便是上圖所敘述從 svc_isr 開始到返回。
 
 這邊需要知道 cm3 c function 和組合語言如何傳遞參數, r0~r3 用來傳遞參數, 如果有第五個參數, 就要用 stack 來傳遞, 返回值則存在 r0。這裡同樣會有 context 的切換, 所以如果沒搞懂 context switch 如何實作, 這邊應該也是看不懂, 金字塔知識就是這樣堆積起來的。
+
+程式若用上兩個 stack 會簡單點, 但這麼<b>直白</b>的程式, 比較好理解整個來龍去脈, 裡頭有著 user process, kernel code 的 stack 切換, 可以了解到一個 system call 的複雜, 和一般的 function call 可是有本質上的不同。
 
 三個麻煩順利解決 (你說麻煩一沒解決是吧, 管他的, 做出來最重要, 美感的話再說了), 痛快。

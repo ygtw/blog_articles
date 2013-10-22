@@ -83,7 +83,7 @@
 <b> 77</b> }
 <b> 78</b> 
 <b> 79</b> 
-<b> 80</b> #define offsetof(TYPE, MEMBER) ((unsigned int) &amp;((TYPE *)0)-&gt;MEMBER)
+<span style="color: blue;"><b> 80</b> #define offsetof(TYPE, MEMBER) ((unsigned int) &amp;((TYPE *)0)-&gt;MEMBER)
 <b> 81</b> 
 <b> 82</b> 
 <b> 83</b> #define container_of(ptr, type, member) ({   \
@@ -92,7 +92,7 @@
 <b> 86</b> 
 <b> 87</b> 
 <b> 88</b> #define list_entry(ptr,type,member) \
-<b> 89</b>     container_of(ptr, type, member)
+<b> 89</b>     container_of(ptr, type, member)</span>
 <b> 90</b> 
 <b> 91</b> 
 <b> 92</b> 
@@ -115,17 +115,19 @@
 <b>109</b>   printf("%p\n", ( (char *)lh - ((unsigned int) &amp;((struct page *)0)-&gt;list) ) );
 <b>110</b>   printf("%p\n", &amp;p1);
 <b>111</b>         
-<b>112</b>   //list_entry(lh,struct page,list);
+<span style="color: red;"><b>112</b>   //list_entry(lh,struct page,list);</span>
 <b>113</b>   return 0;
 <b>114</b> }
 
-<b>200</b>   ({ const typeof( ((struct page *)0)-&gt;list ) *__mptr = (lh); 
-<b>201</b>   (struct page *)( (char *)__mptr - ((unsigned int) &amp;((struct page *)0)-&gt;list) );});
+<span style="color: #38761d;"><b>200</b>   ({ const typeof( ((struct page *)0)-&gt;list ) *__mptr = (lh); 
+<b>201</b>   (struct page *)( (char *)__mptr - ((unsigned int) &amp;((struct page *)0)-&gt;list) );});</span>
 <b>202</b>   return 0;
 </pre>
 </fieldset>
 
-L112 展開是 L200~202 的結果, 我分別從 L105~110 做了單獨的測試。最主要是要補充書上沒提到的小例子, 有了這個小例子, 搭配書上的講解 (6.1.2.2 page 148), 應該就能了解。
+L80 ~ L89 真是令人害怕的 macro, 還有一個不認識的 <a href="http://gcc.gnu.org/onlinedocs/gcc/Typeof.html" target="_blank">typeof</a>, 不認識很正常, 這是 gcc 的 c extension, 很討厭這種 extension 吧, 難道沒用上 extension 就做不到同樣的事情嗎? 當然不是, 只是選擇不同。
+
+L112 展開是 L200, L201 的結果 (還是讓人害怕, 書上用了 8 頁的說明現在你覺得有道理了吧), 我分別從 L105~110 做了單獨的測試。最主要是要補充書上沒提到的小例子, 有了這個小例子, 搭配書上的講解 (6.1.2.2 page 148~154), 應該就能了解。
 
 一開始被 0 取址所迷惑, 以為這樣會 core dump, 不過應該是要做寫入的動作才會 core dump, 讀取位址 0 是沒問題的。
 
@@ -147,7 +149,7 @@ L112 展開是 L200~202 的結果, 我分別從 L105~110 做了單獨的測試�
 <b> 5</b> 
 <b> 6</b> #include "stm32.h"
 <b> 7</b> 
-<b> 8</b> template &lt;typename type&gt;
+<span style="color: red;"><b> 8</b> template &lt;typename type&gt;
 <b> 9</b> class List
 <b>10</b> {
 <b>11</b>   public:
@@ -170,7 +172,7 @@ L112 展開是 L200~202 的結果, 我分別從 L105~110 做了單獨的測試�
 <b>28</b>     type *item_;
 <b>29</b>     List *prev_;
 <b>30</b>     List *next_;
-<b>31</b> };
+<b>31</b> };</span>
 <b>32</b> 
 <b>33</b> struct page 
 <b>34</b> {
@@ -230,16 +232,17 @@ L112 展開是 L200~202 的結果, 我分別從 L105~110 做了單獨的測試�
 </pre>
 </fieldset>
 
-這是要在 os 層級使用的, 來試試看能否成功。
+跑在 os 下使用這功能沒什麼特別的, 這是要在 os 層級使用的, 來試試看能否成功。
 
-<pre class="cmd">arm-none-eabi-g++ -fno-common -O0 -g -mcpu=cortex-m3 -mthumb -fno-exceptions -fno-rtti  -c list.cpp 
-arm-none-eabi-g++ -Wl,-T./stm32.ld -nostartfiles -o list.elf list.o
+<pre class="cmd">arm-none-eabi-g++ -fno-common -O0 -g -mcpu=cortex-m3 -mthumb  -fno-exceptions -fno-rtti -std=c++11  -c list.cpp 
+arm-none-eabi-g++ -Wl,-T./stm32.ld -nostartfiles -fno-common -mcpu=cortex-m3 -mthumb -o list.elf list.o
 arm-none-eabi-objcopy -O binary list.elf list.bin
 </pre>
 
 <pre class="cmd">qemu-system-arm -M lm3s6965evb -kernel list.bin -S -gdb tcp::1234
 </pre>
-透過 qemu/gdb 可觀察到 p1, p2 位址, 和使用 List 取出的是一樣的。藉由 template, 可以塞進各種型別。
+
+為了簡單, 就不要出動列印功能 (不使用 printf), 直接透過 qemu/gdb 來檢視正確性, gdb 可觀察到 p1, p2 位址, 和使用 List 取出的是一樣的。藉由 template, 可以塞進各種型別, 相信 c++ template 版本看來友善多了。
 
 <fieldset>
 <legend>gdb</legend>
@@ -255,9 +258,9 @@ arm-none-eabi-objcopy -O binary list.elf list.bin
 <b>10</b> Breakpoint 1, mymain () at list.cpp:44
 <b>11</b> 44        List&lt;page&gt; node1(&amp;p1), node2(&amp;p2);
 <b>12</b> (gdb) p &amp;p1
-<b>13</b> $1 = (page *) 0x200000d0
+<span style="color: red;"><b>13</b> $1 = (page *) 0x200000d0</span>
 <b>14</b> (gdb) p &amp;p2
-<b>15</b> $2 = (page *) 0x200000c4
+<span style="color: red;"><b>15</b> $2 = (page *) 0x200000c4</span>
 <b>16</b> (gdb) n
 <b>17</b> 55        node1.add_next(&amp;node2);
 <b>18</b> (gdb) n
@@ -273,18 +276,21 @@ arm-none-eabi-objcopy -O binary list.elf list.bin
 <b>28</b> (gdb) n
 <b>29</b> 58        for (List&lt;page&gt; *cur=head ; cur ; cur=cur-&gt;next())
 <b>30</b> (gdb) p cur_page 
-<b>31</b> $4 = (page *) 0x200000d0
+<span style="color: blue;"><b>31</b> $4 = (page *) 0x200000d0</span>
 <b>32</b> (gdb) n
 <b>33</b> 60          cur_page =  cur-&gt;item();
 <b>34</b> (gdb) n
 <b>35</b> 58        for (List&lt;page&gt; *cur=head ; cur ; cur=cur-&gt;next())
 <b>36</b> (gdb) p cur_page 
-<b>37</b> $5 = (page *) 0x200000c4
+<span style="color: blue;"><b>37</b> $5 = (page *) 0x200000c4</span>
 <b>38</b> (gdb) 
 </pre>
 </fieldset>
 
+L13, L15, 是 p1, p2 的位址, L31, L37 是透過 List 取出的位址, 剛好一樣 (不一樣就慘了)。
+
 以下的 gdb 環境為 stm32f4 discovery board, 和模擬器的值一模一樣。
+
 <fieldset>
 <legend>gdb stm32f4 discovery board</legend>
 <pre style="white-space: pre-wrap;"><b> 1</b> $1 = {vaddr = 3204496768, flags = 134218252, order = 536870912}
@@ -293,36 +299,37 @@ arm-none-eabi-objcopy -O binary list.elf list.bin
 <b> 4</b> (gdb) p &amp;p2
 <b> 5</b> $3 = (page *) 0x200000c4
 <b> 6</b> (gdb) n
-<b> 7</b> 55	  node1.add_next(&amp;node2);
+<b> 7</b> 55   node1.add_next(&amp;node2);
 <b> 8</b> (gdb) n
-<b> 9</b> 56	  head = &amp;node1;
+<b> 9</b> 56   head = &amp;node1;
 <b>10</b> (gdb) n
-<b>11</b> 57	  page *cur_page = 0;
+<b>11</b> 57   page *cur_page = 0;
 <b>12</b> (gdb) n
-<b>13</b> 58	  for (List&lt;page&gt; *cur=head ; cur ; cur=cur-&gt;next())
+<b>13</b> 58   for (List&lt;page&gt; *cur=head ; cur ; cur=cur-&gt;next())
 <b>14</b> (gdb) n
-<b>15</b> p 60	    cur_page =  cur-&gt;item();
+<b>15</b> p 60     cur_page =  cur-&gt;item();
 <b>16</b> (gdb) p cur_page
 <b>17</b> $4 = (page *) 0x0
 <b>18</b> (gdb) n
-<b>19</b> 58	  for (List&lt;page&gt; *cur=head ; cur ; cur=cur-&gt;next())
+<b>19</b> 58   for (List&lt;page&gt; *cur=head ; cur ; cur=cur-&gt;next())
 <b>20</b> (gdb) p cur_page
 <b>21</b> $5 = (page *) 0x200000d0
 <b>22</b> (gdb) n
-<b>23</b> 60	    cur_page =  cur-&gt;item();
+<b>23</b> 60     cur_page =  cur-&gt;item();
 <b>24</b> (gdb) n
-<b>25</b> 58	  for (List&lt;page&gt; *cur=head ; cur ; cur=cur-&gt;next())
+<b>25</b> 58   for (List&lt;page&gt; *cur=head ; cur ; cur=cur-&gt;next())
 <b>26</b> (gdb) p cur_page
 <b>27</b> $6 = (page *) 0x200000c4
 <b>28</b> (gdb) n
-<b>29</b> 63	  while(1);
+<b>29</b> 63   while(1);
 <b>30</b> (gdb) n
 <b>31</b> ^Cmymain () at list.cpp:63
-<b>32</b> 63	  while(1);
+<b>32</b> 63   while(1);
 <b>33</b> Error while handling inferior event:
 <b>34</b> Quit
 <b>35</b> mymain () at list.cpp:63
-<b>36</b> 63	  while(1);
+<b>36</b> 63   while(1);
 </pre>
 </fieldset>
 
+c macro 版本莫測高深, c++ template 版本高深莫測, 相信每個人都有自己喜歡的作法, 神的右手與魔鬼的左手同樣的強大。這是我喜歡 c++ 的原因之一, 你可選神的右手或是魔鬼的左手。
