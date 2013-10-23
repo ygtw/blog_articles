@@ -11,11 +11,9 @@
 
 這個範例程式很醜, 架構也不美, 但它可是我從無到有實實在在完成的, 對我來說, 意義非凡。
 
-我參考這篇的方法來實作:
-<a href="http://www.coactionos.com/embedded-design/133-effective-use-of-arm-cortex-m3-svcall.html" target="_blank">Effective Use of ARM Cortex-M3 SVCall</a>
+本來打算使用 <a href="http://descent-incoming.blogspot.tw/2011/12/oranges.html">Orange's 一個作業系統的實現</a> 上的實作方式, 我也想好怎麼開始了, 不過 ...
 
-本來打算使用 <a href="http://descent-incoming.blogspot.tw/2011/12/oranges.html">Orange's 一個作業系統的實現</a> 上的實作方式, 我也想好怎麼開始了, 不過後來看到這個方法好像也不賴, 試試看。
-<b>Orange's 一個作業系統的實現</b>是這樣完成 system call:
+先來看看 <b>Orange's 一個作業系統的實現</b>是怎麼<strike>實現</strike>實作 system call:
 
 程式碼請參閱 <a href="https://github.com/descent/simple_os" target="_blank">simple_os</a>
 
@@ -52,13 +50,18 @@ sys_call:
   ret
 </pre>
 
-填入 system call 編號到 %eax, 觸發 0x90 中斷 (int 0x90), 這時候會跑到 sys_call (透過 IDT 設定的結果), 再根據 sys_call_table, 編號去執行 sys_call_table 裡頭的 function (ref: syscall.c), 再把傳回值寫到 process stack frame 的 %eax 欄位, system call 結束後, process 的 %eax 自然就得到該 system call 的傳回值, 文字敘述很簡單, 把它變成程式碼就困難些了。
+填入 system call 編號到 %eax, 觸發 0x90 中斷 (int 0x90), 這時候會跑到 sys_call (透過 IDT 設定的結果), 再根據 sys_call_table, 編號去執行 sys_call_table 裡頭的 function (ref: syscall.c), 再把傳回值寫到 process stack frame 的 %eax 欄位, system call 結束後, process 的 %eax 自然就得到該 system call 的傳回值。
 
 如何把參數傳給 system call:
 以 write 為例子, 將傳進來的參數存到 %ebx, %ecx, 然後在執行 sys_call_table 裡頭的 function 之前 push 到 stack, 請參閱 sys_call。
 
-好了, 該輪到 cm3 的<strike>實現</strike>實作 (我不厭其煩地加上這些刪除線, 希望有人能理解我的苦心) 了
-一樣拿 get_tics() 來開刀, 這是蠻適合的一個例子, 在 cm3 上, 就是把 systick_isr 累加的 ticks 回傳給<strike>調用</strike>呼叫的那個 process。
+文字敘述很簡單 (所以通常被稱做嘴炮), 把它變成程式碼就困難些了。 
+
+不過後來找到這篇的實作方法:
+<a href="http://www.coactionos.com/embedded-design/133-effective-use-of-arm-cortex-m3-svcall.html" target="_blank">Effective Use of ARM Cortex-M3 SVCall</a>
+我想試試看這個作法。
+
+好了, 該輪到 cm3 的<strike>實現</strike>實作了, 一樣拿 get_tics() 來開刀, 這是蠻適合的一個例子, 在 cm3 上, 就是把 systick_isr 累加的 ticks 回傳給<strike>調用</strike>呼叫 (我不厭其煩地加上這些刪除線, 希望有人能理解我的苦心) 的那個 process。
 
 <fieldset>
 <legend>asm_func.S</legend>
@@ -210,7 +213,8 @@ sys_call:
 </pre>
 </fieldset>
 
-asm_func.S L39 ~ 79 就是在處理 system call 的部份, 
+asm_func.S L39 ~ 79 就是在處理 system call 的部份, 有些說明請參考以下圖片, 呃 ... 我也不願意這麼做, 實在是太沒質感了, 應該畫個漂亮的圖才是, 有人願意幫忙嗎? 裡頭涉及到 context switch, 會有點複雜。
+
 <center>
 <a href="https://picasaweb.google.com/lh/photo/TaEPtNvc0rqYVZ7gM-r_rNMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="600" src="https://lh4.googleusercontent.com/-vEQ1YM-wfI4/UlIw0-KaofI/AAAAAAAAs_s/M5rUC6JRIfA/s800/P1350042.JPG" width="800" /></a>
 </center>
