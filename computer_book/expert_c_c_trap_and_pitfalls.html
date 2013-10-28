@@ -1,0 +1,216 @@
+<span style="font-size: x-large;">expert c programming (C 专家编程)</span>
+
+<a href="https://picasaweb.google.com/lh/photo/krapimqaD8Bg6_GiwvgU3dMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="480" src="https://lh3.googleusercontent.com/-9qCpnYKl2H8/T1iIn17HaDI/AAAAAAAAZYM/XwVhLqgYr0c/s640/P1320093.JPG" width="640" /></a>
+
+其實不知道該怎麼談論這本書, 所以我決定用幾個程式碼來引起大家對這本書的興趣。
+
+你知道這些指標要怎麼寫才對嗎？
+
+<fieldset>
+<legend>ma.c</legend>
+<pre><a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line1" name="line1"> 1</a> #include &lt;stdio.h&gt;
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line2" name="line2"> 2</a> 
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line3" name="line3"> 3</a> void my_func1(int fruit[2][3][5]){;}
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line4" name="line4"> 4</a> void my_func2(int fruit[][3][5]){;}
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line5" name="line5"> 5</a> void my_func3(int (*fruit)[3][5]){;}
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line6" name="line6"> 6</a> 
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line7" name="line7"> 7</a> int main(int argc, const char *argv[])
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line8" name="line8"> 8</a> {
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line9" name="line9"> 9</a>   int apricot[2][3][5];
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line10" name="line10">10</a>   printf("apricot addr: %p\n", apricot);
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line11" name="line11">11</a>   my_func1(apricot);
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line12" name="line12">12</a>   my_func2(apricot);
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line13" name="line13">13</a>   my_func3(apricot);
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line14" name="line14">14</a> 
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line15" name="line15">15</a>   int (*p)[3][5] = apricot;
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line16" name="line16">16</a>   my_func1(p);
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line17" name="line17">17</a>   my_func2(p);
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line18" name="line18">18</a>   my_func3(p);
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line19" name="line19">19</a> 
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line20" name="line20">20</a>   int (*q)[2][3][5] = &amp;apricot;
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line21" name="line21">21</a>   my_func1(*q);
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line22" name="line22">22</a>   my_func2(*q);
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line23" name="line23">23</a>   my_func3(*q);
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line24" name="line24">24</a> 
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line25" name="line25">25</a>   int (*r)[5] = apricot[0];
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line26" name="line26">26</a>   printf("apricot[0] addr: %p\n", apricot[0]);
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line27" name="line27">27</a>   printf("apricot[1] addr: %p\n", apricot[1]);
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line28" name="line28">28</a>   printf("r addr: %p\n", r);
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line29" name="line29">29</a>   int (*r1)[5] = &amp;apricot[0][0];
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line30" name="line30">30</a>   printf("r1 addr: %p\n", r1);
+<span style="color: red;"><a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line31" name="line31">31</a>   r = apricot[1];</span>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line32" name="line32">32</a> 
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line33" name="line33">33</a>   int *t = apricot[0][1];
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line34" name="line34">34</a>   t = apricot[1][2];
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line35" name="line35">35</a> 
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line36" name="line36">36</a> 
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line37" name="line37">37</a>   return 0;
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line38" name="line38">38</a> }
+</pre>
+</fieldset>
+
+<pre><span style="color: red;"><a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line31" name="line31">31</a>   r = apricot[1];</span></pre>
+<strike>我還沒想透 ...</strike>, 看了<b> C 陷阱与缺陷</b>已經想通。
+
+使用了 c 標準程式庫的函式名稱會怎樣?
+<fieldset>
+<legend>interpositioning.c</legend>
+<pre><a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line1" name="line1"> 1</a> //#include &lt;stdio.h&gt;
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line2" name="line2"> 2</a> 
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line3" name="line3"> 3</a> void printf(const char *format, ...)
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line4" name="line4"> 4</a> {
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line5" name="line5"> 5</a>   puts("interposition printf");
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line6" name="line6"> 6</a> }
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line7" name="line7"> 7</a> int main(int argc, const char *argv[])
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line8" name="line8"> 8</a> {
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line9" name="line9"> 9</a>   printf("a\n");
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line10" name="line10">10</a>   return 0;
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line11" name="line11">11</a> }
+</pre>
+</fieldset>
+
+
+gcc 1.c 2.c =&gt; a.out
+執行結果在我的平台是
+newdef f = 0.000000, char = 3
+對這個結果很驚訝嗎？
+
+<fieldset>
+<legend>1.c</legend>
+<pre><a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line1" name="line1">1</a> <b>int</b> <span style="color: #2040a0;">main</span><span style="color: #4444ff;">(</span><b>int</b> <span style="color: #2040a0;">argc</span>, <b>const</b> <b>char</b> <span style="color: #4444ff;">*</span><span style="color: #2040a0;">argv</span><span style="color: #4444ff;">[</span><span style="color: #4444ff;">]</span><span style="color: #4444ff;">)</span>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line2" name="line2">2</a> <span style="color: #4444ff;"><b>{</b></span>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line3" name="line3">3</a> //<b>int</b> <span style="color: #2040a0;">newdef</span><span style="color: #4444ff;">(</span><b>float</b> <span style="color: #2040a0;">d</span>, <b>char</b> <span style="color: #2040a0;">i</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line4" name="line4">4</a>   <b>float</b> <span style="color: #2040a0;">d</span> <span style="color: #4444ff;">=</span> <span style="color: red;">10.0</span><span style="color: #4444ff;">;</span>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line5" name="line5">5</a>   <b>char</b> <span style="color: #2040a0;">j</span> <span style="color: #4444ff;">=</span> <span style="color: red;">3</span><span style="color: #4444ff;">;</span>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line6" name="line6">6</a>   <span style="color: #2040a0;">newdef</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">d</span>, <span style="color: #2040a0;">j</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>        
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line7" name="line7">7</a>   <b>return</b> <span style="color: red;">0</span><span style="color: #4444ff;">;</span>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line8" name="line8">8</a> <span style="color: #4444ff;"><b>}</b></span>
+</pre>
+</fieldset>
+
+<fieldset>
+<legend>2.c</legend>
+<pre><a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line1" name="line1">1</a> <span style="color: blue;"><b>#include <span style="color: green;">&lt;stdio.h&gt;</span></b></span>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line2" name="line2">2</a> 
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line3" name="line3">3</a> <b>int</b> <span style="color: #2040a0;">newdef</span><span style="color: #4444ff;">(</span><b>float</b> <span style="color: #2040a0;">d</span>, <b>char</b> <span style="color: #2040a0;">i</span><span style="color: #4444ff;">)</span>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line4" name="line4">4</a> <span style="color: #4444ff;"><b>{</b></span>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line5" name="line5">5</a>   <span style="color: #2040a0;">printf</span><span style="color: #4444ff;">(</span><span style="color: green;">"newdef f = %f, char = %x<span style="color: #77dd77;">\n</span>"</span>, <span style="color: #2040a0;">d</span>, <span style="color: #2040a0;">i</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line6" name="line6">6</a> <span style="color: #4444ff;"><b>}</b></span>
+</pre>
+</fieldset>
+
+書中在探討 C 語言中一般書上較少提到的主題, 也會有些和 os 相關的部份; 和 os 相關部份可能是比較難理解的章節 (有實際完成 os 才比較能體會), 但其他部份都是看過就可以理解。指標和陣列的異同非常實用, 費點腦力研讀會很有收穫。
+
+<pre class="cmd">char * const *(*next)();
+void(*(*papf)[3])(char *);
+</pre>
+
+上面的語法有難倒你嗎? 3.3 3.4 在討論如何看這種令人腦袋打結的語法。
+
+p219 介紹多維<strike>數組</strike>陣列的記憶體 layout,
+
+char pea[5][2] 是可以有 5 個長度為 2 的字串? 還是有 2 個長度為 5 的字串?
+答案是這樣: 有 5 個長度為 2 的字串
+char pea[5][2] = {"a", "b", "c", "d", "e"};
+所以我要怎麼指向這個多維陣列?
+char (*p)[2] = pea;
+我得告訴 c compiler, p++ 一次要移動 2 bytes, 還撐的住, 來個 3 維陣列看看。
+
+char a3[4][3][2];
+2 個的有 3 個, 2 個的 3 個有 4 個。 
+ww ww ww xx xx xx&nbsp; yy yy yy zz zz zz
+
+指向 2 個的:
+char (*p2)[2] = &amp;a3[1][2];
+
+指向包了 2 個的那 3 個: 
+char (*p3)[3][2] = &amp;a3[2] ;
+
+以下是測試程式碼, 我相信我應該很快會忘記, 所以我寫了這篇。
+
+<fieldset>
+<legend>a.c</legend>
+<pre style="white-space: pre-wrap;"><b> 1</b> #include &lt;stdio.h&gt;
+<b> 2</b> int main(int argc, char *argv[])
+<b> 3</b> {
+<b> 4</b>   char pea[5][2] = {"a", "b", "c", "d", "e"};
+<b> 5</b>   char (*p)[2] = pea;
+<b> 6</b>   int i=0;
+<b> 7</b>   for (i=0 ; i &lt; 5 ; ++i)
+<b> 8</b>     printf("%s\n", pea[i]);
+<b> 9</b> 
+<b>10</b>   printf("===\n");
+<b>11</b> 
+<b>12</b>   for (i=0 ; i &lt; 5 ; ++i)
+<b>13</b>   {
+<b>14</b>     printf("%s\n", *p++);
+<b>15</b>   }
+<b>16</b> 
+<b>17</b>   char a3[4][3][2] = {"a","b","c", "d","e","f", "l","m","n",  "x","y","z"};
+<b>18</b>   char (*p2)[2] = &amp;a3[1][2];
+<b>19</b>   printf("%s\n", p2);
+<b>20</b>   char (*p3)[3][2] = &amp;a3[2] ;
+<b>21</b>   for (i=0 ; i &lt; 3 ; ++i)
+<b>22</b>   {
+<b>23</b>     printf("%s\n", (*p3)[i]);
+<b>24</b>   }
+<b>25</b>   return 0;
+<b>26</b> }
+</pre>
+</fieldset>
+
+執行結果:
+<pre class="cmd">descent@descent-u:tmp$ ./a.out 
+a
+b
+c
+d
+e
+===
+a
+b
+c
+d
+e
+f
+l
+m
+n
+</pre>
+本書翻譯的不是很好, 詞句有些不順暢, 讀來詰屈聱牙, 雖然薄薄一本, 還是得花點心力看完, 下一本就好多了。
+
+<span style="font-size: x-large;">c trap and pitfalls (C 陷阱与缺陷)</span>
+
+<a href="https://picasaweb.google.com/lh/photo/YUjWskXfmevLqsbT3YOpzdMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="480" src="https://lh4.googleusercontent.com/-8F0RFyfGufQ/T1iIkx6QTXI/AAAAAAAAZX8/WA21PrzGG5g/s640/P1320091.JPG" width="640" /></a>
+
+這本的翻譯好一點, 讀來稍微不那麼痛苦; 也是類似的書籍, 探討 c 語言的陷阱。
+
+<fieldset>
+<legend>b.c</legend>
+<pre><a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629" name="line1"> 1</a> <span style="color: blue;"><b>#include <span style="color: green;">&lt;stdio.h&gt;</span></b></span>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629" name="line2"> 2</a> 
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629" name="line3"> 3</a> <b>int</b> <span style="color: #2040a0;">main</span><span style="color: #4444ff;">(</span><b>int</b> <span style="color: #2040a0;">argc</span>, <b>const</b> <b>char</b> <span style="color: #4444ff;">*</span><span style="color: #2040a0;">argv</span><span style="color: #4444ff;">[</span><span style="color: #4444ff;">]</span><span style="color: #4444ff;">)</span>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629" name="line4"> 4</a> <span style="color: #4444ff;"><b>{</b></span>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629" name="line5"> 5</a>   <b>int</b> <span style="color: #2040a0;">c</span><span style="color: #4444ff;">;</span>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629" name="line6"> 6</a> 
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629" name="line7"> 7</a>   <b>char</b> <span style="color: #2040a0;">buf</span><span style="color: #4444ff;">[</span><span style="color: #2040a0;">BUFSIZ</span><span style="color: #4444ff;">]</span><span style="color: #4444ff;">;</span>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629" name="line8"> 8</a>   <span style="color: #2040a0;">setbuf</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">stdout</span>, <span style="color: #2040a0;">buf</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629" name="line9"> 9</a> 
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629" name="line10">10</a>   <b>while</b><span style="color: #4444ff;">(</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">c</span><span style="color: #4444ff;">=</span><span style="color: #2040a0;">getchar</span><span style="color: #4444ff;">(</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">)</span> <span style="color: #4444ff;">!</span><span style="color: #4444ff;">=</span> <span style="color: #2040a0;">EOF</span><span style="color: #4444ff;">)</span>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629" name="line11">11</a>     <span style="color: #2040a0;">putchar</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">c</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629" name="line12">12</a>   <b>return</b> <span style="color: red;">0</span><span style="color: #4444ff;">;</span>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629" name="line13">13</a> <span style="color: #4444ff;"><b>}</b></span>
+</pre>
+</fieldset>
+
+上面的程式錯在那呢？令人防不勝防。
+
+我之前都是透過 c++ 書籍學習 c&nbsp; 語言, 雖然可以應付工作的需求, 但看了這兩本才知道 c 語言的<b>搞怪</b> (台語發音)。
+
+<a href="http://blog.csdn.net/yylklshmyt20090217/article/details/4216868">http://blog.csdn.net/yylklshmyt20090217/article/details/4216868</a> p87 上的內容, 一字不差, 怎麼有人好意思把書上的東西寫進自己的 blog, 還沒有註明引用來源。
+
+<b>3.6 邊界計算與不對稱邊界</b>討論值的範圍, 說明 0&lt;=N &lt; 6 比 0&lt;= N &lt;= 5 讓我記住怎麼計算邊界, 在也不會搞錯了, 難怪 stl container 也是用這樣的設計, 值得一讀。
+
+台灣的出版社應該要出版這兩本, 這是可以長賣的書籍, 又很薄, 可以減少製作的時間, 不需要侯捷這樣等級的翻譯作家應該就可以製作的比中國簡體版好, 我認為有這樣程度的 c 語言譯者比較好找, 當然價格也不能定得太貴, 要不然又沒吸引力, 出版社難做阿！
+
+以 C 陷阱与缺陷來說, 人民幣 30, 若是台灣定價在 200 ~ 250 NT 應該可讓台灣讀者接受。
