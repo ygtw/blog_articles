@@ -1,0 +1,134 @@
+在 <a href="http://descent-incoming.blogspot.tw/search/label/process%20switch">x86 process switch 系列</a>後, 我嘗試實作 arm cm3 的 process switch, 基本原理是一樣的, 不過 stack 處理可讓我傷透腦筋, 也才有 <a href="http://descent-incoming.blogspot.tw/2013/04/x86-process-switch-implementation-15.html" target="_blank">x86 process switch implementation (1.5) - save/restore in real mode</a> 這篇, 算是意外的收穫, 腦筋只要動, 還是想得出方法。
+
+不過這篇是在還沒想到之前寫的, 完成後固然開心, 但這不是在 arm cm3 的作法, 實際上的作法有點不同 (類似 1.5 那篇)。但是這方法很容易理解, 還是值得說明一下, 來看看沒有保存 stack 的作法。
+
+source code: <a href="https://github.com/descent/stm32f4_prog">https://github.com/descent/stm32f4_prog</a>
+git commit b78cb69ce5b61421d0ea865939a983930e1f3fea
+
+<fieldset>
+<legend>process.S</legend>
+<pre style="white-space: pre-wrap;"><b>  1</b> # test svc software interrupt
+<b>  2</b> # ref : http://tw.m.wretch.yahoo.com/blog/DreamYeh/888788
+<b>  3</b> # comment: #, @
+<b>  4</b> 
+<b>  5</b> .equ STACK_TOP, 0x20000800
+<b>  6</b> .text
+<b>  7</b> .global _start
+<b>  8</b> .code 16
+<b>  9</b> .syntax unified
+<b> 10</b> _start:
+<b> 11</b>   .word STACK_TOP, start 
+<b> 12</b>   .type start, function @ let lsb to 1
+<b> 13</b> 
+<b> 14</b>   .word int_isr+1
+<b> 15</b>   .word int_isr+1
+<b> 16</b>   .word int_isr+1
+<b> 17</b>   .word int_isr+1
+<b> 18</b>   .word int_isr+1
+<b> 19</b>   .word int_isr+1
+<b> 20</b>   .word int_isr+1
+<b> 21</b>   .word int_isr+1
+<b> 22</b>   .word int_isr+1
+<b> 23</b>   .word int_isr+1 @ svc isr
+<b> 24</b>   .word int_isr+1
+<b> 25</b>   .word int_isr+1
+<b> 26</b>   .word int_isr+1
+<b> 27</b>   .word int_isr+1
+<b> 28</b>   .word int_isr+1
+<b> 29</b>   .word int_isr+1
+<b> 30</b>   .word int_isr+1
+<b> 31</b> 
+<b> 32</b> start:
+<b> 33</b>   ldr r0, =stack_frame_a
+<b> 34</b> 
+<b> 35</b>   ldr r1,=#0xfffffff9
+<b> 36</b>   str r1, [r0, #20] @ setup lr
+<b> 37</b> 
+<b> 38</b>   adr r1, proc_a
+<b> 39</b>   str r1, [r0, #24] @ setup pc
+<b> 40</b>   mov r1, #0x1000000
+<b> 41</b>   str r1, [r0, #28] @ setup psr
+<b> 42</b> 
+<b> 43</b>   @@@@@@@@@@@@@@@@@@@@@
+<b> 44</b> 
+<b> 45</b>   ldr r0, =stack_frame_b
+<b> 46</b> 
+<b> 47</b>   ldr r1,=#0xfffffff9
+<b> 48</b>   str r1, [r0, #20] @ setup lr
+<b> 49</b> 
+<b> 50</b>   ldr r1, =proc_b
+<b> 51</b>   str r1, [r0, #24] @ setup pc
+<b> 52</b>   mov r1, #0x1000000
+<b> 53</b>   str r1, [r0, #28] @ setup psr
+<b> 54</b> 
+<b> 55</b>   @@@@@@@@@@@@@@@@@@@@@
+<b> 56</b>   ldr r5, =cur_proc
+<b> 57</b>   mov r1, #0
+<b> 58</b>   str r1, [r5]
+<b> 59</b> 
+<b> 60</b>   svc 0
+<b> 61</b> 
+<b> 62</b> deadloop:
+<b> 63</b>   b deadloop
+<b> 64</b> 
+<b> 65</b> .type proc_a, function @ let lsb to 1
+<b> 66</b> proc_a:
+<b> 67</b>   movs r0, #1
+<b> 68</b>   svc 0
+<b> 69</b>   nop
+<b> 70</b>   b proc_a
+<b> 71</b> 
+<b> 72</b> .type proc_b, function @ let lsb to 1
+<b> 73</b> proc_b:
+<b> 74</b>   movs r1, #2
+<b> 75</b>   nop
+<b> 76</b>   svc 0
+<b> 77</b>   b proc_b
+<b> 78</b> 
+<b> 79</b> int_isr:
+<b> 80</b>   movs r5, #5
+<b> 81</b>   ldr r5, =cur_proc
+<b> 82</b>   ldr r0, [r5]
+<b> 83</b>   cmp r0, #0
+<b> 84</b>   ittee eq
+<b> 85</b>   ldreq sp,=#stack_frame_a
+<b> 86</b>   moveq r1, #1
+<b> 87</b>   ldrne sp,=#stack_frame_b
+<b> 88</b>   movne r1, #0
+<b> 89</b> 
+<b> 90</b>   str r1, [r5]
+<b> 91</b>   bx lr
+<b> 92</b> .data
+<b> 93</b> 
+<span style="color: red;"><b> 94</b> stack_frame_a:
+<b> 95</b> .word 9 @r0
+<b> 96</b> .word 8 @r1
+<b> 97</b> .word 7 @r2
+<b> 98</b> .word 6 @r3
+<b> 99</b> .word 5 @r12
+<b>100</b> .word 4 @lr 
+<b>101</b> .word 3 @pc @ proc_a
+<b>102</b> .word 2 @psr</span>
+<b>103</b> 
+<span style="color: blue;"><b>104</b> stack_frame_b:
+<b>105</b> .word 1 @r0
+<b>106</b> .word 2 @r1
+<b>107</b> .word 3 @r2
+<b>108</b> .word 4 @r3
+<b>109</b> .word 5 @r12
+<b>110</b> .word 6 @lr
+<b>111</b> .word 7 @pc
+<b>112</b> .word 8 @psr</span>
+<b>113</b> 
+<b>114</b> cur_proc:
+<b>115</b> .word 1
+</pre>
+</fieldset>
+
+一樣有兩個 stack frame (L94 ~ L102, L104 ~ L112), 保存 r0~r3, r12, lr, pc, psr, L33 ~ L53 把 lr, pc, psr, 設定好即可。在 int_isr 只要輪由切換 stack_frame_a, stack_frame_b 的位址到 sp 即可, 如何, 很簡單吧?
+
+在 int_isr return 時, 會根據 stack frame pc 這欄位而跳到那裡執行。執行 svc 0 時, 會把下一個位址紀錄在 stack frame pc 這欄位。這是基本原理。
+
+中斷時 stack 變化請參考 arm cortex-m3: 嵌入式系統設計入門 p9-2。lr 的值可參考 arm cortex-m3: 嵌入式系統設計入門 p9-7。
+
+疑！你沒打算說明阿? 當然阿! 書上有的東西我幹嘛再打一次。
