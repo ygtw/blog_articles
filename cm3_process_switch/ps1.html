@@ -1,4 +1,29 @@
-雖然基本原理是一樣的, 但細節還是有所不同。這個範例保存所有暫存器, 沒有保存 stack, 而且不談細節。
+為什麼這系列文章是名為 process switch, 而不是 context switch 呢? 我有自己的想法, 有興趣的朋友可以猜猜看。
+
+雖然基本原理是一樣的, 但細節還是有所不同。這個範例保存所有暫存器, 沒有保存 stack (其實已經可以保存 stack, 不過為了簡單, 還是一步一步來), 而且不談細節。
+
+先來看看 process frame 的資料結構。
+
+<table border="1"><caption> process frame&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 資料結構 </caption> <tbody>
+<tr>     <td>高 stack top</td> <td></td>    </tr>
+<tr>    <td></td>    <td>psr</td>   </tr>
+<tr>    <td></td>    <td>pc</td>   </tr>
+<tr>    <td></td>    <td>lr</td>   </tr>
+<tr>    <td></td>    <td>r12</td>   </tr>
+<tr>    <td></td>    <td>r3</td>   </tr>
+<tr>    <td></td>    <td>r2</td>   </tr>
+<tr>     <td></td>    <td>r1</td> </tr>
+<tr><td></td>    <td>r0</td>   </tr>
+<tr>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span></td>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;">r11</span> <span style="color: #6aa84f;"> </span></td>   </tr>
+<tr>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span></td>    <td><span style="color: #6aa84f;">r10</span> <span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span></td>   </tr>
+<tr>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span></td>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;">r9</span><span style="color: #6aa84f;"></span></td>   </tr>
+<tr>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span></td>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;">r8</span> <span style="color: #6aa84f;"> </span></td>   </tr>
+<tr>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span></td>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;">r7</span> <span style="color: #6aa84f;"> </span></td>   </tr>
+<tr>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span></td>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;">r6</span> <span style="color: #6aa84f;"> </span></td>   </tr>
+<tr>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span></td>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;">r5</span> <span style="color: #6aa84f;"> </span></td>   </tr>
+<tr>     <td><span style="color: #6aa84f;">低 stack poniter</span></td><td><span style="color: #6aa84f;">r4</span></td>   </tr>
+</tbody> </table>
+
 
 source code: <a href="https://github.com/descent/stm32f4_prog">https://github.com/descent/stm32f4_prog</a>
 git commit: b3ed8870ce3dbc50d55909a81f7b4e5af50f9a7d
@@ -227,25 +252,6 @@ L74 ~ L 81 在設定 proc a 的 stack, 並跳到 proc_a 執行。
 高 - 高位址
 低 - 低位址
 
-<table border="1"><caption> process frame&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 資料結構 </caption> <tbody>
-<tr>     <td>高 stack top</td> <td></td>    </tr>
-<tr>    <td></td>    <td>psr</td>   </tr>
-<tr>    <td></td>    <td>pc</td>   </tr>
-<tr>    <td></td>    <td>lr</td>   </tr>
-<tr>    <td></td>    <td>r12</td>   </tr>
-<tr>    <td></td>    <td>r3</td>   </tr>
-<tr>    <td></td>    <td>r2</td>   </tr>
-<tr>     <td></td>    <td>r1</td> </tr>
-<tr><td></td>    <td>r0</td>   </tr>
-<tr>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span></td>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;">r11</span> <span style="color: #6aa84f;"> </span></td>   </tr>
-<tr>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span></td>    <td><span style="color: #6aa84f;">r10</span> <span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span></td>   </tr>
-<tr>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span></td>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;">r9</span><span style="color: #6aa84f;"></span></td>   </tr>
-<tr>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span></td>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;">r8</span> <span style="color: #6aa84f;"> </span></td>   </tr>
-<tr>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span></td>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;">r7</span> <span style="color: #6aa84f;"> </span></td>   </tr>
-<tr>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span></td>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;">r6</span> <span style="color: #6aa84f;"> </span></td>   </tr>
-<tr>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;"> </span></td>    <td><span style="color: #6aa84f;"> </span> <span style="color: #6aa84f;">r5</span> <span style="color: #6aa84f;"> </span></td>   </tr>
-<tr>     <td><span style="color: #6aa84f;">低 stack poniter</span></td><td><span style="color: #6aa84f;">r4</span></td>   </tr>
-</tbody> </table>
 
 在 proc_a svc 0 之後, 跳到 svc_isr 後, stack 變化如下:
 <pre class="cmd">0x20000308 -&gt; (svc 0) 0x200002e8 -&gt; (push {r4-r11) 0x200002c8
@@ -271,10 +277,10 @@ L74 ~ L 81 在設定 proc a 的 stack, 並跳到 proc_a 執行。
 <pre class="cmd">0x20000608 -&gt; (svc 0) 0x200005e8 -&gt; (push {r4-r11) 0x200005c8
 </pre>
 
-手工意視圖
+手工示意圖
 <a href="https://picasaweb.google.com/lh/photo/_2rxImbdVBDnc-qjlnHkXNMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="480" src="https://lh4.googleusercontent.com/-p4n4rJSnaeg/UjETgwbbNBI/AAAAAAAArvk/Upozt6r14C4/s640/P1340168.JPG" width="640" /></a>
 
-真要體會, 請在 arm cortex m3 平台跑一次, 才算真懂。下一篇完成最後的動作, 保存 stack。
+真要體會, 請在 arm cortex m3 平台跑一次, 才算真懂, qemu 似乎無法模擬 svc 的行為, 需要在真的的硬體上測試。下一篇完成最後的動作, 保存 stack。
 
 參考資料:
 <ul>
@@ -282,17 +288,22 @@ L74 ~ L 81 在設定 proc a 的 stack, 並跳到 proc_a 執行。
 <li>scmrtos source code, 以下所列的程式碼為我所參考的部份。</li>
 </ul>
 
+<pre style="white-space: pre-wrap;">
+descent@descent-u:scmrtos-code-git$ git log
 commit c8e243cfc666ed7230a874b951f2e719e8f9335c
-Author: evgenynest <evgenynest b526ac-3511-40f3-916a-959e9aa89f3e="">
-Date:&nbsp;&nbsp; Thu Aug 22 05:32:42 2013 +0000
+Author: evgenynest &lt;evgenynest@25b526ac-3511-40f3-916a-959e9aa89f3e&gt;
+Date:   Thu Aug 22 05:32:42 2013 +0000
 
-git-svn-id: svn://svn.code.sf.net/p/scmrtos/code/trunk@581 25b526ac-3511-40f3-916a-959e9
-</evgenynest>
+git-svn-id: svn://svn.code.sf.net/p/scmrtos/code/trunk@581 25b526ac-3511-40f3-916a-959e9aa89f3e
+</pre>
 
-<pre style="white-space: pre-wrap;"><span style="color: blue;"><b>158</b>      void os_start(stack_item_t* sp)</span></pre>
-<pre style="white-space: pre-wrap;"><span style="color: #3d85c6;"><b>53</b> void TBaseProcess::init_stack_frame( stack_item_t * Stack</span></pre>
-<pre style="white-space: pre-wrap;"><span style="color: #3d85c6;"><b>612</b> stack_item_t* OS::TKernel::context_switch_hook(stack_item_t* sp)</span></pre>
-<pre style="white-space: pre-wrap;"><span style="color: #6aa84f;"><b>119</b> PendSVC_ISR:</span></pre>
+這是幾個重點 function:
+<pre style="white-space: pre-wrap;">
+<span style="color: blue;"><b>158 </b>void os_start(stack_item_t* sp)</span>
+<span style="color: #3d85c6;"><b>053 </b>void TBaseProcess::init_stack_frame( stack_item_t * Stack</span>
+<span style="color: #3d85c6;"><b>612 </b>stack_item_t* OS::TKernel::context_switch_hook(stack_item_t* sp)</span>
+<span style="color: #6aa84f;"><b>119 </b>PendSVC_ISR:</span>
+</pre>
 
 <fieldset>
 <legend>OS_Target_asm.S</legend>
