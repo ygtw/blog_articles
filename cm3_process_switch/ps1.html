@@ -284,6 +284,17 @@ process 切換時都是在操作 stack pointer, 保存目前 process 的 stack p
 
 真要體會, 請在 arm cortex m3 平台跑一次, 才算真懂, qemu 似乎無法模擬 svc 的行為, 需要在真的的硬體上測試。下一篇完成最後的動作, 保存 stack。
 
+<pre class="cmd">
+Note
+
+When changing the stack pointer, software must use an ISB instruction immediately after 
+the MSR instruction. This ensures that instructions after the ISB instruction 
+execute using the new stack pointer. See ISB
+</pre>
+
+感謝 Wen:
+http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0553a/CHDBIBGJ.html
+
 參考資料:
 <ul>
 <li>STM32F207 高性能网络型 MCU 嵌入式系统设计 (15.2.2)。</li>
