@@ -2,10 +2,15 @@
 
 雖然基本原理是一樣的, 但細節還是有所不同。這個範例保存所有暫存器, 沒有保存 stack (其實已經可以保存 stack, 不過為了簡單, 還是一步一步來), 而且不談細節。
 
-先來看看 process frame 的資料結構。
+先來看看 process frame 的資料結構, 從 psr ~ r4 這塊區域是 process frame, 而最上方則是這個 process 的 stack 區域。
+
+高 - 高位址
+低 - 低位址
 
 <table border="1"><caption> process frame&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 資料結構 </caption> <tbody>
-<tr>     <td>高 stack top</td> <td></td>    </tr>
+<tr>     <td>高 stack top</td> <td>proc stack addr</td>    </tr>
+<tr>     <td>proc 可操作的 stack 區域</td> <td>...</td>    </tr>
+<tr>     <td></td> <td>...</td>    </tr>
 <tr>    <td></td>    <td>psr</td>   </tr>
 <tr>    <td></td>    <td>pc</td>   </tr>
 <tr>    <td></td>    <td>lr</td>   </tr>
@@ -24,6 +29,9 @@
 <tr>     <td><span style="color: #6aa84f;">低 stack poniter</span></td><td><span style="color: #6aa84f;">r4</span></td>   </tr>
 </tbody> </table>
 
+綠色部份要靠自己的程式碼負責存起來, 黑色部份在中斷發生時, arm cm3 會自動保存, 保存到哪裡呢? 目前 sp 指到的位址。
+
+在初始化一個 process 時, 設定好 psr, pc 這兩個欄位即可, ref L31 ~L53。
 
 source code: <a href="https://github.com/descent/stm32f4_prog">https://github.com/descent/stm32f4_prog</a>
 git commit: b3ed8870ce3dbc50d55909a81f7b4e5af50f9a7d
@@ -235,11 +243,7 @@ git commit: b3ed8870ce3dbc50d55909a81f7b4e5af50f9a7d
 </pre>
 </fieldset>
 
-
-綠色部份自己的程式碼要負責存起來, 黑色部份在中斷發生時, arm cm3 會自動保存。
-在初始化一個 process 時, 設定好 psr, pc 即可, ref L31 ~L53。
-
-再來要記住 process frame 的 stack poniter (proc_a_sp, proc_b_sp), ref: L57 ~ L65。
+再來要記住 process frame 的 stack poniter (proc_a_sp, proc_b_sp, r4 那個欄位的位址), ref: L57 ~ L65。
 
 <pre class="cmd">(gdb) p/x proc_a_sp
 $1 = 0x200002c8
@@ -247,13 +251,11 @@ $1 = 0x200002c8
 $2 = 0x200005c8
 </pre>
 
-L74 ~ L 81 在設定 proc a 的 stack, 並跳到 proc_a 執行。
+L74 ~ L81 在設定 proc a 的 stack (L76, 把 stack frame pointer 加上 4*16 即可), 並跳到 proc_a 執行。
 
-高 - 高位址
-低 - 低位址
+process 切換時都是在操作 stack pointer, 保存目前 process 的 stack pointer, 取用另外一個 process stack pointer, pop r4 ~ r11, 這樣在 bx lr 而之後, 就會跳到 stack frame 的 pc 欄位裡頭的位址。
 
-
-在 proc_a svc 0 之後, 跳到 svc_isr 後, stack 變化如下:
+在 proc_a 執行 svc 0 之後, 跳到 svc_isr 後, stack 變化如下:
 <pre class="cmd">0x20000308 -&gt; (svc 0) 0x200002e8 -&gt; (push {r4-r11) 0x200002c8
 </pre>
 
@@ -271,7 +273,7 @@ L74 ~ L 81 在設定 proc a 的 stack, 並跳到 proc_a 執行。
 
 綠色部份是 r4 ~ r11, 紅色部份是 r0~ r3, r12, lr, pc, psr。
 
-再來載入, proc b stack poniter, 離開 svc_isr 後, 會執行 proc_b, 再來就是一樣的故事了, 只是主角換成 proc b。
+再來載入 proc b stack poniter, 離開 svc_isr 後, 會執行 proc_b, 再來就是一樣的故事了, 只是主角換成 proc b。
 
 在 proc_b svc 0 之後, 跳到 svc_isr 後, stack 變化如下:
 <pre class="cmd">0x20000608 -&gt; (svc 0) 0x200005e8 -&gt; (push {r4-r11) 0x200005c8
