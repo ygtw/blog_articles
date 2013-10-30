@@ -2,7 +2,7 @@
 
 雖然基本原理是一樣的, 但細節還是有所不同。這個範例保存所有暫存器, 沒有保存 stack (其實已經可以保存 stack, 不過為了簡單, 還是一步一步來), 而且不談細節。
 
-先來看看 process frame 的資料結構, 從 psr ~ r4 這塊區域是 process frame, 而最上方則是這個 process 的 stack 區域。
+先來看看 process frame 的資料結構, 從 psr ~ r4 這塊區域是 process frame, 而最上方則是這個 process 的 stack 區域, 由於 stack 會在 proc a 執行時一直變動, 所以 process frame 的位址也會跟著改變, 這是和 x86 有著硬體輔助記住 stack 的機制有所區別。
 
 高 - 高位址
 低 - 低位址
@@ -11,7 +11,7 @@
 <tr>     <td>高 stack top</td> <td>proc stack addr</td>    </tr>
 <tr>     <td>proc 可操作的 stack 區域</td> <td>...</td>    </tr>
 <tr>     <td></td> <td>...</td>    </tr>
-<tr>    <td></td>    <td>psr</td>   </tr>
+<tr>    <td>process frame from here</td>    <td>psr</td>   </tr>
 <tr>    <td></td>    <td>pc</td>   </tr>
 <tr>    <td></td>    <td>lr</td>   </tr>
 <tr>    <td></td>    <td>r12</td>   </tr>
@@ -29,12 +29,9 @@
 <tr>     <td><span style="color: #6aa84f;">低 stack poniter</span></td><td><span style="color: #6aa84f;">r4</span></td>   </tr>
 </tbody> </table>
 
-綠色部份要靠自己的程式碼負責存起來, 黑色部份在中斷發生時, arm cm3 會自動保存, 保存到哪裡呢? 目前 sp 指到的位址。
+黑色部份在中斷發生時, arm cm3 會自動保存, 綠色部份要靠自己的程式碼負責存起來, 保存到哪裡呢? 目前 sp 指到的位址。
 
 在初始化一個 process 時, 設定好 psr, pc 這兩個欄位即可, ref L31 ~L53。
-
-source code: <a href="https://github.com/descent/stm32f4_prog">https://github.com/descent/stm32f4_prog</a>
-git commit: b3ed8870ce3dbc50d55909a81f7b4e5af50f9a7d
 
 <fieldset>
 <legend>process_2.S</legend>
@@ -243,7 +240,7 @@ git commit: b3ed8870ce3dbc50d55909a81f7b4e5af50f9a7d
 </pre>
 </fieldset>
 
-再來要記住 process frame 的 stack poniter (proc_a_sp, proc_b_sp, r4 那個欄位的位址), ref: L57 ~ L65。
+再來要記住 process frame 的 stack poniter (proc_a_sp, proc_b_sp 用來記住 r4 那個欄位的位址), ref: L57 ~ L65。
 
 <pre class="cmd">(gdb) p/x proc_a_sp
 $1 = 0x200002c8
@@ -259,7 +256,8 @@ process 切換時都是在操作 stack pointer, 保存目前 process 的 stack p
 <pre class="cmd">0x20000308 -&gt; (svc 0) 0x200002e8 -&gt; (push {r4-r11) 0x200002c8
 </pre>
 
-最後 proc a process frame 內容, 把所有暫存器內容保存起來, 等著下次輪到 proc a 執行之後回復。
+最後 proc a process frame 內容, 把所有暫存器內容保存起來 (保存到 process frame 那個資料結構), 等著下次輪到 proc a 執行之後回復。
+
 <pre class="cmd"><span style="color: #6aa84f;">0x200002c8 </span><proc_a_ptr><span style="color: #6aa84f;">:    0x14    0x00    0x00    0x00    0x15    0x00    0x00    0x00
 0x200002d0 </span><proc_a_ptr><span style="color: #6aa84f;">:    0x16    0x00    0x00    0x00    0x17    0x00    0x00    0x00
 0x200002d8 </span><proc_a_ptr><span style="color: #6aa84f;">:    0x18    0x00    0x00    0x00    0x19    0x00    0x00    0x00
@@ -282,10 +280,12 @@ process 切換時都是在操作 stack pointer, 保存目前 process 的 stack p
 手工示意圖
 <a href="https://picasaweb.google.com/lh/photo/_2rxImbdVBDnc-qjlnHkXNMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="480" src="https://lh4.googleusercontent.com/-p4n4rJSnaeg/UjETgwbbNBI/AAAAAAAArvk/Upozt6r14C4/s640/P1340168.JPG" width="640" /></a>
 
-真要體會, 請在 arm cortex m3 平台跑一次, 才算真懂, qemu 似乎無法模擬 svc 的行為, 需要在真的的硬體上測試。下一篇完成最後的動作, 保存 stack。
+我可能沒有寫得很好, 真要體會, 請在 arm cortex m3 平台跑一次, 才算真懂, qemu 似乎無法模擬 svc 的行為, 需要在真的的硬體上測試。下一篇會說明最後的動作, 保存 stack, 這才算是功德圓滿。
 
-<pre class="cmd">
-Note
+source code: <a href="https://github.com/descent/stm32f4_prog">https://github.com/descent/stm32f4_prog</a>
+git commit: b3ed8870ce3dbc50d55909a81f7b4e5af50f9a7d
+
+<pre class="cmd">Note
 
 When changing the stack pointer, software must use an ISB instruction immediately after 
 the MSR instruction. This ensures that instructions after the ISB instruction 
@@ -293,16 +293,16 @@ execute using the new stack pointer. See ISB
 </pre>
 
 感謝 Wen:
-http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0553a/CHDBIBGJ.html
+<a href="http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0553a/CHDBIBGJ.html">http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0553a/CHDBIBGJ.html</a>
 
 參考資料:
 <ul>
 <li>STM32F207 高性能网络型 MCU 嵌入式系统设计 (15.2.2)。</li>
 <li>scmrtos source code, 以下所列的程式碼為我所參考的部份。</li>
 </ul>
+為什麼我不去看較為流行的 freertos 而要看 scmrtos 呢? 除了該書的原因之外, 還因為 scmrtos 是 c++ 寫的, 我打算用 c++ 實作 simple_os for cm3 版本, 並用上 c++11 的新特性, 晤 ... 難度不低。
 
-<pre style="white-space: pre-wrap;">
-descent@descent-u:scmrtos-code-git$ git log
+<pre style="white-space: pre-wrap;">descent@descent-u:scmrtos-code-git$ git log
 commit c8e243cfc666ed7230a874b951f2e719e8f9335c
 Author: evgenynest &lt;evgenynest@25b526ac-3511-40f3-916a-959e9aa89f3e&gt;
 Date:   Thu Aug 22 05:32:42 2013 +0000
@@ -311,8 +311,7 @@ git-svn-id: svn://svn.code.sf.net/p/scmrtos/code/trunk@581 25b526ac-3511-40f3-91
 </pre>
 
 這是幾個重點 function:
-<pre style="white-space: pre-wrap;">
-<span style="color: blue;"><b>158 </b>void os_start(stack_item_t* sp)</span>
+<pre style="white-space: pre-wrap;"><span style="color: blue;"><b>158 </b>void os_start(stack_item_t* sp)</span>
 <span style="color: #3d85c6;"><b>053 </b>void TBaseProcess::init_stack_frame( stack_item_t * Stack</span>
 <span style="color: #3d85c6;"><b>612 </b>stack_item_t* OS::TKernel::context_switch_hook(stack_item_t* sp)</span>
 <span style="color: #6aa84f;"><b>119 </b>PendSVC_ISR:</span>
