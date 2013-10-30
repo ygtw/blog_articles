@@ -466,9 +466,9 @@ D.2　Git和Hg  命令对照/ 593
 
 <a href="https://picasaweb.google.com/lh/photo/VlsQc0fTuitCMfGjyTdRzdMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="400" src="https://lh6.googleusercontent.com/-ZHpfCWYvsDQ/TxmS_yj5ttI/AAAAAAAAY3o/8HVK1NMmHsI/s400/P1310079.JPG" style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;" width="300" /></a>git 不算是容易學習的軟體, 不要小看學習他的難度, 網路片斷的資料實在難以讓人有個完整的學習。就算有完整電子書, 你能在螢幕上完整看完嗎？印出來是個好方法, 但大多是 html 格式的電子書, 輸出紙張的效果可能不是很好 (pro git 中文版有 epub 格式, 是個好選擇)。我知道有人可以拼拼湊湊就把 git 學好, 我不是這樣的人, 我相信大多數人也需要一本好的書籍來學習 git, 速食主義實在荼毒我們太深, 希望我這篇的描述可以吸引你去找一本書來學習 git。
 
-我在 2001 左右開始使用 rcs, 接著是 cvs, svn, 但我遇上 git 則完全沒辦法, 之前的學習經驗都派不上用場, 沒有去看相關資料, 並不是那麼好上手, 所以我只勉勉強強的使用, 大部份還是使用 svn, 直到我看完本書才能上手。
+我在 2001 左右開始使用 rcs, 接著是 cvs, svn, svk, 但我遇上 git 則完全沒辦法適應, 之前的學習經驗都派不上用場, 沒有去看相關資料, 並不是那麼好上手, 所以我只勉勉強強的使用, 大部份還是使用 svn, 直到我看完本書才能上手。svk 則是有著恐怖的 perl depend package, 我只用了很短的時間, 便不再使用了。
 
-我一直在找一本可以參考的 git 中文書籍, 買書學習某個專業一直是我的主要學習方式, 沒想到簡體中文書籍多的讓我驚訝, 我看了書名, 挑了這本。
+我一直在找一本可以參考的 git 中文書籍, 買書閱讀某個知識一直是我的主要學習方式, 沒想到簡體中文書籍多的讓我驚訝, 我看了書名, 挑了這本。
 
 台灣的工程師除了電腦的專業, 還要面對英文的專業, 一個擁有兩項專業的軟體工程師卻不見得能領到兩倍薪水 (其實有這樣的能力, 拿三倍薪水也不為過), 真是辛苦。若翻譯工業能幫上忙, 無疑是幫了軟體工程師一個大忙。工程師們也能努力在電腦專業上發展, 一個工業若總是要靠天才來支撐, 哪能成事, 讓翻譯工業來幫幫像我這樣的平凡人，我想學得是 git, 不是英文。
 
@@ -482,7 +482,7 @@ D.2　Git和Hg  命令对照/ 593
 
 <iframe allowfullscreen="" frameborder="0" height="315" src="http://www.youtube.com/embed/4XpnKHJAok8" width="420"></iframe>
 
-我只剛看了前面幾章, 就已經覺得值回票價, 光是第一章的 diff, 就讓我興奮莫名, 我終於知道那些數字是什麼意思了。
+我只剛看了前面幾章, 就已經覺得值回票價, 光是第一章的 diff, 就讓我興奮莫名, 我終於知道那些數字還有 +- 是什麼意思了。
 
 <pre class="cmd">--- a/a
 +++ b/a
@@ -570,6 +570,8 @@ git reset -&gt; 改變 master
 12.3.2 rebase
 12.3.3 交談式 rebase
 第 6, 7, 8 章提的東西要很清楚, 否則這章可能會看到頭昏, 不過不要緊, 就算不使用本章提到的功能, 也已經可以基本的使用 git。看不懂就先跳過。
+
+rebase 很複雜, 如果遇上 rebase conflict, 可能會害怕自己會不會搞砸 repository。
 
 第 13 章介紹 git clone, 告訴我們 bare 的 repository 和 non-bare repository 有什麼不同, 對 push/pull 的行為有什麼不同。這也是我曾經在網路看到的問題。在本章, 你會看到 git push repos/a.git master:master 這樣的指令。到了這裡, 基本上已經可以上手 git 了, 總共是 186 頁, 辛苦了。再把第 3 篇讀完吧, 還有 109 頁, 不難，這樣 git 應該已經可以用得得心應手。
 
