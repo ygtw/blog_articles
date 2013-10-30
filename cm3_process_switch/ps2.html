@@ -1,0 +1,204 @@
+這個版本在 proc_a 使用了 stack, 用來測試 stack 的儲存與回復。ref: L85 ~ L86
+
+<fieldset>
+<legend>process_2.S</legend>
+<pre style="white-space: pre-wrap;"><b>  1</b> # not process switch, this is context switch
+<b>  2</b> 
+<b>  3</b> @.equ STACK_TOP, 0x20000800
+<b>  4</b> .text
+<b>  5</b> .global _start
+<b>  6</b> .code 16
+<b>  7</b> .syntax unified
+<b>  8</b> _start:
+<b>  9</b>   .word STACK_TOP, start 
+<b> 10</b>   .type start, function @ let lsb to 1
+<b> 11</b> 
+<b> 12</b>   .word int_isr+1
+<b> 13</b>   .word hardf_isr+1
+<b> 14</b>   .word mmf_isr+1
+<b> 15</b>   .word int_isr+1
+<b> 16</b>   .word int_isr+1
+<b> 17</b>   .word int_isr+1
+<b> 18</b>   .word int_isr+1
+<b> 19</b>   .word int_isr+1
+<b> 20</b>   .word int_isr+1
+<b> 21</b>   .word svc_isr+1 @ svc isr
+<b> 22</b>   .word int_isr+1
+<b> 23</b>   .word int_isr+1
+<b> 24</b>   .word int_isr+1
+<b> 25</b>   .word int_isr+1
+<b> 26</b>   .word int_isr+1
+<b> 27</b>   .word int_isr+1
+<b> 28</b>   .word int_isr+1
+<b> 29</b> 
+<b> 30</b> start:
+<b> 31</b>   @ init a proc
+<b> 32</b>   ldr r0, =proc_a_stack
+<b> 33</b> 
+<b> 34</b>   @ setup proc a psr
+<b> 35</b>   mov r1, #0x21000000
+<b> 36</b>   str r1, [r0, #(-4)]
+<b> 37</b> 
+<b> 38</b>   @ setup proc a pc
+<b> 39</b>   ldr r1, =proc_a
+<b> 40</b>   str r1, [r0, #(-8)]
+<b> 41</b> 
+<b> 42</b>   @@@@@@@@@@@@@@@@@@@
+<b> 43</b> 
+<b> 44</b>   @ init b proc
+<b> 45</b>   ldr r0, =proc_b_stack
+<b> 46</b> 
+<b> 47</b>   @ setup proc b psr
+<b> 48</b>   mov r1, #0x21000000
+<b> 49</b>   str r1, [r0, #(-4)]
+<b> 50</b> 
+<b> 51</b>   @ setup proc b pc
+<b> 52</b>   ldr r1, =proc_b
+<b> 53</b>   str r1, [r0, #(-8)]
+<b> 54</b> 
+<b> 55</b>   @@@@@@@@@@@@@@@@@@@
+<b> 56</b> 
+<b> 57</b>   ldr r0, =proc_a_sp
+<b> 58</b>   ldr r1, =proc_a_stack
+<b> 59</b>   sub r1, #(16*4)
+<b> 60</b>   str r1, [r0]
+<b> 61</b> 
+<b> 62</b>   ldr r0, =proc_b_sp
+<b> 63</b>   ldr r1, =proc_b_stack
+<b> 64</b>   sub r1, #(16*4)
+<b> 65</b>   str r1, [r0]
+<b> 66</b> 
+<b> 67</b>   ldr r0, =cur_proc
+<b> 68</b>   mov r1, #0
+<b> 69</b>   str r1, [r0]
+<b> 70</b> 
+<b> 71</b>   ldr r1, =proc_a_sp
+<b> 72</b>   ldr r0, [r1]
+<b> 73</b> 
+<b> 74</b>   @ ref: scmrtos-code/Ports/CortexM3/GCC/OS_Target_asm.S
+<b> 75</b>   LDR     r4, [r0, #(4 * 14)]     @ Load process entry point into R4
+<b> 76</b>   add     r0, #(4 * 16)           @ emulate context restore
+<b> 77</b>   mov sp, r0
+<b> 78</b> @  dsb
+<b> 79</b>   isb                             @ Insert a barrier
+<b> 80</b> 
+<b> 81</b>   bx r4                           @ run proc_a
+<b> 82</b> 
+<b> 83</b> .type proc_a, function @ let lsb to 1
+<b> 84</b> proc_a:
+<span style="color: red;"><b> 85</b>   movs r0, #0x10
+<b> 86</b>   push {r0}</span>
+<b> 87</b>   svc 0
+<b> 88</b>   nop
+<b> 89</b>   b proc_a
+<b> 90</b> 
+<b> 91</b> .type proc_b, function @ let lsb to 1
+<b> 92</b> proc_b:
+<b> 93</b>   movs r0, #0x20
+<b> 94</b>   movs r1, #0x21
+<b> 95</b>   movs r2, #0x22
+<b> 96</b>   movs r3, #0x23
+<b> 97</b>   movs r4, #0x24
+<b> 98</b>   movs r5, #0x25
+<b> 99</b>   movs r6, #0x26
+<b>100</b>   movs r7, #0x27
+<b>101</b>   movs r8, #0x28
+<b>102</b>   movs r9, #0x29
+<b>103</b>   movs r10, #0x2a
+<b>104</b>   movs r11, #0x2b
+<b>105</b>   movs r12, #0x2c
+<b>106</b>   nop
+<b>107</b>   svc 0
+<b>108</b>   b proc_b
+<b>109</b> 
+<b>110</b> 
+<b>111</b> .type del_func, function @ let lsb to 1
+<b>112</b> del_func:
+<b>113</b>   mov r5, #5
+<b>114</b>   b del_func
+<b>115</b> 
+<b>116</b> int_isr:
+<b>117</b>   mov r0, #67
+<b>118</b>   bx lr
+<b>119</b> 
+<b>120</b> hardf_isr:
+<b>121</b>   mov r0, #0x3b
+<b>122</b>   bx lr
+<b>123</b> @ memory manage fault
+<b>124</b> mmf_isr:
+<b>125</b>   mov r0, #0x3a
+<b>126</b>   bx lr
+<b>127</b> 
+<b>128</b> svc_isr:
+<b>129</b>   cpsid i @Prevent interruption during context switch
+<b>130</b> 
+<b>131</b>   push {r4-r11}
+<b>132</b> 
+<b>133</b>   @ choice another process
+<b>134</b>   ldr r1, =cur_proc
+<b>135</b>   ldr r0, [r1]
+<b>136</b> 
+<b>137</b>   cmp r0, #1
+<b>138</b>   beq.n 1f
+<b>139</b>   @ current proc a, switch to proc b
+<b>140</b>   ldr r2, =proc_a_sp
+<b>141</b>   str sp, [r2] @ save cur process sp
+<b>142</b> 
+<b>143</b>   mov r3, #1
+<b>144</b>   str r3, [r1]
+<b>145</b> 
+<b>146</b>   ldr r0, =proc_b_sp
+<b>147</b> 
+<b>148</b>   b 2f
+<b>149</b> 1:
+<b>150</b>   @ current proc b, switch to proc a
+<b>151</b>   ldr r2, =proc_b_sp
+<b>152</b>   str sp, [r2] @ save cur process sp
+<b>153</b> 
+<b>154</b>   mov r3, #0
+<b>155</b>   str r3, [r1]
+<b>156</b> 
+<b>157</b>   ldr r0, =proc_a_sp
+<b>158</b> 
+<b>159</b> 2:
+<b>160</b> 
+<b>161</b>   ldr r0, [r0]
+<b>162</b> 
+<b>163</b>   mov sp, r0
+<b>164</b>   pop {R4-R11}     // Restore r4-11 from new process stack
+<b>165</b> 
+<b>166</b>   cpsie i
+<b>167</b>   bx lr
+<b>168</b> 
+<b>169</b> 
+<b>170</b> .data
+<b>171</b> 
+<b>172</b> proc_a_sp:
+<b>173</b> .word 1
+<b>174</b> proc_b_sp:
+<b>175</b> .word 2
+<b>176</b> 
+<b>177</b> proc_a_ptr:
+<b>178</b> .space  0x300, 0
+<b>179</b> proc_a_stack:
+<b>180</b> 
+<b>181</b> proc_b_ptr:
+<b>182</b> .space  0x300, 0
+<b>183</b> proc_b_stack:
+<b>184</b> 
+<b>185</b> 
+<b>186</b> cur_proc:
+<b>187</b> .word 
+<b>188</b> 
+<b>189</b> .space  0x300, 0
+<b>190</b> STACK_TOP:
+</pre>
+</fieldset>
+
+下圖上方的示意圖是第一次 proc a 執行時 stack 變化, 下方的示意圖為第二次執行 proc a 時 stack 變化。
+
+疑！寫完了, 這篇真短。
+
+<a href="https://picasaweb.google.com/lh/photo/Tq76h7fBgzh6z95KB3pOqdMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="800" src="https://lh5.googleusercontent.com/-8nKXqXDhinA/UjEThvlNGUI/AAAAAAAArvs/CBXdJrH6Vjc/s800/P1340169.JPG" width="600" /></a>
+
+對於畫出精美的圖示我實在不在行, 不過手工圖彌補了這個缺點, 大家將就著看吧。
