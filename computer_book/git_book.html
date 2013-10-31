@@ -11,12 +11,11 @@ Git 权威指南 (Git 權威指南) 89 rmb (534 nt)
 <li>定价: 89.00 rmb</li>
 <li>ISBN: 9787111349679</li>
 </ul>
-<h2>目录</h2>
-<table>
-<tr>
-<td>
-<pre>
-前　言
+<h2>
+目录</h2>
+<table><tbody>
+<tr> <td>
+<pre>前　言
 第1篇　初识Git
 第1章　版本控制的前世和今生/ 2
 1.1　黑暗的史前时代/ 2
@@ -230,10 +229,8 @@ Git 权威指南 (Git 權威指南) 89 rmb (534 nt)
 23.4　隐性子模组/ 343
 23.5　子模组的管理问题/ 345
 </pre>
-</td>
-<td>
-<pre>
-第24章　子树合并/ 347
+</td> <td>
+<pre>第24章　子树合并/ 347
 24.1　引入外部版本库/ 347
 24.2　子目录方式合并外部版本库/ 349
 24.3　利用子树合并跟踪上游改动/ 351
@@ -450,9 +447,8 @@ C.2　 Git 和SVN 命令对照/ 589
 D.1　面对面访谈录/ 592
 D.2　Git和Hg  命令对照/ 593
 </pre>
-</td>
-</tr>
-</table>
+</td> </tr>
+</tbody></table>
 
 目錄長到嚇人, 你滾的手指痛了吧? 我篇幅倒是佔用的蠻過癮的 (我已經縮短了 2 倍)。不過每章的長度不長, 蠻容易閱讀。20120120 購於成大若水堂, 先來看看書底中國讀者的推薦:
 
@@ -544,8 +540,7 @@ git checkout HEAD .    使用 HEAD 指向的 master branch 的內容覆蓋 index
 7.2 介紹了 reflog 這個指令, 可以在移動 master 時, 輕易回復 master 指到的位置。
 
 7.3 介紹 git reset [--soft | --mixed | --hard] 你和我一樣總是搞亂嗎?
-<pre class="cmd">
---hard 
+<pre class="cmd">--hard 
 用 commit 換掉 index
 用 commit 換掉 working tree
 
@@ -621,12 +616,12 @@ http://ihower.tw/git/files/ihower-git.pdf
 
 除了本書, 還有其他有用的網路書籍可供學習 git, 可以參考 <a href="http://book.git-scm.com/" target="_blank">progit</a> (<a href="http://git-scm.com/blog/2010/06/09/pro-git-zh.html">簡體中文</a>), 我下載 epub 格式到我的 sony-T1, 輕鬆閱讀中。本書作者蒋鑫也是由這本書開始學習 git。
 
-
 解釋為什麼 rebase 一下比較好:
-http://victorlin.me/posts/2013/09/30/keep-a-readable-git-history
+<a href="http://victorlin.me/posts/2013/09/30/keep-a-readable-git-history">http://victorlin.me/posts/2013/09/30/keep-a-readable-git-history</a>
+可是一想到 rebase 會遇到的 conflict 就令我害怕。
 
-這是我在某聚會分享的 5 分鐘 git 就上手 - 不可能, 說明 working tree, index, repository 的相關操作。
-<iframe width="640" height="480" src="//www.youtube.com/embed/4iLVH1vOum8" frameborder="0" allowfullscreen></iframe>
+這是我在某聚會分享的 5 分鐘 git 就上手 - 不可能, 說明 working tree, index, repository 的相關操作。主要不是 git 教學, 而是說明 git 很難學。
+<iframe allowfullscreen="" frameborder="0" height="480" src="//www.youtube.com/embed/4iLVH1vOum8" width="640"></iframe>
 
 mission impossible 2 - 5 分鐘 git 就上手
 
