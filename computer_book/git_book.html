@@ -539,15 +539,18 @@ git checkout HEAD .    使用 HEAD 指向的 master branch 的內容覆蓋 index
 
 7.2 介紹了 reflog 這個指令, 可以在移動 master 時, 輕易回復 master 指到的位置。
 
-7.3 介紹 git reset [--soft | --mixed | --hard] 你和我一樣總是搞亂嗎?
+7.3 介紹 git reset [--soft | --mixed | --hard] 你和我一樣總是搞亂嗎? reset 用來移動 master。
 <pre class="cmd">--hard 
+改變 master
 用 commit 換掉 index
 用 commit 換掉 working tree
 
 --soft
+改變 master
 index, working tree 不動
 
 --mixed
+改變 master
 用 commit 換掉 index
 working tree 不動
 </pre>
@@ -564,7 +567,7 @@ git reset -&gt; 改變 master
 12.3.1 reset, cherry-pick
 12.3.2 rebase
 12.3.3 交談式 rebase
-第 6, 7, 8 章提的東西要很清楚, 否則這章可能會看到頭昏, 不過不要緊, 就算不使用本章提到的功能, 也已經可以基本的使用 git。看不懂就先跳過。
+第 6, 7, 8 章提到的東西要很清楚, 否則這章可能會看到頭昏, 不過不要緊, 就算不使用本章提到的功能, 也已經可以基本的使用 git。看不懂就先跳過。
 
 rebase 很複雜, 如果遇上 rebase conflict, 可能會害怕自己會不會搞砸 repository。
 介紹 rebase 用法: http://blog.yorkxin.org/posts/2011/07/29/git-rebase
