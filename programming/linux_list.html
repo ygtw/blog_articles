@@ -129,6 +129,10 @@ L80 ~ L89 真是令人害怕的 macro, 還有一個不認識的 <a href="http://
 
 L112 展開是 L200, L201 的結果 (還是讓人害怕, 書上用了 8 頁的說明現在你覺得有道理了吧), 我分別從 L105~110 做了單獨的測試。最主要是要補充書上沒提到的小例子, 有了這個小例子, 搭配書上的講解 (6.1.2.2 page 148~154), 應該就能了解。
 
+我沒注意到 ({}) 這用法, 這也是 gcc extension:
+<a href="http://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html">http://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html</a>
+<a href="http://www.ptt.cc/bbs/C_and_CPP/M.1383271390.A.B23.html">http://www.ptt.cc/bbs/C_and_CPP/M.1383271390.A.B23.html</a>
+
 一開始被 0 取址所迷惑, 以為這樣會 core dump, 不過應該是要做寫入的動作才會 core dump, 讀取位址 0 是沒問題的。
 
 <pre class="cmd">descent@debian-vm:part2$ ./list 
