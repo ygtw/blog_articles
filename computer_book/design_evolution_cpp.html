@@ -315,7 +315,11 @@
 </td> </tr>
 </tbody></table>
 
+原文版出版自 199405
+
 <a href="https://picasaweb.google.com/lh/photo/TXSfz-DVld3H02_VwzB2kx7lyzyq0Rg6WnM09MTnQXU?feat=embedwebsite" style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;"><img src="https://lh6.googleusercontent.com/-MRnNlwCY-vU/UmUVxAYYSWI/AAAAAAAAtQU/cgbc1fKDZNw/s400/IMG_6888.JPG" /></a>一開始 Bjarne 談及使用 Simula 來開發他博士論文需要的模擬器與相關的 os 系統。Simula 很好, 也很不好, 最後改用 BCPL 重新把模擬器改寫, 得到了需要的數據, 也順利取得博士學位。這時候他對程式語言有了自己的一套想法, 這些概念, 最後都在 c++ 裡頭實現了。而根據 Bjarne 自己的哲學思想, c++ 就是要支援各種不同的風格, function base, object base, oop, generic programming ... c++11 還來個 functional programming。
+
+p6 有張圖, 秀出一些電腦語言的出生時間點,
 
 p23 提到 Cpre (1981 第1個版本發佈), 這是 c with class 的 preprocessor
 p34 說明 this 為什麼是 this 而不是 self, 
@@ -329,3 +333,5 @@ g++ 1.13 在 198712 公佈, 這是第1個 g++ 版本
 cfront (198408 第1個版本發佈) 1986 移植到 pc/at, cfront 並不是 c++ compiler, p59 有張圖可以了解 cfront 的角色, 簡單說透過 cfront 產生的原始碼還要經過 c compiler, 所以才叫 cfront 阿!
 
 c++ 的設計理念之一, 『你只需要為你用的東西付出代價。』用上 class, 和 c 的 struct 一樣, 不會有任何負擔, 加上 virtual function, 呃 ... 這和 c 就不同了, 得付出一點代價。
+
+p77 介紹了對於 operator[]() 這個 operator 重新定義時會有的問題, 以 string 為例子, 引入了輔助用 class 來分別處理左值、右值, 真是巧妙。
