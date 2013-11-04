@@ -31,16 +31,18 @@ pc and PC
 Program counter. This is a synonym for R15.
 
 ref:
-http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0473c/CJAJBFHC.html
-http://forums.leaflabs.com/topic.php?id=1298
+<a href="http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0473c/CJAJBFHC.html">http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0473c/CJAJBFHC.html</a>
+<a href="http://forums.leaflabs.com/topic.php?id=1298">http://forums.leaflabs.com/topic.php?id=1298</a>
 
 ip (r12):
-http://blog.csdn.net/gooogleman/article/details/3529413
-http://forums.arm.com/index.php?/topic/12986-about-r12/
+<a href="http://blog.csdn.net/gooogleman/article/details/3529413">http://blog.csdn.net/gooogleman/article/details/3529413</a>
+<a href="http://forums.arm.com/index.php?/topic/12986-about-r12/">http://forums.arm.com/index.php?/topic/12986-about-r12/</a>
 
-<fieldset><legend>arm-eabi-toolchain/newlib-2013.05/newlib/libc/machine/arm/setjmp.S</legend>
-<pre style="white-space: pre-wrap;">
-<b>  1</b> /* This is a simple version of setjmp and longjmp.
+我還是習慣直接的名稱, 搞這些有的沒的化名實在累人人累。
+
+<fieldset>
+<legend>arm-eabi-toolchain/newlib-2013.05/newlib/libc/machine/arm/setjmp.S</legend>
+<pre style="white-space: pre-wrap;"><b>  1</b> /* This is a simple version of setjmp and longjmp.
 <b>  2</b> 
 <b>  3</b>    Nick Clifton, Cygnus Solutions, 13 June 1997.  */
 <b>  4</b> 
@@ -135,12 +137,17 @@ http://forums.arm.com/index.php?/topic/12986-about-r12/
 </pre>
 </fieldset>
 
+<pre class="cmd">stmea a1!, { v1-v7, fp, ip, lr }
+</pre>
+相當於
+<pre class="cmd">stmea r0!, {r4, r5, r6, r7, r8, r9, r10, r11, r12, lr}     
+</pre>
+
 <fieldset>
 <legend>
 gdb 的觀察結果 (newlib setjmp/longjmp) link 到錯誤的 libc.a
 </legend>
-<pre style="white-space: pre-wrap;">
-<b> 1</b> 0x1b0 &lt;setjmp&gt;  stmia  r0!, {r4, r5, r6, r7, r8, r9, r10, r11, r12, sp, lr}         
+<pre style="white-space: pre-wrap;"><b> 1</b> 0x1b0 &lt;setjmp&gt;  stmia  r0!, {r4, r5, r6, r7, r8, r9, r10, r11, r12, sp, lr}         
 <b> 2</b> 0x1b4 &lt;setjmp&gt;  mov    r0, #0                                                       
 <b> 3</b> 0x1b8 &lt;setjmp&gt;  tst    lr, #1                                                       
 <b> 4</b> 0x1bc &lt;setjmp&gt;  moveq  pc, lr                                                       
@@ -155,9 +162,9 @@ gdb 的觀察結果 (newlib setjmp/longjmp) link 到錯誤的 libc.a
 </pre>
 </fieldset>
 
-<fieldset><legend>gdb_stmf4discovery</legend>
-<pre style="white-space: pre-wrap;">
-<b> 1</b>   &gt;│0x8000130 &lt;setjmp&gt;      mov    r12, sp                                                      
+<fieldset>
+<legend>gdb_stmf4discovery</legend>
+<pre style="white-space: pre-wrap;"><b> 1</b>   &gt;│0x8000130 &lt;setjmp&gt;      mov    r12, sp                                                      
 <b> 2</b>    │0x8000132 &lt;setjmp+2&gt;    stmia.w        r0!, {r4, r5, r6, r7, r8, r9, r10, r11, r12, lr}     
 <b> 3</b>    │0x8000136 &lt;setjmp+6&gt;    mov.w  r0, #0                                                       
 <b> 4</b>    │0x800013a &lt;setjmp+10&gt;   bx     lr                                                           
@@ -173,12 +180,13 @@ gdb 的觀察結果 (newlib setjmp/longjmp) link 到錯誤的 libc.a
 提外話:
 
 newlib 有 4 個 libc.a
-./arm-none-eabi/lib/libc.a
+<pre class="cmd">./arm-none-eabi/lib/libc.a
 ./arm-none-eabi/lib/armv6-m/libc.a
 ./arm-none-eabi/lib/thumb/libc.a
 ./arm-none-eabi/lib/thumb2/libc.a
+</pre>
 
 這個編譯參數沒加上 -mcpu=cortex-m3 -mthumb 會 link 到錯誤的 libc.a
-arm-none-eabi-gcc -Wl,-T./stm32.ld -nostartfiles -fno-common -mcpu=cortex-m3 -mthumb -o t0.elf t0.o
-花了我好大一番功夫找到這個錯誤。
-
+<pre class="cmd">arm-none-eabi-gcc -Wl,-T./stm32.ld -nostartfiles -fno-common -mcpu=cortex-m3 -mthumb -o t0.elf t0.o
+</pre>
+花了我好大一番功夫才找到這個錯誤。
