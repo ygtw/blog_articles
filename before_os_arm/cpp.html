@@ -1,6 +1,8 @@
-遲來的 c++ 篇, 之前忙著搞懂 arm cortex m3 這顆 mcu, 無法分心在 c++ 上。這篇是精彩的 c/c++ 論戰 (中文的相信好看多了): <a href="http://blog.csdn.net/turingbook/article/details/1775488">Linux之父炮轰C++：糟糕程序员的垃圾语言</a> 
+遲來的 c++ 篇, 之前忙著搞懂 arm cortex m3 這顆 mcu, 無法分心在 c++ 上。
 
-雖然我很尊敬 Linus Torvalds 不過我可不會照單全收他的想法, 我很喜歡 c++, 來個 c++ 的版本, 不過我想用的部份的確是和 c 比較接近的部份。不用 class/object 的話, 還有什麼 c++ 特性可以用呢? 呃 ... 多的很
+語言戰文總是引人注目, 這裡有篇年代久遠的精彩 c/c++ 論戰 (中文的相信好看多了): <a href="http://blog.csdn.net/turingbook/article/details/1775488">Linux之父炮轰C++：糟糕程序员的垃圾语言</a> 
+
+雖然我很尊敬 Linus Torvalds, 不過我可不會照單全收他的想法, 我很喜歡 c++, 來個 c++ 版本的作業系統之前的程式, 不過我想用的部份的確是和 c 比較接近的部份。不用 class/object 的話, 還有什麼 c++ 特性可以用呢? 呃 ... 多的很
 
 <ul>
 <li>namespace</li>
@@ -252,9 +254,9 @@ git commit 21f49647dc48da5b3c8d2fcf1544be25d67bb45a
 
 c++11 多了很多新的特性, 我們來試試看。
 
-<fieldset><legend>mycpp11.cpp</legend>
-<pre style="white-space: pre-wrap;">
-<b> 1</b> #include &quot;stm32.h&quot;
+<fieldset>
+<legend>mycpp11.cpp</legend>
+<pre style="white-space: pre-wrap;"><b> 1</b> #include "stm32.h"
 <b> 2</b> 
 <b> 3</b> 
 <b> 4</b> int print(int i)
@@ -280,8 +282,8 @@ c++11 多了很多新的特性, 我們來試試看。
 <b>24</b>   int x=3;
 <b>25</b>   int y=9;
 <b>26</b> 
-<b>27</b>   char path[]=R&quot;(/usr/local/aaa)&quot;;
-<b>28</b>   char wpath[]=R&quot;(&quot;\usr\local\aaa&quot;)&quot;;
+<b>27</b>   char path[]=R"(/usr/local/aaa)";
+<b>28</b>   char wpath[]=R"("\usr\local\aaa")";
 <b>29</b> 
 <b>30</b>   int total = lambda_test(x, y);
 <b>31</b>   print(35);
