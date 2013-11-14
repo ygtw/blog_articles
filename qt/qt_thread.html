@@ -1,4 +1,7 @@
-ps -eLf|grep qt_thread
+env:
+ubuntu 12.04 64 bit
+qt 4.8.1
+
 這篇提到用 QThread 的四個方法:
 http://blog.csdn.net/jiong_1988/article/details/7942738
 
@@ -57,5 +60,7 @@ delete thread
 </fieldset>
 
 要讓結束某個 thread 做的事情會有不同作法, 如果是繼承 QThread::run() 這樣的方法來使用 QThread, 得先離開 QThread::run(), 否則 QThread::run() 一直執行中, thread->isFinished() 就不會 return true。
+
+這和我之前的想法不同, 我以為在 thread 執行的那段程式碼結束後, 這個 thread 就會結束, 直到我用 ps -eLf 觀察才知道不是這麼一回事。
 
 thread 是什麼時候產生的, 並不是 new QThread(this), 而是呼叫 start() [thread->start();] 才產生。
