@@ -2,7 +2,7 @@ ps -eLf|grep qt_thread
 這篇提到用 QThread 的四個方法:
 http://blog.csdn.net/jiong_1988/article/details/7942738
 
-以下是程式碼
+soure code:
 https://github.com/descent/progs/tree/master/qt_thread1
 commit 73c8d8a181b94ea8c782c4c3aeae66dbce6bf47a
 
@@ -11,7 +11,7 @@ descent@descent-u:qt_thread1$ ./qt_thread1
 main:  139740863580032 
 slots1:  139740729222912 
 
-descent@descent-u:imx5x$ ps -eLf|grep qt_thread
+descent@descent-u:qt_thread1$ ps -eLf|grep qt_thread
 descent  21876 21553 21876  2    2 16:09 pts/41   00:00:00 ./qt_thread1
 descent  21876 21553 21877  0    2 16:09 pts/41   00:00:00 ./qt_thread1
 
@@ -25,7 +25,7 @@ QThread: Destroyed while thread is still running
 
 不過程式也的確結束了。
 
-但一定會有點擔心吧, 這樣真的有正常結束程式嗎?
+但一定會有點擔心吧? 這樣真的有正常結束程式嗎?
 
 https://github.com/descent/progs/tree/master/qt_thread1
 commit e8c84a55923adf2edd9284cc59e1805ba334a576
@@ -41,3 +41,21 @@ delete thread
 沒有 QThread: Destroyed while thread is still running
 看來有正常的結束程式。
 
+基本原理就是要讓結束這個 thread 做的事情, 並離開 thread event loop, 我不確定這是不是正確作法, 不過看來是有效的。
+
+<fieldset>
+<pre style="white-space: pre-wrap;">
+<b>1</b> ~Widget()
+<b>2</b> {
+<b>3</b>   qDebug() &lt;&lt; &quot;wait thread end&quot; &lt;&lt; objectName();
+<b>4</b>   thread-&gt;exit(0);
+<b>5</b>   while (thread-&gt;isFinished() == false);
+<b>6</b>   qDebug() &lt;&lt; &quot;delete thread&quot;;
+<b>7</b>   delete thread;
+<b>8</b> }
+</pre>
+</fieldset>
+
+要讓結束某個 thread 做的事情會有不同作法, 如果是繼承 QThread::run() 這樣的方法來使用 QThread, 得先離開 QThread::run(), 否則 QThread::run() 一直執行中, thread->isFinished() 就不會 return true。
+
+thread 是什麼時候產生的, 並不是 new QThread(this), 而是呼叫 start() [thread->start();] 才產生。
