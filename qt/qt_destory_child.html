@@ -1,0 +1,51 @@
+http://stackoverflow.com/questions/2491707/memory-management-in-qt
+提到 qt 會 delete child objects。
+
+qt_src/src/corelib/kernel/qobject.h
+
+<fieldset>
+<pre style="white-space: pre-wrap;">
+<b> 1</b> class Q_CORE_EXPORT QObject
+<b> 2</b> {
+<b> 3</b>     Q_OBJECT
+<b> 4</b>     Q_PROPERTY(QString objectName READ objectName WRITE setObjectName)
+<b> 5</b>     Q_DECLARE_PRIVATE(QObject)
+<b> 6</b> 
+<b> 7</b> public:
+<b> 8</b>     Q_INVOKABLE explicit QObject(QObject *parent=0);
+<b> 9</b>     virtual ~QObject();
+<b>10</b> }
+</fieldset>
+
+
+
+QObject 的 dtor [virtual ~QObject();] 宣告為 virtual, 這就是 qt 可以自動呼叫 child objects dtor 的秘密。這通常在 QWidge 上, 只要 delete main widget, main widget 內的所有 chile widget 都會正常的解構, 就不用寫一堆 delete 的程式碼。
+
+commit c4ec6abf13142e89c8034ce9a2d9912bc2c6e5f1
+https://github.com/descent/progs/tree/master/qt_thread1
+
+測試了這樣的行為。
+
+要注意兩點才能使這樣的功能正常運作:
+
+1.
+記得把繼承 QWidget 的 parent 傳給 QWidget, 這應該沒問題, 繼承一個 class 通常都會這樣寫。
+<fieldset>
+<pre style="white-space: pre-wrap;">
+<b>13</b> MyWidget::MyWidget ( QWidget * parent, Qt::WindowFlags f)
+<b>14</b>   : QWidget(parent, f)
+<b>15</b> {
+<b>16</b> }
+</fieldset>
+
+2.
+<fieldset>
+<pre style="white-space: pre-wrap;">
+<b>18</b> Widget::Widget():m_label(new QLabel), m_button(new QPushButton(&quot;Button&quot;)), m_worker(new Worker)
+<b>19</b> {
+<b>20</b>   new MyWidget(this);
+<b>21</b> }
+</pre>
+</fieldset>
+
+要把 this 傳給這個繼承的 widget, 如果傳 0, 無法自己呼叫 dtor, 需要自己手動 delete。
