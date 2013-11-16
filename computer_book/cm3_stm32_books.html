@@ -1,0 +1,346 @@
+<b>arm cortex-m3: 嵌入式系統設計入門</b>
+<a href="https://picasaweb.google.com/lh/photo/XCKrt4MP7yOEg4yafzBW1dMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="480" src="https://lh6.googleusercontent.com/-rqbTAwpxONU/UVZKEq1htMI/AAAAAAAAlmw/l2SyK5bxdw0/s640/IMGP7898.JPG" width="640" /></a>
+20130326 購於 ruten, 20130329 拿到 390 NT
+
+
+<a href="https://picasaweb.google.com/lh/photo/kgWDit1ceJLegXWaKE7WW9MTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="225" src="https://lh6.googleusercontent.com/-VzXwn1dJSf0/Ujm76SqDcxI/AAAAAAAAr20/YtnxBGjyGwI/s400/IMG_6640.JPG" width="400" /></a>
+
+Cortex-M3之STM32嵌入式系统设计
+前言
+第1章 概述
+1.1 嵌入式系统定义
+1.2 嵌入式系统的发展
+1.2.1 从单片机到嵌入式系统
+1.2.2 从芯片级设计到系统级设计
+1.2.3 从面向器件到面向任务的设计
+1.2.4 从单处理器设计到多处理器设计
+1.3 嵌入式系统的应用
+1.4 ARM系列嵌入式系统处理器
+1.4.1 ARM处理器分类
+1.4.2 ARM Cortex处理器
+1.4.3 ARM Coretx-M3处理器
+1.4.4 ARM Cortex-A8处理器
+1.5 从8/16位处理器到ARM Cortex-M3/M
+1.6 常见的Cortex-M0/M3系列MCU
+
+第2章 STM32最小系统设计
+2.1 STM32F103C最小系统设计方案
+2.2 最小系统设计的要素
+2.2.1 STM32外部晶振
+2.2.2 复位电路
+2.2.3 LED、Key及BOOT跳线
+2.2.4 稳压电源及ISP下载口
+2.2.5 IO端口
+2.3 PCB图设计
+
+第3章 STM32程序设计入门
+3.1 STM32入门之Hello World程序
+3.1.1 开发环境
+3.1.2 编写STM32的C程序
+3.1.3 用GCC编译stm32程序
+
+3.1.4 STM32程序下载
+3.1.5 在Obtain_Studio中编译Hello World程序
+3.2 不同开发板的Hello World程序
+3.3 基于STM32固件库的入门程序
+3.3.1 STM32固件库
+3.3.2 STM32固件库外设的初始化和设置
+3.3.3 基于STM32固件库的程序设计
+3.4 基于STM32固件库的Hello World程序代码分析
+
+第4章 GPIO应用
+4.1 认识STM32 GPIO
+4.1.1 GPIO功能特点
+4.1.2 STM32 IO口的优点
+4.1.3 STM32固件库中提供的GPIO库函数
+4.2 KEY_LED程序
+4.2.1 创建stm32_C++KEY_LED项目
+4.2.2 stm32_C++KEY_LED项目程序分析
+4.3 低层代码分析
+4.3.1 GPIO端口的定义
+4.3.2 AHB/APB桥的配置
+4.3.3 GPIO引脚的配置
+4.3.4 GPIO的读写
+
+第5章 GCC编译器的安装与应用
+5.1 GCC介绍
+5.1.1 GCC概述
+5.1.2 MinGW简介
+5.1.3 MinGW的安装
+5.1.4 MinGW测试
+5.1.5 常见GCC用法
+5.2 ARM GCC编译器
+5.2.1 WinARM编译器
+5.2.2 Sourcery G++ Lite for ARM EABI编译器
+5.3 Obtain_Studio集成开发系统
+5.3.1 Obtain_Studio集成开发系统介绍
+5.3.2 Obtain_Studio集成开发系统常用技巧
+5.4 GCC Make编译文件设计
+5.4.1 GCC Make常用命令
+5.4.2 makefile文件规则
+5.4.3 makefile文件函数
+5.5 GCC编译器LD脚本
+5.5.1 C/C++程序内存空间
+5.5.2 GCC LD脚本基础
+5.5.3 STM32程序中的LD脚本程序
+
+第6章 STM32外部中断
+6.1 STM32外部中断
+6.2 STM32外部中断实例
+6.3 STM32中断配置
+6.3.1 STM32外部中断程序分析
+6.3.2 中断通道配置
+6.3.3 中断优先级配置
+6.3.4 外部中断模式配置
+6.3.5 外部中断响应函数配置
+
+第7章 面向对象程序设计
+7.1 程序风格
+7.1.1 程序风格的比较
+7.1.2 编程风格在程序设计中的作用
+7.2 跨越开发板
+7.2.1 端口映射的方法
+7.2.2 模式设置的方法
+7.3 分类与封装
+7.3.1 什么是分类与封装
+7.3.2 封装的实现
+7.4 隐藏与权限
+7.4.1 隐藏
+7.4.2 权限
+7.5 继承
+7.5.1 CGpio类的继承
+7.5.2 测试CLed和CKey类
+7.6 组装
+7.6.1 GPIO的组装
+7.6.2 GPIO组装的测试
+7.7 C++在嵌入式系统中的应用
+7.7.1 C++介绍
+7.7.2 兼容C语言
+7.7.3 在C++程序中调用C函数
+7.7.4 面向对象程序设计语言
+7.7.5 泛型编程语言
+7.7.6 STL编程
+7.7.7 接口编程
+
+第8章 USART通信
+8.1 从51单片机到STM32的串口通信
+8.2 USART通用串口通信设计
+8.2.1 USART通用串口
+8.2.2 USART通用串口通信设计方案
+8.3 USART通用串口程序设计入门
+8.3.1 USART数据发送程序设计
+8.3.2 USART数据接收程序设计
+8.4 中断方式的数据接收
+8.4.1 中断方式的数据接收程序设计
+8.4.2 多个串口驱动对象的协同工作
+8.5 USART驱动程序的设计
+8.5.1 USART驱动程序
+8.5.2 printf与cout的实现
+8.6 深入STM32 USART的工作原理
+8.6.1 USART工作原理
+8.6.2 发送器
+8.6.3 接收器
+8.6.4 USART初始化函数USART_Init
+8.6.5 USART波特率的计算方法
+
+第9章 STM32的工作原理
+9.1 STM32启动原理
+9.1.1 STM32启动过程分析
+9.1.2 STM32软件复位与功耗控制
+9.2 系统时钟分析
+9.2.1 系统时钟种类
+9.2.2 STM32固件库设置时钟
+9.2.3 系统时钟配置
+9.3 存储器以及存储器映射
+9.4 NVIC嵌套中断向量控制器
+9.4.1 NVIC嵌套中断向量控制器
+9.4.2 STM32的NVIC优先级
+9.5 STM32向量表及配置
+9.5.1 STM32复位后从哪个地址开始执行
+9.5.2 STM32向量表
+9.5.3 用户程序中的向量表
+
+第10章 定时器与日历
+10.1 SysTick定时器
+10.1.1 关于SysTick
+10.1.2 SysTick测试程序
+10.1.3 SysTick程序分析
+10.2 RTC定时器
+10.2.1 RTC定时器介绍
+10.2.2 RTC的本质与测试程序
+10.2.3 日历算法
+10.2.4 STM32的RTC日历测试程序
+10.2.5 STM32 RTC程序分析
+10.2.6 RTC秒中断
+10.2.7 RTC闹钟
+10.2.8 RTC校准
+10.3 通用定时器
+10.3.1 STM32定时器的种类
+10.3.2 通用定时器介绍
+10.3.3 通用定时器基本应用程序设计
+10.3.4 通用定时器常用模式
+10.3.5 输出模式测试实例
+10.3.6 输入捕获模式测试实例
+
+第11章 ADC应用
+11.1 ADC与数字信号处理系统设计
+11.1.1 数字信号处理系统设计
+11.1.2 STM32简单的ADC应用实例
+11.1.3 过采样技术
+11.1.4 欠采样技术
+11.2 STM32的ADC简介
+11.3 STM32 ADC入门实例
+11.3.1 STM32 ADC入门测试程序
+11.3.2 STM32 ADC程序分析
+11.3.3 STM32内部温度测量
+11.4 STM32 ADC注入方式
+11.4.1 STM32 ADC注入方式简介
+11.4.2 STM32双ADC模式
+11.4.3 STM32 ADC注入方式实例
+
+第12章 DMA应用
+12.1 STM32的DMA简介
+12.1.1 任务转移策略
+12.1.2 STM32的DMA功能
+12.2 DMA在ADC中的应用
+12.2.1 任务转移策略的DMA ADC应用实例
+12.2.2 DMA_ADC程序分析
+12.3 DMA在USART中的应用
+12.3.1 任务转移策略的USART DMA数据发送
+12.3.2 任务转移策略的USART DMA数据接收
+12.3.3 任务队列策略的USART DMA发送中断应用
+12.3.4 任务循环策略的USART DMA接收中断应用
+
+第13章 备份寄存器与看门狗程序
+13.1 STM32备份寄存器
+13.1.1 备份寄存器特点
+13.1.2 BKP应用实例
+13.2 STM32看门狗
+13.2.1 STM32看门狗介绍
+13.2.2 独立看门狗介绍
+13.2.3 独立看门狗程序设计
+13.2.4 窗口看门狗介绍
+13.2.5 窗口看门狗测试程序
+
+第14章 TFT驱动与显示
+14.1 LCD概述
+14.1.1 LCD简介
+14.1.2 LCD接口
+14.2 Ili9xx系列TFT驱动芯片
+14.3 TFT测试程序
+14.3.1 TFT测试程序准备工作
+14.3.2 TFT测试主程序
+14.3.3 字符的显示
+14.4 基于FSMC的TFT驱动程序设计
+14.4.1 STM32的FSMC功能
+14.4.2 FSMC与TFT端口连接与端口映射
+14.4.3 FSMC与TFT的内存空间映射与操作
+14.4.4 FSMC初始化
+14.4.5 TFT初始化
+14.4.5 TFT驱动程序统一接口函数的实现
+14.5 基于GPIO的TFT驱动程序设计
+
+第15章 触摸屏驱动
+15.1 触摸屏介绍
+15.2 触摸屏驱动IC
+15.3 触摸屏测试项目
+15.4 触摸屏驱动程序分析
+15.5 触摸屏校准
+15.5.1 触摸屏校准算法
+15.5.2 触摸屏校准的实现
+
+第16章 SD卡驱动与FAT文件系统
+16.1 STM32的SDIO接口
+16.1.1 常见存储卡种类
+16.1.2 SD卡结构
+16.1.3 STM32的SDIO接口
+16.2 FAT文件系统
+16.2.1 FAT文件系统概述
+16.2.2 FatFs介绍
+16.3 STM32 SDIO接口
+16.4 SD卡文件读写实例
+16.4.1 准备工作
+16.4.2 SD卡文件读写实例
+16.4.3 SD卡文件操作类CFile的设计
+16.4.4 目录操作
+
+第17章 μC/OS-Ⅱ在STM32上的移植
+17.1 μC/OS-Ⅱ概述
+17.1.1 μC/OS-Ⅱ简介
+17.1.2 μC/OS-Ⅱ的组成部分
+17.2 μC/OS-Ⅱ移植到STM
+17.3 μC/OS-Ⅱ工作原理
+17.3.1 μC/OS-Ⅱ启动过程
+17.3.2 任务切换的相关函数解析
+
+第18章 汉字与图形图像显示
+18.1 汉字显示
+18.1.1 汉字库
+18.1.2 程序中加入汉字库实现汉字显示
+18.1.3 使用SD卡上的汉字库实现汉字显示
+18.2 图形绘制
+18.3 图像显示
+18.3.1 位图与bmp文件格式
+18.3.2 bmp文件操作
+18.3.3 bmp图像显示测试程序
+
+第19章 摄像头驱动与图像采集
+19.1 摄像头接口
+19.1.1 图像传感器
+19.1.2 OV7670摄像头
+19.1.3 CMOS摄像头接口
+19.2 CMOS摄像头测试程序
+19.3 深入CMOS摄像头驱动程序原理
+19.3.1 SCCB协议
+19.3.2 SCCB协议驱动程序设计
+19.3.3 CMOS摄像头驱动程序设计
+
+第20章 以太网及Web远程控制系统设计
+20.1 ENC28J60以太网控制器
+20.2 网络测试程序
+20.2.1 Web Server测试
+20.2.2 UDP通信测试
+20.3 IP/ICMP协议与Ping命令的实现
+20.3.1 以太网数据包结构
+20.3.2 IP协议
+20.3.3 ICMP协议
+20.3.4 Ping命令
+20.3.5 Ping命令的实现
+20.4 UDP通信原理
+20.4.1 UDP协议
+20.4.2 UDP通信的实现
+20.5 Web Server程序设计
+20.5.1 Web Server原理
+20.5.2 TCP设计
+20.5.3 Web Server设计
+20.6 ENC28J60驱动程序设计
+20.6.1 STM32 SPI接口
+20.6.2 STM32 SPI驱动程序
+20.6.3 ENC28J60驱动程序
+参考文献
+
+
+
+<div style="clear: left; float: left; margin-bottom: 1em; margin-right: 1em;">
+<img height="400" src="https://lh4.googleusercontent.com/-I3VjxkQf_3U/UcBvwlxNx7I/AAAAAAAAofo/ukVon0MirJo/s800/06-18%254022-26-56-333.jpg" width="330" /></div>
+<b>STM32F207 高性能网络型 MCU 嵌入式系统设计</b>, 20130618 購於台南若水堂 307 nt/59 rmb。
+
+其實我只想看第 15 章, 提到 process switch 的部份, 所以我猶豫很久, 才決定買了下來。翻閱其他章節也還是有可看之處。
+
+我已經有寫了一個 process switch 的版本, 不過這是我自己胡思亂想寫出來的, 我並不確定這是所謂一般的寫法, 所以我還是參考一下 scmrtos 的寫法, 彌補自己的不足。
+
+果然有所不足, context switch 需要使用 pendsv, 所以要補上這個才比較完整。
+
+裡頭提到了 <a href="http://scmrtos.sourceforge.net/ScmRTOS" target="_blank">scmrtos</a>: 這是 c++ 寫的 rtos, 書中的 process switch 範例就是以他為主的說明。
+
+STM32F207 高性能网络型 MCU 嵌入式系统设计範例程式碼 (需要註冊):
+<a href="http://www.buaapress.com.cn/filedetail.php?ddid=205&amp;pdtid=1&amp;sdtid=3&amp;pmenuid=5">http://www.buaapress.com.cn/filedetail.php?ddid=205&amp;pdtid=1&amp;sdtid=3&amp;pmenuid=5</a>
+
+<a href="https://picasaweb.google.com/lh/photo/EdT_x7jjBLfr0_9etZRSGtMTjNZETYmyPJy0liipFm0?feat=embedwebsite" style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;"><img height="400" src="https://lh3.googleusercontent.com/-MboTxbiRLzE/UVZfAqquCMI/AAAAAAAAlnE/bH_0LlfzBg4/s800/03-29%254011-24-51-41.jpg" width="330" /></a>
+<b>嵌入式系统及其应用：基于Cortex-M3内核和STM32F103系列微控制器的系统设计与开发</b>, 這本有點像是大雜會, 包含的內容很廣
+
+
+
+
+
+
