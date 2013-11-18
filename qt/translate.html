@@ -1,0 +1,87 @@
+使用 QT_TR_NOOP, QT_TRANSLATE_NOOP macro
+
+<fieldset>
+<legend>w.cpp</legend>
+<pre><b>class</b> <span style="color: #2040a0;">Weather</span>
+<span style="color: #4444ff;"><b>{</b></span>
+&nbsp; <b>public</b><span style="color: #4444ff;">:</span>
+&nbsp; &nbsp; <span style="color: #2040a0;">show_info</span><span style="color: #4444ff;">(</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<span style="color: #4444ff;"><b>}</b></span><span style="color: #4444ff;">;</span>
+
+
+<span style="color: #444444;">//in class 用 QT_TR_NOOP</span>
+<b>void</b> <span style="color: #2040a0;">weather</span><span style="color: #4444ff;">:</span><span style="color: #4444ff;">:</span><span style="color: #2040a0;">show_info</span><span style="color: #4444ff;">(</span><span style="color: #4444ff;">)</span>
+<span style="color: #4444ff;"><b>{</b></span>
+
+<b>static</b> <b>const</b> <b>char</b> <span style="color: #4444ff;">*</span><span style="color: #2040a0;">day_name</span><span style="color: #4444ff;">[</span><span style="color: #4444ff;">]</span> <span style="color: #4444ff;">=</span>
+<span style="color: #4444ff;"><b>{</b></span>
+&nbsp; <span style="color: #2040a0;">QT_TR_NOOP</span><span style="color: #4444ff;">(</span><span style="color: green;">"0"</span><span style="color: #4444ff;">)</span>,
+&nbsp; <span style="color: #2040a0;">QT_TR_NOOP</span><span style="color: #4444ff;">(</span><span style="color: green;">"1"</span><span style="color: #4444ff;">)</span>,
+&nbsp; <span style="color: #2040a0;">QT_TR_NOOP</span><span style="color: #4444ff;">(</span><span style="color: green;">"2"</span><span style="color: #4444ff;">)</span>,
+&nbsp; <span style="color: #2040a0;">QT_TR_NOOP</span><span style="color: #4444ff;">(</span><span style="color: green;">"3"</span><span style="color: #4444ff;">)</span>,
+&nbsp; <span style="color: #2040a0;">QT_TR_NOOP</span><span style="color: #4444ff;">(</span><span style="color: green;">"4"</span><span style="color: #4444ff;">)</span>,
+&nbsp; <span style="color: #2040a0;">QT_TR_NOOP</span><span style="color: #4444ff;">(</span><span style="color: green;">"5"</span><span style="color: #4444ff;">)</span>,
+&nbsp; <span style="color: #2040a0;">QT_TR_NOOP</span><span style="color: #4444ff;">(</span><span style="color: green;">"6"</span><span style="color: #4444ff;">)</span>,
+&nbsp; <span style="color: #2040a0;">QT_TR_NOOP</span><span style="color: #4444ff;">(</span><span style="color: green;">"7"</span><span style="color: #4444ff;">)</span>,
+<span style="color: #4444ff;"><b>}</b></span><span style="color: #4444ff;">;</span>
+
+<span style="color: #4444ff;"><b>}</b></span>
+
+<span style="color: #444444;">//global space 用 QT_TRANSLATE_NOOP</span>
+<b>static</b> <b>const</b> <b>char</b> <span style="color: #4444ff;">*</span><span style="color: #2040a0;">city_name</span><span style="color: #4444ff;">[</span><span style="color: #4444ff;">]</span> <span style="color: #4444ff;">=</span>
+<span style="color: #4444ff;"><b>{</b></span>
+&nbsp; <span style="color: #2040a0;">QT_TRANSLATE_NOOP</span><span style="color: #4444ff;">(</span><span style="color: green;">"Weather"</span>, <span style="color: green;">"0"</span><span style="color: #4444ff;">)</span>,
+&nbsp; <span style="color: #2040a0;">QT_TRANSLATE_NOOP</span><span style="color: #4444ff;">(</span><span style="color: green;">"Weather"</span>, <span style="color: green;">"1"</span><span style="color: #4444ff;">)</span>,
+&nbsp; <span style="color: #2040a0;">QT_TRANSLATE_NOOP</span><span style="color: #4444ff;">(</span><span style="color: green;">"Weather"</span>, <span style="color: green;">"2"</span><span style="color: #4444ff;">)</span>,
+&nbsp; <span style="color: #2040a0;">QT_TRANSLATE_NOOP</span><span style="color: #4444ff;">(</span><span style="color: green;">"Weather"</span>, <span style="color: green;">"3"</span><span style="color: #4444ff;">)</span>,
+&nbsp; <span style="color: #2040a0;">QT_TRANSLATE_NOOP</span><span style="color: #4444ff;">(</span><span style="color: green;">"Weather"</span>, <span style="color: green;">"4"</span><span style="color: #4444ff;">)</span>
+<span style="color: #4444ff;"><b>}</b></span><span style="color: #4444ff;">;</span>
+</pre>
+</fieldset>
+
+
+w.pro 加入
+TRANSLATIONS = $${TARGET}_zh_TW.ts $${TARGET}_zh_CN.ts $${TARGET}_zh_JP.ts
+
+翻譯三部曲:
+<ul>
+<li>lupdate</li>
+<li>linguist</li>
+<li>lrelease</li>
+</ul>
+
+<b>lupdate w.pro</b> 產生 *.ts, 在我的例子裡, 會產生:
+
+w_zh_CN.ts &nbsp;w_zh_JP.ts &nbsp;w_TW.ts
+<div>
+
+</div>
+
+linguist 修改 *.ts 將對應的 *NOOP 改成某個語系的辭彙 (ex: 中文)
+<b>lrelease w.pro</b> 產生 *.qm
+w_zh_CN.qm &nbsp;w_zh_JP.qm &nbsp;w_TW.qm
+
+<fieldset>
+<legend>m.cpp</legend>
+<pre><span style="color: #2040a0;">in</span> <span style="color: #2040a0;">main</span><span style="color: #4444ff;">(</span><span style="color: #4444ff;">)</span>
+<span style="color: #4444ff;"><b>{</b></span>
+&nbsp; <span style="color: #2040a0;">QApplication</span> <span style="color: #2040a0;">app</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">argc</span>, <span style="color: #2040a0;">argv</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+
+&nbsp; <span style="color: #2040a0;">QTranslator</span> <span style="color: #2040a0;">translator</span><span style="color: #4444ff;">;</span>
+
+&nbsp; <span style="color: #2040a0;">translator</span>.<span style="color: #2040a0;">load</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">w_TW</span>.<span style="color: #2040a0;">qm</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+&nbsp; <span style="color: #2040a0;">app</span>.<span style="color: #2040a0;">installTranslator</span><span style="color: #4444ff;">(</span><span style="color: #4444ff;">&amp;</span><span style="color: #2040a0;">translator</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<span style="color: #4444ff;"><b>}</b></span>
+</pre>
+</fieldset>
+
+Qt-4.X/examples/tools/i18n 可參考。
+
+ref:
+
+<ul>
+<li>QT document Internationalization with Qt</li>
+<li>linguist 中文亂碼問題:&nbsp;<a href="http://blog.csdn.net/dbzhang800/article/details/6334852">http://blog.csdn.net/dbzhang800/article/details/6334852</a></li>
+<li>Qt 动态切换语言 附源码:&nbsp;<a href="http://mobile.51cto.com/symbian-270112.htm">http://mobile.51cto.com/symbian-270112.htm</a></li>
+<li>精通 C++ GUI 程式設計 使用 Qt4 (第二版) chapter 18</li>
+</ul>
