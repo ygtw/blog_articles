@@ -601,6 +601,14 @@ chapter 33 介紹 github, gitorious 這兩個 git 伺服器, 不算詳細, 所�
 
 你大概可以看出我花了很大心力在學 git, 因為我認為這是一個值得投資的軟體 (又跨平台, 這點很重要), 但我不希望重演 rcs, cvs, svn, git, ??? 的戲碼, 不僅浪費我的投資, 轉換各種 repository 可是很痛苦的。
 
+以下是 Bitbucket 建立一個新的 repository 時給的命令:
+<pre class="cmd">
+cd /path/to/my/repo
+git remote add origin ssh://git@bitbucket.org/dsung/a_prog.git
+git push -u origin --all # pushes up the repo and its refs for the first time
+git push -u origin --tags # pushes up any tags
+</pre>
+
 這個 pdf 大約說明了 git 一些操作, 有些還算是蠻進階的議題。
 http://ihower.tw/git/files/ihower-git.pdf
 
