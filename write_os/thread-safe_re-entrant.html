@@ -1,0 +1,73 @@
+這篇是個雜記, 紀錄這三個惱人的東西還有一些自己的問題。
+
+<a href="http://tw.myblog.yahoo.com/blue-comic/article?mid=253&amp;prev=257&amp;l=f&amp;fid=26">http://tw.myblog.yahoo.com/blue-comic/article?mid=253&amp;prev=257&amp;l=f&amp;fid=26</a>
+<a href="http://blog.xuite.net/jackie.xie/bluelove/46644355">http://blog.xuite.net/jackie.xie/bluelove/46644355</a>
+
+<a href="http://qt-project.org/doc/qt-4.8/threads-reentrancy.html">http://qt-project.org/doc/qt-4.8/threads-reentrancy.html</a> 
+
+在寫怎麼樣的程式時, 需要考慮 reentrant?
+在寫怎麼樣的程式時, 需要考慮 thread-safe?
+
+在 multi-thread 程式中, 需要的是 reentrant 還是 thread-safe? 
+
+<ul>
+<li><a href="http://www.unix.org/whitepapers/reentrant.html">http://www.unix.org/whitepapers/reentrant.html</a></li>
+<li><a href="http://stackoverflow.com/questions/856823/threadsafe-vs-re-entrant">http://stackoverflow.com/questions/856823/threadsafe-vs-re-entrant</a></li>
+<li><a href="http://blogs.msdn.com/b/oldnewthing/archive/2004/06/29/168719.aspx">http://blogs.msdn.com/b/oldnewthing/archive/2004/06/29/168719.aspx</a></li>
+</ul>
+
+Fast Atomic Counters With the x86 LOCK Prefix:
+<a href="http://www.codemaestro.com/reviews/8">http://www.codemaestro.com/reviews/8</a>
+
+問題很混亂, 不過看了 pthread 多緒程式設計 (p237), 有了比較清楚的概念:
+
+簡單提一下 (詳細請參閱該書籍):
+reentrant function: 不可使用 static, global data
+thread safe: 使用 mutex 來保護 global data, 而 data 不一定是變數, 可能是檔案, 可能是某個週邊。
+
+<hr />
+
+再來是 memory ordering (memory barrier) 這問題:
+
+我也被這問題困惑很久, 在 os 下寫應用程式, 幾乎沒用過這種指令, 有需要在 os 下的應用程式使用這些指令嗎? 還是被 os api 給包裝起來了呢?
+
+這是 linux 在 x86 下使用的 memory barrier 指令。
+<pre class="cmd">#define mb() &nbsp; &nbsp;asm volatile("mfence":::"memory")
+#define rmb() &nbsp; asm volatile("lfence":::"memory")
+#define wmb() &nbsp; asm volatile("sfence" ::: "memory")
+</pre>
+
+arm cortex m3 memory barrier 指令: isb
+
+Binary Hacks--駭客秘傳技巧一百招 #94 在談這個, 看完就清楚了, 可是我不知道怎麼寫程式測試這個情形。
+
+不過這樣的話, 在 os 下寫應用程式也會遇到這問題才是, 可是卻沒看過在 os 下的 c 應用程式用上這種指令。
+
+multi-thread 程式要突破兩關:
+<ol>
+<li>lock 機制 (使用 test-and-set 硬體指令實作)</li>
+<li>memory ordering (使用 memory barrier 指令)</li>
+</ol>
+才有正確的結果。
+
+1 通常由 os api 提供 (x86 可用 bts/xchg 實作, arm cortex M3 可用 ldrex/strex 來實作)。
+2 我就沒看過在 os 下的應用程式要怎麼用, 只看過在 driver 階段有使用過。<a href="http://stackoverflow.com/questions/3208060/does-guarding-a-variable-with-a-pthread-mutex-guarantee-its-also-not-cached" target="_blank">這篇</a>提到 memory barrier pthread 已經實作在裡頭了。 
+
+thread 程式的共享變數還需要用 volatile 來宣告, 僅僅加上 lock 是不夠的。
+ref: 
+<a href="http://bbs.chinaunix.net/forum.php?mod=viewthread&amp;tid=1920275">http://bbs.chinaunix.net/forum.php?mod=viewthread&amp;tid=1920275</a> 
+<a href="http://www.parallellabs.com/2010/12/04/why-should-we-be-care-of-volatile-keyword-in-multithreaded-applications/">http://www.parallellabs.com/2010/12/04/why-should-we-be-care-of-volatile-keyword-in-multithreaded-applications/</a>
+
+
+ref memory barrier (ptt damody provides):
+<ul>
+<li><a href="http://msdn.microsoft.com/en-us/library/windows/desktop/ms684208%28v=vs.85%29.aspx">http://msdn.microsoft.com/en-us/library/windows/desktop/ms684208%28v=vs.85%29.aspx</a></li>
+<li><a href="http://stackoverflow.com/questions/8729466/is-this-a-correct-use-of-thread-memorybarrier">http://stackoverflow.com/questions/8729466/is-this-a-correct-use-of-thread-memorybarrier</a></li>
+</ul>
+
+下一個類似的問題是:
+mutex/semaphore and spin lock, 你知道的, 我要的不是教科書的解釋, 我想要實作這些東西出來, 能實作出來就真能代表懂了。
+
+目前我在 arm cortex-m3 使用 ldrex/strex 實作出 spin lock。
+
+<ul></ul>
