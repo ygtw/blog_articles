@@ -540,6 +540,8 @@ git checkout HEAD .    使用 HEAD 指向的 master branch 的內容覆蓋 index
 7.2 介紹了 reflog 這個指令, 可以在移動 master 時, 輕易回復 master 指到的位置。
 
 7.3 介紹 git reset [--soft | --mixed | --hard] 你和我一樣總是搞亂嗎? reset 用來移動 master。
+
+git reset 會改變 master 指向的位置, 並根據參數的不同有下面不同的影響:
 <pre class="cmd">--hard 
 改變 master
 用 commit 換掉 index
@@ -560,6 +562,8 @@ working tree 不動
 <pre class="cmd">git check -&gt; 改變 head
 git reset -&gt; 改變 master
 </pre>
+
+git checkout 有可能會處在斷頭模式 (detached HEAD state。呵, 我真喜歡這個恐怖的名詞), 在這裡所做的修改, 很有可能會消失, 在使用 git gc 時, 會檢查這部份的時間, 過期後這部份的 commit 都會被清掉, 而 git gc 在執行某些指令時, 會自動呼叫, 所以並不是沒有主動 git gc 就沒事, 請小心, 這是另一個你用 commit 進 repository 的東西有可能會消失的另一種情形。
 
 10.5 (p120) 介紹了 describe, 搭配 tag, 可以用來紀錄軟體版本編號。也可參考 p553 (ident), p557 (export-ignore) 這兩個屬性。
 
@@ -649,9 +653,13 @@ https://github.com/pluralsight/git-internals-pdf/releases
 mission impossible 2 - 5 分鐘 git 就上手
 
 HEAD, master branch
-show "detached HEAD" by checkout command
-modify commit log (HEAD commit, a specify commit)
+move master branch by git reset
 reflog
+show "detached HEAD" by checkout command
+
+modify commit log (HEAD commit, a specify commit) by git commit --amend
+
 delete a commit
 merge 2 commit to 1 commit
-
+use git checkout/rebase/cherry-pick 
+use git rebase
