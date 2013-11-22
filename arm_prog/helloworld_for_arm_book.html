@@ -1,0 +1,139 @@
+這是<a href="http://descent-incoming.blogspot.tw/2013/09/books-arm.html" target="_blank">一步步写嵌入式操作系统:ARM 编程的方法与实践</a>的第一個範例。
+
+<fieldset>
+<legend> helloworld.c</legend>
+<pre><b> 1</b> /*
+<b> 2</b> helloworld.c:
+<b> 3</b> Copyright (C) 2009  david leels &lt;davidontech@gmail.com&gt;
+<b> 4</b> 
+<b> 5</b> This program is free software: you can redistribute it and/or modify
+<b> 6</b> it under the terms of the GNU General Public License as published by
+<b> 7</b> the Free Software Foundation, either version 3 of the License, or
+<b> 8</b> (at your option) any later version.
+<b> 9</b> 
+<b>10</b> This program is distributed in the hope that it will be useful,
+<b>11</b> but WITHOUT ANY WARRANTY; without even the implied warranty of
+<b>12</b> MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<b>13</b> GNU General Public License for more details.
+<b>14</b> 
+<b>15</b> You should have received a copy of the GNU General Public License
+<b>16</b> along with this program.  If not, see http://www.gnu.org/licenses/.
+<b>17</b> */
+<b>18</b> 
+<b>19</b> #define UFCON0 ((volatile unsigned int *)(0x50000020))
+<b>20</b> 
+<b>21</b> void helloworld(void){
+<b>22</b>  const char *p="helloworld\n";
+<b>23</b>  while(*p){
+<b>24</b>   *UFCON0=*p++;
+<b>25</b>  };
+<b>26</b>  while(1);
+<b>27</b> }
+</pre>
+</fieldset>
+
+很不順, 照著書上跑 skyeye 執行 helloworld.c 竟然給我這個:
+
+arch: arm
+cpu info: armv4, arm920t, 41009200, ff00fff0, 2
+mach info: name s3c2410x, mach_init addr 0x806dee0
+SKYEYE: use arm920t mmu ops
+
+**************************** WARNING **********************************
+If you want to run ELF image, you should use -e option to indicate
+your elf-format image filename. Or you only want to run binary image,
+you need to set the filename of the image and its entry in skyeye.conf.
+***********************************************************************
+
+Your elf file is little endian.
+uart_mod:0, desc_in:, desc_out:, converter:
+Loaded RAM &nbsp; ./helloworld.bin
+SKYEYE:Error in mem_read_word, no bank found, NumInstrs 7, mem_read_word addr = fffffff8 no bank
+SKYEYE:Error in mem_read_word, no bank found, NumInstrs 13, mem_read_word addr = fffffff8 no bank
+^DSKYEYE:Error in mem_read_word, no bank found, NumInstrs 16, mem_read_word addr = fffffff8 no bank
+SKYEYE:Error in mem_read_word, no bank found, NumInstrs 19, mem_read_word addr = fffffff8 no bank
+SKYEYE:Error in mem_read_word, no bank found, NumInstrs 25, mem_read_word addr = fffffff8 no bank
+^DSKYEYE:Error in mem_read_word, no bank found, NumInstrs 28, mem_read_word addr = fffffff8 no bank
+SKYEYE:Error in mem_read_word, no bank found, NumInstrs 31, mem_read_word addr = fffffff8 no bank
+SKYEYE:Error in mem_read_word, no bank found, NumInstrs 37, mem_read_word addr = fffffff8 no bank
+^DSKYEYE:Error in mem_read_word, no bank found, NumInstrs 40, mem_read_word addr = fffffff8 no bank
+SKYEYE:Error in mem_read_word, no bank found, NumInstrs 43, mem_read_word addr = fffffff8 no bank
+SKYEYE:Error in mem_read_word, no bank found, NumInstrs 49, mem_read_word addr = fffffff8 no bank
+^DSKYEYE:Error in mem_read_word, no bank found, NumInstrs 52, mem_read_word addr = fffffff8 no bank
+SKYEYE:Error in mem_read_word, no bank found, NumInstrs 55, mem_read_word addr = fffffff8 no bank
+SKYEYE:Error in mem_read_word, no bank found, NumInstrs 61, mem_read_word addr = fffffff8 no bank
+^DSKYEYE:Error in mem_read_word, no bank found, NumInstrs 64, mem_read_word addr = fffffff8 no bank
+SKYEYE:Error in mem_read_word, no bank found, NumInstrs 67, mem_read_word addr = fffffff8 no bank
+SKYEYE:Error in mem_read_word, no bank found, NumInstrs 73, mem_read_word addr = fffffff8 no bank
+^DSKYEYE:Error in mem_read_word, no bank found, NumInstrs 76, mem_read_word addr = fffffff8 no bank
+SKYEYE:Error in mem_read_word, no bank found, NumInstrs 79, mem_read_word addr = fffffff8 no bank
+SKYEYE:Error in mem_read_word, no bank found, NumInstrs 85, mem_read_word addr = fffffff8 no bank
+<div>
+
+</div>
+<div>
+我嚇傻了, &nbsp;怎麼這樣勒?</div>
+<div>
+
+</div>
+<div>
+找到這篇有了答案 
+<a href="http://hi.baidu.com/vtrsazxaxjcdfge/item/4826cdaecf0f4c328919d354">http://hi.baidu.com/vtrsazxaxjcdfge/item/4826cdaecf0f4c328919d354</a>
+
+加上 L7 搞定。
+
+</div>
+<fieldset>
+<legend>skyeye.conf</legend>
+<pre><b>1</b> cpu:  arm920t
+<b>2</b> mach: s3c2410x
+<b>3</b>   
+<b>4</b> #physical memory
+<b>5</b> mem_bank: map=M, type=RW, addr=0x00000000, size=0x00800000, file=./helloworld.bin, boot=yes
+<b>6</b> #ref : http://hi.baidu.com/vtrsazxaxjcdfge/item/4826cdaecf0f4c328919d354 for stack address
+<span style="color: red;"><b>7</b> mem_bank: map=M, type=RW, addr=0xfff00000, size=0x000fffff 
+</span><b>8</b> #all peripherals I/O mapping area
+<b>9</b> mem_bank: map=I, type=RW, addr=0x48000000, size=0x20000000
+</pre>
+</fieldset>
+
+不過我可不是在重複說明人家已經知道的事情, 我要來討論為什麼 stack 沒設定會產生這種結果? 下面是反組譯的程式碼, 看不懂 arm 組合語言是吧? 我也是, 所以只看這行 (L8) 就好 ...
+
+<fieldset>
+<legend>/usr/leeos_tools_for_linux/bin/arm-elf-objdump  -d helloworld.c.elf</legend>
+<pre><b> 1</b> 
+<b> 2</b> helloworld.c.elf:     file format elf32-littlearm
+<b> 3</b> 
+<b> 4</b> 
+<b> 5</b> Disassembly of section .text:
+<b> 6</b> 
+<b> 7</b> 00000000 &lt;helloworld&gt;:
+<span style="color: red;"><b> 8</b>    0: e52db004  push {fp}  ; (str fp, [sp, #-4]!)</span>
+<b> 9</b>    4: e28db000  add fp, sp, #0
+<b>10</b>    8: e24dd004  sub sp, sp, #4
+<b>11</b>    c: e59f3038  ldr r3, [pc, #56] ; 4c &lt;helloworld+0x4c&gt;
+<b>12</b>   10: e50b3004  str r3, [fp, #-4]
+<b>13</b>   14: ea000007  b 38 &lt;helloworld+0x38&gt;
+<b>14</b>   18: e3a03205  mov r3, #1342177280 ; 0x50000000
+<b>15</b>   1c: e2833020  add r3, r3, #32
+<b>16</b>   20: e51b2004  ldr r2, [fp, #-4]
+<b>17</b>   24: e5d22000  ldrb r2, [r2]
+<b>18</b>   28: e5832000  str r2, [r3]
+<b>19</b>   2c: e51b3004  ldr r3, [fp, #-4]
+<b>20</b>   30: e2833001  add r3, r3, #1
+<b>21</b>   34: e50b3004  str r3, [fp, #-4]
+<b>22</b>   38: e51b3004  ldr r3, [fp, #-4]
+<b>23</b>   3c: e5d33000  ldrb r3, [r3]
+<b>24</b>   40: e3530000  cmp r3, #0
+<b>25</b>   44: 1afffff3  bne 18 &lt;helloworld+0x18&gt;
+<b>26</b>   48: eafffffe  b 48 &lt;helloworld+0x48&gt;
+<b>27</b>   4c: 00000050  .word 0x00000050
+</pre>
+</fieldset>
+
+還沒找到類似 bochs 的模擬器, 只好用猜的, 看看
+
+<pre><b> 8</b>    0: e52db004  push {fp}  ; (str fp, [sp, #-4]!)
+</pre>
+
+push 指令會動到 stack, 那從&nbsp;helloworld.c 有看到那行在設定 stack 嗎？沒有, 所以 stack 可能在某塊不能存取的地方, 恭喜踩到地雷, 連結提到的 stack 位址因為沒有好用的模擬器可用來觀察, 就只能先相信了。而實際上把這段 stack 位址補上也的確能正常執行。
