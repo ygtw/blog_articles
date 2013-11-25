@@ -8,7 +8,7 @@
 
 這本書真是可惜了, 直接買簡體版可能不會差太多。製作簡體中文的書籍難度應該比外文書籍容易許多, 如果因為出版社的不用心, 只做做繁體化中文的工作, 那實在也太不尊重台灣支持你的讀者了。
 
-原文版本 (簡體版) 是于淵自己用 latex 排版而成, 作者自序有提到, 但是繁體中文版本被刪除了, 所以我推測繁體中文版本不是用 latex 排版而成。雖然我喜歡 latex 排版的書, 但我並不會強人所難, 再說, 繁體中文版本的排版也不難看。而使用 latex 排版可以保證書中程式碼和範例程式碼是一模一樣, latex 可以直接 include 程式碼成為 latex 檔案的一部分, 用心良苦。
+原文版本 (簡體版) 是于淵自己用 latex 排版而成, 作者自序有提到, 但是這段繁體中文版刪除了, 所以我推測繁體中文版本不是用 latex 排版而成。雖然我喜歡 latex 排版的書, 但我並不會強人所難, 再說, 繁體中文版本的排版也不難看。而使用 latex 排版可以保證書中程式碼和範例程式碼是一模一樣, latex 可以直接 include 程式碼成為 latex 檔案的一部分, 于淵用心良苦。
 
 書附的 CD 也有不同, 原文版本裡頭除了程式碼還有該出版社的其他出版書籍, 順便打個廣告, 我很喜歡看一些廣告自己出版社的書籍, 可是不知道為什麼, 不太有出版社做這樣動作, 基本上我喜歡這本書, 多少也會相信其廣告的書籍品質也有相當水準。出版社應該善用這點。
 
@@ -112,21 +112,25 @@ ref:&nbsp; <a href="http://stackoverflow.com/questions/1806585/why-is-linux-call
 我跟著這本書, 大約花了一年的時間, 實作了 x86 上的 os (我取名 simple_os),&nbsp; 他是本書的簡單版本, 我只實作功能, 沒有考慮太多錯誤處理。甚至也沒有書中最簡單的記憶體管理, 而是直接切一塊來使用。檔案系統我也不是使用書中範例, 我沒碰 IDE HD, 而是使用 romfs ramdisk 來實作, 由於我已經突破 kernel 只能有 1MB 的限制, 所以我的 ramdisk 可以大一點。
 
 總計實作:
-process switch
-system call 
-ipc
-task process
-使用 ring0, ring1, ring3
-filesystem
-fork/exec/wait/exit
-不使用 bios call, 進入繪圖模式 (這可是我很得意的一點)， 秀了幾張圖片和中文, 也可以在繪圖模式和文字模式來回切換。
-使用 unreal mode 載入超過 1MB 的檔案
+<ul>
+<li>process switch</li>
+<li>system call </li>
+<li>ipc</li>
+<li>task process</li>
+<li>使用 ring0, ring1, ring3</li>
+<li>filesystem</li>
+<li>fork/exec/wait/exit</li>
+<li>不使用 bios call, 進入繪圖模式 (這可是我很得意的一點)， 秀了幾張圖片和中文, 也可以在繪圖模式和文字模式來回切換。</li>
+<li>使用 unreal mode 載入超過 1MB 的檔案</li>
+</ul>
 
 少了什麼呢？
-lock 機制, 用來保護 critcal section
-mmu pagine
-存取硬碟
-還有很多很多 ...
+<ul>
+<li>lock 機制, 用來保護 critcal section</li>
+<li>mmu pagine</li>
+<li>存取硬碟</li>
+<li>還有很多很多 ...</li>
+</ul>
 這些都是我要繼續補完的部份。 
 
 學習 os 強迫我自己學會了很多底層知識, 在軟體上還有什麼比 os 還底層呢？大概剩下 vm 程式而已。所以若不搞懂很多底層知識, 也無法寫出 os, 需要哪些呢? 太雜了, 自己做就會知道了。
@@ -145,7 +149,7 @@ debugger 的使用很重要, 我幾乎常常在 bochs, qemu/gdb 中使用著 sin
 
 我竟然忘了這本書: 自己動手寫嵌入式操作系統
 
-<a href="http://www.eslite.com/product.aspx?pgid=1001250681720653#" id="mainlink"> <img class="PI_img" id="ctl00_ContentPlaceHolder1_mainphoto" src="http://pic.eslite.com/Upload/Product/200708/m/2680284018007m.jpg" style="opacity: 1.2;" /></a> 
+<a href="http://www.eslite.com/product.aspx?pgid=1001250681720653#" id="mainlink"> <img class="PI_img" src="http://pic.eslite.com/Upload/Product/200708/m/2680284018007m.jpg" id="ctl00_ContentPlaceHolder1_mainphoto" style="opacity: 1.2;" /></a> 
 
 這是用 vc++ 開發的 os, 有個疑問:
 
@@ -178,12 +182,12 @@ debugger 的使用很重要, 我幾乎常常在 bochs, qemu/gdb 中使用著 sin
 
 <a href="http://www.bookz.asia/index.php?app=goods&amp;id=3627" target="_blank"><b>保護方式下的80386其編程</b></a>
 
-<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629"><span class="jqzoom"><img height="300" src="http://www.bookz.asia/data/files/store_898/goods/201103142127549045.jpg" width="300" /></span></a>   
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629"><span class="jqzoom"><img src="http://www.bookz.asia/data/files/store_898/goods/201103142127549045.jpg" height="300" width="300" /></span></a>   
 
 另一本書:
 <a href="http://www.bookz.asia/index.php?app=goods&amp;id=3626" target="_blank">80X86保護模式高級程序設計</a>
 
 
-<img height="300" src="http://www.bookz.asia/data/files/store_898/goods/201103142125077468.jpg" width="300" />
+<img src="http://www.bookz.asia/data/files/store_898/goods/201103142125077468.jpg" height="300" width="300" />
 
-ref:<a href="http://coolshell.cn/articles/8275.html">http://coolshell.cn/articles/8275.html</a>
+ref:<a href="http://coolshell.cn/articles/8275.html">对九个超级程序员的采访</a>
