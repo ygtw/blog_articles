@@ -1,11 +1,17 @@
 <b>arm cortex-m3: 嵌入式系統設計入門</b>
 <a href="https://picasaweb.google.com/lh/photo/XCKrt4MP7yOEg4yafzBW1dMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="480" src="https://lh6.googleusercontent.com/-rqbTAwpxONU/UVZKEq1htMI/AAAAAAAAlmw/l2SyK5bxdw0/s640/IMGP7898.JPG" width="640" /></a>
-20130326 購於 ruten, 20130329 拿到 390 NT
+20130326 購於 ruten, 20130329 拿到 390 NT。這本書很奇怪, 在我知道的時候似乎已經絕版了, 所以我才會從二手市場購得本書, 不過目前 (201310), 出版社似乎又繼續出版了, 大概是目前的 cm3 蠻流行的, 此書的需求性變高了吧！有位朋友還是直接到旗標出版社詢問才買到, 剛好有庫存。
+
+我認為這是本學習 cm3 一定要買的書籍, 裡頭介紹了 cm3 的架構, 相關暫存器的使用方式, gnu, keil toolchin 的使用。
+
 
 
 <a href="https://picasaweb.google.com/lh/photo/kgWDit1ceJLegXWaKE7WW9MTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="225" src="https://lh6.googleusercontent.com/-VzXwn1dJSf0/Ujm76SqDcxI/AAAAAAAAr20/YtnxBGjyGwI/s400/IMG_6640.JPG" width="400" /></a>
 
 Cortex-M3之STM32嵌入式系统设计
+<table><caption>目录</caption> <tbody>
+<tr> <td>
+<pre>
 前言
 第1章 概述
 1.1 嵌入式系统定义
@@ -159,7 +165,11 @@ Cortex-M3之STM32嵌入式系统设计
 9.5.1 STM32复位后从哪个地址开始执行
 9.5.2 STM32向量表
 9.5.3 用户程序中的向量表
+</pre>
+</td>
 
+<td>
+<pre>
 第10章 定时器与日历
 10.1 SysTick定时器
 10.1.1 关于SysTick
@@ -318,26 +328,83 @@ Cortex-M3之STM32嵌入式系统设计
 20.6.2 STM32 SPI驱动程序
 20.6.3 ENC28J60驱动程序
 参考文献
+</pre>
+</td>
+</tr>
+</tbody>
+</table>
+
+這本書吸引我的原因是以 gcc 來當作書中的開發工具, 而不是比較流行的 iar, KEIL ... 我需要的正是這樣的書籍。
+
+5.5.2 link script 的介紹更是身得我心, 我終於知道為什麼我老是搞不清楚 AT, LMA, VMA 的區別, 因為我沒接觸過這樣的平台, x86 pc 不會有這樣的分野, 所以 LMA, VMA 無法感受出其差別, 有著 1M flash stm32 平台, 比較容易察覺這兩個的用途。 
+
+ref:
+http://blog.csdn.net/redredbird/article/details/5986035
+
+不過當然不只這樣, 還有很多 LD 相關的資訊, 我覺得很受用, 基本上若是不懂 link script, 應該是無法寫出作業系統之前的程式, 當然, 若是用廠商提供的工具/函式庫, 這些都不用煩惱。但把這些知識補完, 是很重要的。
+
+書中雖然展示的是 gnu toolchain, 不過是在 windows 環境, 而且還用了一個 ide, 和我原始人的開發環境有些差別, 不過已經很類似了。
+
+第三章的 STM32程序设计入门讓我得以完成第一支 cm3 作業系統之前的程式, 這是很重要的一小步, 完成之後才會有後續複雜的程式。
+
+嵌入式系統大部份都會使用 c, 這本書很罕見的提供 c++ 資訊, 使用 class 來完成嵌入式程式, 我很喜歡 c++, 所以我也打算使用 c++, 可以從本書獲得一些參考資料。
 
 
 
 <div style="clear: left; float: left; margin-bottom: 1em; margin-right: 1em;">
 <img height="400" src="https://lh4.googleusercontent.com/-I3VjxkQf_3U/UcBvwlxNx7I/AAAAAAAAofo/ukVon0MirJo/s800/06-18%254022-26-56-333.jpg" width="330" /></div>
-<b>STM32F207 高性能网络型 MCU 嵌入式系统设计</b>, 20130618 購於台南若水堂 307 nt/59 rmb。
 
-其實我只想看第 15 章, 提到 process switch 的部份, 所以我猶豫很久, 才決定買了下來。翻閱其他章節也還是有可看之處。
+<b>STM32F207 高性能网络型 MCU 嵌入式系统设计</b>
+<table><caption>目录</caption> <tbody>
+<tr> <td>
+<pre>
+第1章 ARM Cortex处理器概述 
+第2章 从STM32F1到STM32F2的硬件兼容性设计 
+第3章 从STM32F1到STM32F2的程序设计 
+第4章 STM32F2固件库的使用 
+第5章 STM32F2的启动原理及时钟控制 
+第6章 STM32F2新增的FSMC接口及LCD屏控制 
+第7章 STM32F2新增的日历功能及应用 
+第8章 STM32F2中断及SysTick应用 
+</pre>
+</td>
 
-我已經有寫了一個 process switch 的版本, 不過這是我自己胡思亂想寫出來的, 我並不確定這是所謂一般的寫法, 所以我還是參考一下 scmrtos 的寫法, 彌補自己的不足。
+<td>
+<pre>
+第9章 STM32F2增强的闹钟、时间戳与篡改检测 
+第10章 STM32F2增强的定时器 
+第11章 STM32F2新增的ETH以太网接口及LwIP应用 
+第12章 STM32F2新增的DCMI数码相机接口及应用 
+第13章 STM32F2增强的USART接口与应用 
+第14章 STM32F2增强的ADC模块及应用 
+第15章 一步一步设计自己的嵌入式操作
+系统 第16章 一步一步设计自己的嵌入式GUI库 
+参考文献 
+</pre>
+</td>
+</tr>
+</tbody>
+</table>
+
+
+
+20130618 購於台南若水堂 307 nt/59 rmb。
+
+其實我只想看第 15 章, 提到 process switch 的部份, 所以我猶豫很久, 才決定買了下來。其他章節其實還是有可看之處。
+
+我已經寫了一個 process switch 的版本, 不過這是我自己胡思亂想寫出來的, 我並不確定這是所謂一般的寫法, 所以我還是參考一下 scmrtos 的寫法 (書中介紹的實作便是 scmrtos), 彌補自己的不足。
 
 果然有所不足, context switch 需要使用 pendsv, 所以要補上這個才比較完整。
 
 裡頭提到了 <a href="http://scmrtos.sourceforge.net/ScmRTOS" target="_blank">scmrtos</a>: 這是 c++ 寫的 rtos, 書中的 process switch 範例就是以他為主的說明。
 
+就算我有了 x86 context switch 的經驗, 也還是花了不少時間才弄懂這樣的寫法, http://descent-incoming.blogspot.tw/search/label/cm3%20process%20switch 便是我的心得。
+
 STM32F207 高性能网络型 MCU 嵌入式系统设计範例程式碼 (需要註冊):
 <a href="http://www.buaapress.com.cn/filedetail.php?ddid=205&amp;pdtid=1&amp;sdtid=3&amp;pmenuid=5">http://www.buaapress.com.cn/filedetail.php?ddid=205&amp;pdtid=1&amp;sdtid=3&amp;pmenuid=5</a>
 
 <a href="https://picasaweb.google.com/lh/photo/EdT_x7jjBLfr0_9etZRSGtMTjNZETYmyPJy0liipFm0?feat=embedwebsite" style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;"><img height="400" src="https://lh3.googleusercontent.com/-MboTxbiRLzE/UVZfAqquCMI/AAAAAAAAlnE/bH_0LlfzBg4/s800/03-29%254011-24-51-41.jpg" width="330" /></a>
-<b>嵌入式系统及其应用：基于Cortex-M3内核和STM32F103系列微控制器的系统设计与开发</b>, 這本有點像是大雜會, 包含的內容很廣
+<b>嵌入式系统及其应用：基于Cortex-M3内核和STM32F103系列微控制器的系统设计与开发</b>, 這本有點像是大雜會, 包含的內容很廣, 有點像是 arm cortex-m3: 嵌入式系統設計入門 + Cortex-M3之STM32嵌入式系统设计。買這本最主要是看上其談論 cm3 架構的部份。
 
 
 
