@@ -10,17 +10,16 @@ CGI 是我唯一學過的 web 技術, 從 cgi, isapi, nsapi, asp, jsp, php, asp.
 
 evn: ubuntu 12.04
 
-install apache2
+<pre class="cmd">install apache2
 apt-get install apache2
+</pre>
 
-cgi 麻煩的一點是它的設定, apache2 的設定很煩雜, 使用 ubuntu 預設值就好。不過似乎每個 framework 都需要這耶煩雜的設定, apache2/cgi 的設定算是簡單。
+cgi 麻煩的一點是它的設定, apache2 的設定很煩雜, 使用 ubuntu 預設值就好。不過似乎每個 web framework 都需要這耶煩雜的設定, apache2/cgi 的設定算是簡單。
 
 查看系統預設的 cgi 設定值
 /etc/apache2/sites-enabled/000-default
 
 從 L16~22 可以得知, cgi 設定, cgi 程式放在 /usr/lib/cgi-bin/, url 則為: http://127.0.0.1/cgi-bin/cgi1
-
-cgi1 為我寫的 cgi 測試程式 
 
 <fieldset>
 <legend>000-default</legend>
@@ -67,6 +66,7 @@ cgi1 為我寫的 cgi 測試程式
 <b>41</b> &lt;/VirtualHost&gt;</pre>
 </fieldset>
 
+cgi1 為我寫的 cgi 測試程式
 <fieldset>
 <legend>/usr/lib/cgi-bin/cgi1.c</legend>
 <pre><b>1</b> #include &lt;stdio.h&gt;
@@ -114,8 +114,11 @@ http://127.0.0.1/cgi-bin/cgi1
 </fieldset>
 
 L17 ~ 21 是我加入的, 這樣可以使用這樣的 url 執行 cgi:
+
 http://127.0.0.1/~descent/cgi-bin/cgi1
+
 cgi1 放在 /home/descent/public_html/cgi-bin/
+
 如果有問題的話, 那就是哪裡沒設定好, 我前面提過, 設定 apache/cgi 並不是一件容易的事情。
 
 在大學時期, cgi 是很流行的技術, 那時候是 isapi, nsapi 還存在的時代 (這個相對難很多, 而且 linux 不能用), 學習 cgi 讓我吃足了苦頭, 因為程式本身就有點難度, 而架設 web server 則是另外的關卡, 那時候查到的資料大多是使用 perl, 不容易找到使用 c 的 cgi 程式, 而解說 cgi 原理的資料就更少了。
