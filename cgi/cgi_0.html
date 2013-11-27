@@ -1,0 +1,128 @@
+你一定會說 cgi 落伍了吧, 現在的 web 系統用 cgi 來開發可能不太實際, 目前的 (2013) 網頁程式複雜度已經和十年前有所不同, 我是很認同這些觀念的, 除了<b>落伍</b>這個詞, 我比較喜歡用<b>少用</b>來代替落伍。
+
+CGI 是我唯一學過的 web 技術, 從 cgi, isapi, nsapi, asp, jsp, php, asp.net, python framework, ruby on rails, 有些紅過, 有些已經被淘汰, 有些目前當紅, 未來還有哪些新星, 不知道, 不過 cgi 還是活得好好的就是, 所以就算經過十年了, 我現在還是可以用上 cgi。
+
+以目前的網站生態來說, 用 cgi 開發可能是苦了點, 我也不是鼓勵使用 cgi 來開發目前的網站系統, 畢竟新東西還是有他厲害/方便的地方。
+
+但是在某些資源比較緊的嵌入式系統, 還是有可能會需要用上以 c 來撰寫 cgi 程式, 所以這個老東西還是有發揮的地方。
+
+我們來懷舊一下。
+
+evn: ubuntu 12.04
+
+install apache2
+apt-get install apache2
+
+cgi 麻煩的一點是它的設定, apache2 的設定很煩雜, 使用 ubuntu 預設值就好。不過似乎每個 framework 都需要這耶煩雜的設定, apache2/cgi 的設定算是簡單。
+
+查看系統預設的 cgi 設定值
+/etc/apache2/sites-enabled/000-default
+
+從 L16~22 可以得知, cgi 設定, cgi 程式放在 /usr/lib/cgi-bin/, url 則為: http://127.0.0.1/cgi-bin/cgi1
+
+cgi1 為我寫的 cgi 測試程式 
+
+<fieldset>
+<legend>000-default</legend>
+<pre><b> 1</b> &lt;VirtualHost *:80&gt;
+<b> 2</b> &nbsp;&nbsp;&nbsp; ServerAdmin webmaster@localhost
+<b> 3</b> 
+<b> 4</b> &nbsp;&nbsp;&nbsp; DocumentRoot /var/www
+<b> 5</b> &nbsp;&nbsp;&nbsp; &lt;Directory /&gt;
+<b> 6</b> &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Options FollowSymLinks
+<b> 7</b> &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; AllowOverride None
+<b> 8</b> &nbsp;&nbsp;&nbsp; &lt;/Directory&gt;
+<b> 9</b> &nbsp;&nbsp;&nbsp; &lt;Directory /var/www/&gt;
+<b>10</b> &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Options Indexes FollowSymLinks MultiViews
+<b>11</b> &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; AllowOverride None
+<b>12</b> &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Order allow,deny
+<b>13</b> &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; allow from all
+<b>14</b> &nbsp;&nbsp;&nbsp; &lt;/Directory&gt;
+<b>15</b> 
+<span style="color: red;"><b>16</b> &nbsp;&nbsp;&nbsp; ScriptAlias /cgi-bin/ /usr/lib/cgi-bin/
+<b>17</b> &nbsp;&nbsp;&nbsp; &lt;Directory "/usr/lib/cgi-bin"&gt;
+<b>18</b> &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; AllowOverride None
+<b>19</b> &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
+<b>20</b> &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Order allow,deny
+<b>21</b> &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Allow from all
+<b>22</b> &nbsp;&nbsp;&nbsp; &lt;/Directory&gt;</span>
+<b>23</b> 
+<b>24</b> &nbsp;&nbsp;&nbsp; ErrorLog ${APACHE_LOG_DIR}/error.log
+<b>25</b> 
+<b>26</b> &nbsp;&nbsp;&nbsp; # Possible values include: debug, info, notice, warn, error, crit,
+<b>27</b> &nbsp;&nbsp;&nbsp; # alert, emerg.
+<b>28</b> &nbsp;&nbsp;&nbsp; LogLevel warn
+<b>29</b> 
+<b>30</b> &nbsp;&nbsp;&nbsp; CustomLog ${APACHE_LOG_DIR}/access.log combined
+<b>31</b> 
+<b>32</b>&nbsp;&nbsp;&nbsp;&nbsp; Alias /doc/ "/usr/share/doc/"
+<b>33</b>&nbsp;&nbsp;&nbsp;&nbsp; &lt;Directory "/usr/share/doc/"&gt;
+<b>34</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Options Indexes MultiViews FollowSymLinks
+<b>35</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; AllowOverride None
+<b>36</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Order deny,allow
+<b>37</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Deny from all
+<b>38</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Allow from 127.0.0.0/255.0.0.0 ::1/128
+<b>39</b>&nbsp;&nbsp;&nbsp;&nbsp; &lt;/Directory&gt;
+<b>40</b> 
+<b>41</b> &lt;/VirtualHost&gt;</pre>
+</fieldset>
+
+<fieldset>
+<legend>/usr/lib/cgi-bin/cgi1.c</legend>
+<pre><b>1</b> #include &lt;stdio.h&gt;
+<b>2</b> 
+<b>3</b> int main(int argc, char *argv[])
+<b>4</b> {
+<b>5</b>   printf("Content-type: text/plain\n\n");
+<b>6</b>   printf("cgi test\n");
+<b>7</b> 
+<b>8</b>   return 0;
+<b>9</b> }
+</pre>
+</fieldset>
+
+在瀏覽器打上:
+http://127.0.0.1/cgi-bin/cgi1
+就可看到結果。
+
+讓使用者可以用自己的目錄來寫 cgi 程式, 這需要修改一點東西:
+<fieldset>
+<legend>/etc/apache2/mods-enabled/userdir.conf</legend>
+<pre><b> 1</b> &lt;IfModule mod_userdir.c&gt;
+<b> 2</b>         UserDir public_html
+<b> 3</b>         UserDir disabled root
+<b> 4</b> 
+<b> 5</b>         &lt;Directory /home/*/public_html&gt;
+<b> 6</b>                 AllowOverride FileInfo AuthConfig Limit Indexes
+<b> 7</b>                 Options MultiViews Indexes SymLinksIfOwnerMatch IncludesNoExec 
+<b> 8</b>                 &lt;Limit GET POST OPTIONS&gt;
+<b> 9</b>                         Order allow,deny
+<b>10</b>                         Allow from all
+<b>11</b>                 &lt;/Limit&gt;
+<b>12</b>                 &lt;LimitExcept GET POST OPTIONS&gt;
+<b>13</b>                         Order deny,allow
+<b>14</b>                         Deny from all
+<b>15</b>                 &lt;/LimitExcept&gt;
+<b>16</b>         &lt;/Directory&gt;
+<span style="color: red;"><b>17</b>         &lt;Directory /home/*/public_html/cgi-bin&gt;
+<b>18</b>                 SetHandler cgi-script
+<b>19</b>                 Options ExecCGI
+<b>20</b> 
+<b>21</b>         &lt;/Directory&gt;</span>
+<b>22</b> &lt;/IfModule&gt;
+</pre>
+</fieldset>
+
+L17 ~ 21 是我加入的, 這樣可以使用這樣的 url 執行 cgi:
+http://127.0.0.1/~descent/cgi-bin/cgi1
+cgi1 放在 /home/descent/public_html/cgi-bin/
+如果有問題的話, 那就是哪裡沒設定好, 我前面提過, 設定 apache/cgi 並不是一件容易的事情。
+
+在大學時期, cgi 是很流行的技術, 那時候是 isapi, nsapi 還存在的時代 (這個相對難很多, 而且 linux 不能用), 學習 cgi 讓我吃足了苦頭, 因為程式本身就有點難度, 而架設 web server 則是另外的關卡, 那時候查到的資料大多是使用 perl, 不容易找到使用 c 的 cgi 程式, 而解說 cgi 原理的資料就更少了。
+
+我那時候堅持使用 c 來完成 cgi, 以我當時的功力簡直就是找死, cgi 需要處理很多字串, c style string 的能力很原始, 剛學習 c 的我根本無法掌控好這部份。
+
+通常寫 c cgi 會去找個 cgi library 來使用, 省去煩雜的 html 編碼轉換, 我用過的是 c++ cgicc, 這是 c++ 的 cgi library, 不錯用。
+
+ref:
+<a href="http://blog.jangmt.com/2010/08/apache2-cgiperlpythonbash-shell.html">http://blog.jangmt.com/2010/08/apache2-cgiperlpythonbash-shell.html</a>
