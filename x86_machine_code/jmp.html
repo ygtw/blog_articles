@@ -1,0 +1,30 @@
+Orange's 一個作業系統的實現 (p 3-25) 從保護模式回到真實模式的 jmp 指令改寫, 作者用這招從 dos 切到保護模式後再切回到真實模式。厲害！若只看 intel datasheet, 沒看過程式碼, 我自己能想到嗎?
+
+<pre class="cmd">.code16
+jmp     $0, $LABEL_REAL_ENTRY      # 段位址會在程序開始處被設置成正確的值
+ 6ed:   ea <span style="color: red;">bd 03</span> <span style="color: blue;">00 00</span>          ljmp   $0x0,$0x3bd
+</pre>
+
+JMP ptr16:16
+
+ea 查這個表 
+<a href="http://pdos.csail.mit.edu/6.828/2006/readings/i386/appa.htm">http://pdos.csail.mit.edu/6.828/2006/readings/i386/appa.htm</a> 
+-&gt; Jv, Ap, Jb 應該是 Ap。
+
+A : jmp 後面的是位址
+p: 32 or 43 bit pointer 
+
+ptr16:16 表示這位址由兩個部份組成 segment + offset,
+藍色的 <span style="color: blue;">00 00</span> 是 segment, 是一個 selector 0,
+
+紅色的<span style="color: red;">bd 03</span>是 offset,
+
+L1便是在修改 L3 的藍色部份 (segment), 填入當時的 %ax, 用來返回真實模式。哇！我到現在才懂 (20130923), 之前我看不懂, 只是照抄。
+
+<pre><b>1</b> movw %ax, (LABEL_GO_BACK_TO_REAL+3)
+
+<b>2</b> LABEL_GO_BACK_TO_REAL:
+<b>3</b>    jmp     $0, $LABEL_REAL_ENTRY   
+</pre>
+
+這篇的文字很少, 但可是累積不少金字塔知識以及查閱 intel 手冊才能完成這篇。
