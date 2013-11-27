@@ -1,0 +1,49 @@
+看到 picasaweb 可以使用一個 form 來選擇多個檔案, 這真是很方便的功能, 我想「知道」這是怎麼做的?
+
+首先當然要來一個 html form 可以讓使用者選擇多個檔案。
+
+<fieldset>
+<legend>mf.html</legend>
+<pre><b> 1</b> <span style="color: #2040a0;"><b><span style="color: #4444ff;"><b>&lt;</b></span><span style="color: #2040a0;">!DOCTYPE</span> <span style="color: #2040a0;">html</span> <span style="color: #2040a0;">PUBLIC</span> <span style="color: green;">"-//W3C//DTD XHTML 1.0 Strict//EN"</span><span style="color: #2040a0;">
+<b> 2</b> </span><span style="color: green;">"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"</span><span style="color: #4444ff;"><b>&gt;</b></span></b></span>
+<b> 3</b> <span style="color: #2040a0;"><b><span style="color: #4444ff;"><b>&lt;</b></span><span style="color: #2040a0;">!
+<b> 4</b> ref:</span> <span style="color: #2040a0;">http://stackoverflow.com/questions/3448117/
+<b> 5</b> can-perls-cgi-pm-process-firefoxs-input-type-file-multiple-form-fields
+<b> 6</b> --</span><span style="color: #4444ff;"><b>&gt;</b></span></b></span>
+<b> 7</b> <span style="color: #2040a0;"><b><span style="color: #4444ff;"><b>&lt;</b></span><span style="color: #2040a0;">html</span><span style="color: #4444ff;"><b>&gt;</b></span></b></span>
+<b> 8</b>   <span style="color: #2040a0;"><b><span style="color: #4444ff;"><b>&lt;</b></span><span style="color: #2040a0;">head</span><span style="color: #4444ff;"><b>&gt;</b></span></b></span>
+<b> 9</b>     <span style="color: #2040a0;"><b><span style="color: #4444ff;"><b>&lt;</b></span><span style="color: #2040a0;">title</span><span style="color: #4444ff;"><b>&gt;</b></span></b></span>Multiple file upload test<span style="color: #2040a0;"><b><span style="color: #4444ff;"><b>&lt;</b></span><span style="color: #2040a0;">/title</span><span style="color: #4444ff;"><b>&gt;</b></span></b></span>
+<b>10</b>   <span style="color: #2040a0;"><b><span style="color: #4444ff;"><b>&lt;</b></span><span style="color: #2040a0;">/head</span><span style="color: #4444ff;"><b>&gt;</b></span></b></span>
+<b>11</b> 
+<b>12</b>   <span style="color: #2040a0;"><b><span style="color: #4444ff;"><b>&lt;</b></span><span style="color: #2040a0;">body</span><span style="color: #4444ff;"><b>&gt;</b></span></b></span>
+<b>13</b>     <span style="color: #2040a0;"><b><span style="color: #4444ff;"><b>&lt;</b></span><span style="color: #2040a0;">form</span> <span style="color: #2040a0;">action=</span><span style="color: green;">"http://127.0.01/cgi-bin/cgi1"</span> <span style="color: #2040a0;">
+<b>14</b> </span>          <span style="color: #2040a0;">method=</span><span style="color: green;">"post"</span> <span style="color: #2040a0;">
+<b>15</b> </span>          <span style="color: #2040a0;">enctype=</span><span style="color: green;">"multipart/form-data"</span><span style="color: #4444ff;"><b>&gt;</b></span></b></span>
+<b>16</b>       <span style="color: #2040a0;"><b><span style="color: #4444ff;"><b>&lt;</b></span><span style="color: #2040a0;">input</span> <span style="color: #2040a0;">type=</span><span style="color: green;">"file"</span> <span style="color: #2040a0;">
+<b>17</b> </span>            <span style="color: #2040a0;">name=</span><span style="color: green;">"multiple_files"</span> <span style="color: #2040a0;">
+<span style="color: red;"><b>18</b> </span></span><span style="color: red;">            multiple="true"/<b>&gt;</b></span></b></span>
+<b>19</b>       <span style="color: #2040a0;"><b><span style="color: #4444ff;"><b>&lt;</b></span><span style="color: #2040a0;">button</span> <span style="color: #2040a0;">type=</span><span style="color: green;">"submit"</span><span style="color: #4444ff;"><b>&gt;</b></span></b></span>Submit<span style="color: #2040a0;"><b><span style="color: #4444ff;"><b>&lt;</b></span><span style="color: #2040a0;">/button</span><span style="color: #4444ff;"><b>&gt;</b></span></b></span>
+<b>20</b>     <span style="color: #2040a0;"><b><span style="color: #4444ff;"><b>&lt;</b></span><span style="color: #2040a0;">/form</span><span style="color: #4444ff;"><b>&gt;</b></span></b></span>
+<b>21</b>   <span style="color: #2040a0;"><b><span style="color: #4444ff;"><b>&lt;</b></span><span style="color: #2040a0;">/body</span><span style="color: #4444ff;"><b>&gt;</b></span></b></span>
+<b>22</b> <span style="color: #2040a0;"><b><span style="color: #4444ff;"><b>&lt;</b></span><span style="color: #2040a0;">/html</span><span style="color: #4444ff;"><b>&gt;</b></span></b></span>
+</pre>
+</fieldset>
+
+L18 就是可以一次選取多個檔案的關鍵, 這樣在選取檔案時, 就可以依據 shift, ctrl 來選取多個檔案。
+
+<a href="https://picasaweb.google.com/lh/photo/ItFAjhViQgRFSObwfOTX7T1NElwGleLEBmG7lDrK3rI?feat=embedwebsite"><img height="477" src="https://lh5.googleusercontent.com/-NlgGhZZessc/UgsoUOz5rcI/AAAAAAAAqUA/OFEx-cN8yaQ/s800/cgi_upload_mutli_files.jpeg" width="800" /></a>
+
+從 wiresharek 可以觀察到多個檔案如何被封裝起來, 123\n, zyx\n, 1q2w\n, 是我上傳的 3 個檔案的內容, 透過 
+<pre class=cmd">
+boundary= "------- 1316" 
+</pre>
+
+來分割這三個部份, 取出每一段的檔名資訊, 檔案的內容, 依據檔名存檔, 這樣就完成了。說來簡單, 不過程式花了我一番功夫才正確運作。
+
+source code:
+https://github.com/descent/cgi_src
+
+ref:
+<a href="http://www.javaworld.com.tw/jute/post/view?bid=6&amp;id=56147&amp;sty=1&amp;tpg=2&amp;age=0">HTTP 檔案上傳機制解析 [精華] </a>
+<a href="http://stackoverflow.com/questions/3448117/can-perls-cgi-pm-process-firefoxs-input-type-file-multiple-form-fields">http://stackoverflow.com/questions/3448117/can-perls-cgi-pm-process-firefoxs-input-type-file-multiple-form-fields</a>
+<a href="http://stackoverflow.com/questions/461282/what-is-the-maximum-file-size-i-can-transfer-using-http-and-using-ftp" target="_blank">http 上傳檔案的容量限制</a>
