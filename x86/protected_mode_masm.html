@@ -1,0 +1,187 @@
+<div class="separator" style="clear: both; text-align: center;">
+<a href="https://picasaweb.google.com/lh/photo/m7gTQEIOHu3fDoijDeli0B7lyzyq0Rg6WnM09MTnQXU?feat=embedwebsite" style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;"><img height="180" src="https://lh3.googleusercontent.com/-7KfNdPRULkM/UoIuBJ4IlPI/AAAAAAAAt2k/KRxo2wE16B4/s320/IMG_7114.JPG" width="320" /></a></div>
+這是 80x86 汇编语言程序设计教程的範例程式,書中的版本有點錯誤, 我做了一點修正。
+
+我自然不熟悉 masm, 通常我的開發環境都是 linux。會使用 masm 來測試這個程式, 純粹是好玩。我已經有了 gas, nasm 的進入保護模式的版本, 想再補上 masm。
+
+如何使用 masm 5.0 讓我傷透腦筋, masm 5.0 可以在 windows xp 執行, 卻不能在 windows 8 執行, 我得在 windows xp 使用 masm, 並把執行檔想辦法傳到 linux/qemu 上, 繞了一大圈總算搞定。
+
+組譯完成後的是一個 exe dos 檔案, 我在 qemu/dos 上測試, 沒問題, 保險起見, 又在真實機器上以 dos 為開機片再測試過, 真的可以正確執行。
+
+
+
+
+
+
+<fieldset>
+<legend>spm.asm</legend>
+<pre style="white-space: pre-wrap;"><b>  1</b> ; test by masm 5.0
+<b>  2</b> ; t10-1.asm 80x86 汇编语言程序设计教程 page 376
+<b>  3</b> JUMP MACRO selector, offsetv
+<b>  4</b>   DB 0eah
+<b>  5</b>   DW offsetv
+<b>  6</b>   DW selector
+<b>  7</b>   ENDM
+<b>  8</b> 
+<b>  9</b> ECHOCH MACRO ascii
+<b> 10</b>   mov ah, 2
+<b> 11</b>   mov dl, ascii
+<b> 12</b>   int 21h
+<b> 13</b>   endm
+<b> 14</b> 
+<b> 15</b> DESCRIPTOR STRUC
+<b> 16</b> LIMITL DW 0
+<b> 17</b> BASEL DW 0
+<b> 18</b> BASEM DB 0
+<b> 19</b> ATTRIBUTES DW 0
+<b> 20</b> BASEH DB 0
+<b> 21</b> DESCRIPTOR ENDS
+<b> 22</b> 
+<b> 23</b> PDESC STRUC
+<b> 24</b> LIMIT DW 0
+<b> 25</b> BASE DD 0
+<b> 26</b> PDESC ENDS
+<b> 27</b> 
+<b> 28</b> ATDW = 92H
+<b> 29</b> ATCE = 98H
+<b> 30</b> .386P
+<b> 31</b> 
+<b> 32</b> DSEG SEGMENT USE16
+<b> 33</b> GDT LABEL BYTE
+<b> 34</b> DUMMY DESCRIPTOR &lt;&gt;
+<b> 35</b> CODE DESCRIPTOR &lt;0FFFFH,,,ATCE,&gt;
+<b> 36</b> CODE_SEL = CODE - GDT
+<b> 37</b> DATAS DESCRIPTOR &lt;0FFFFH,0H,11H,ATDW,0&gt;
+<b> 38</b> DATAS_SEL = DATAS - GDT
+<b> 39</b> DATAD DESCRIPTOR&lt;0FFFFH,,,ATDW,&gt;
+<b> 40</b> DATAD_SEL = DATAD - GDT
+<b> 41</b> GDTLEN = $ - GDT
+<b> 42</b> VGDTR PDESC &lt;GDTLEN-1&gt;
+<b> 43</b> BUFFERLEN = 256
+<b> 44</b> BUFFER DB BUFFERLEN DUP(0)
+<b> 45</b> DSEG ENDS
+<b> 46</b> 
+<b> 47</b> CSEG SEGMENT USE16
+<b> 48</b>   ASSUME CS:CSEG, DS:DSEG
+<b> 49</b> START:
+<b> 50</b>   xchg bx, bx
+<b> 51</b>   mov ax, dseg
+<b> 52</b>   mov ds, ax
+<b> 53</b>   mov bx, 16
+<b> 54</b>   mul bx
+<b> 55</b>   add ax, offset gdt
+<b> 56</b>   adc dx, 0
+<b> 57</b>   mov word ptr vgdtr.base, ax
+<b> 58</b>   mov word ptr vgdtr.base+2, dx
+<b> 59</b>   mov ax, cs
+<b> 60</b>   mul bx
+<b> 61</b>   mov code.basel, ax
+<b> 62</b>   mov code.basem, dl
+<b> 63</b>   mov code.baseh, dh
+<b> 64</b>   mov ax, ds
+<b> 65</b>   mul bx
+<b> 66</b>   add ax, offset buffer
+<b> 67</b>   adc dx, 0
+<b> 68</b>   mov datad.basel, ax
+<b> 69</b>   mov datad.basem, dl
+<b> 70</b>   mov datad.baseh, dh
+<b> 71</b> 
+<b> 72</b>   lgdt qword ptr vgdtr
+<b> 73</b> 
+<b> 74</b>   cli
+<b> 75</b>   call ea20
+<b> 76</b> 
+<b> 77</b>   mov eax, cr0
+<b> 78</b>   or eax, 1
+<b> 79</b>   mov cr0, eax
+<b> 80</b> 
+<b> 81</b>   JUMP &lt;CODE_SEL&gt;, &lt;OFFSET VIRTUAL&gt;
+<b> 82</b> 
+<b> 83</b> VIRTUAL:
+<b> 84</b>   mov ax, datas_sel
+<b> 85</b>   mov ds, ax
+<b> 86</b>   mov ax, datad_sel
+<b> 87</b>   mov es, ax
+<b> 88</b>   cld
+<b> 89</b>   xor si, si
+<b> 90</b>   xor di, di
+<b> 91</b>   mov cx, bufferlen/4
+<b> 92</b>   repz movsd
+<b> 93</b> 
+<b> 94</b>   mov eax, cr0
+<b> 95</b>   and eax, 0fffffffeh
+<b> 96</b>   mov cr0, eax
+<b> 97</b> 
+<b> 98</b>   JUMP &lt;SEG REAL&gt;,&lt;OFFSET REAL&gt;
+<b> 99</b> 
+<b>100</b> REAL:
+<b>101</b>   call da20
+<b>102</b>   sti
+<b>103</b>   mov ax, dseg
+<b>104</b>   mov ds, ax
+<b>105</b>   mov si, offset buffer
+<b>106</b>   cld
+<b>107</b>   mov bp, bufferlen/16
+<b>108</b> NEXTLINE:
+<b>109</b>   mov cx, 16
+<b>110</b> NEXTCH:
+<b>111</b>   lodsb
+<b>112</b>   push ax
+<b>113</b>   shr al, 4
+<b>114</b>   call toascii
+<b>115</b>   ECHOCH al
+<b>116</b>   pop ax
+<b>117</b>   call toascii
+<b>118</b>   echoch al
+<b>119</b>   echoch ' '
+<b>120</b>   loop nextch
+<b>121</b>   echoch 0dh
+<b>122</b>   echoch 0ah
+<b>123</b>   dec bp
+<b>124</b>   jnz nextline
+<b>125</b> 
+<b>126</b>   mov ax, 4c00h
+<b>127</b>   int 21h
+<b>128</b> 
+<b>129</b> TOASCII PROC
+<b>130</b>         and    al, 0fh
+<b>131</b>         cmp     al, 9
+<b>132</b>         ja      EN
+<b>133</b>         add    al, 030h
+<b>134</b>         jmp     EX
+<b>135</b> EN:
+<b>136</b>         sub     al, 0ah
+<b>137</b>         add     al, 041h
+<b>138</b> EX:
+<b>139</b>         ret
+<b>140</b> TOASCII ENDP
+<b>141</b> 
+<b>142</b> EA20 PROC
+<b>143</b>   push ax
+<b>144</b>   in al, 92h
+<b>145</b>   or al, 2
+<b>146</b>   out 92h, al
+<b>147</b>   pop ax
+<b>148</b>   ret
+<b>149</b> EA20 ENDP
+<b>150</b> 
+<b>151</b> DA20 PROC
+<b>152</b>   push ax
+<b>153</b>   in al, 92h
+<b>154</b>   and al, 0fdh
+<b>155</b>   out 92h, al
+<b>156</b>   pop ax
+<b>157</b>   ret
+<b>158</b> DA20 ENDP
+<b>159</b> 
+<b>160</b> 
+<b>161</b> 
+<b>162</b> 
+<b>163</b> 
+<b>164</b> CSEG ENDS
+<b>165</b>   END START
+<b>166</b> 
+</pre>
+</fieldset>
+
+
