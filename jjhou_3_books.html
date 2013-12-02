@@ -81,6 +81,8 @@ vxd, ocx, ole, vc++, dos extend 這些技術, 我幾乎都很陌生, 就算現�
 
 <a href="https://picasaweb.google.com/lh/photo/epFdngGCV142CN3GzMGv7tMTjNZETYmyPJy0liipFm0?feat=embedwebsite" style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;"><img height="300" src="https://lh4.googleusercontent.com/-x4fN-fGcmnw/UPIm04Y-RVI/AAAAAAAAj7E/8gzbs9QcyhI/s400/IMGP7681.JPG" width="400" /></a>本校的資訊系很奇怪, 竟然沒有教 unix 系統與程式設計, 我認為這是本科生和業餘愛好的重要分野之一 (就像是系統程式、編譯器與作業系統, 這在業餘同好下是比較少能接觸的項目), 在那時候, 還有那個科系可以接觸 unix 系統呢? unix 可不像 dos 般, 隨便就能裝在 pc 上, 是有安裝/學習的門檻。
 
+不過 c 語言課程的程式得上 unix 編譯成功才行, 不能使用那時候流行的 turbo c, 很多人到了 unix 主機上開始狂改程式, 但由於沒什麼 unix 教學課程, 連要在 unix 系統上使用 c compiler, editor 都是一大難題。
+
 現在當然不同, linux/bsd, 甚至 mac osX, 已經很容易接觸 unix like os 了。我還記得老師教我們 vi 時的慘狀, 老師學問很好, 不過教學能力似乎沒跟上他的學問, 50 分鐘的課程, 完全把 vi 難用難學的精神發揮到極致, 老師上完課後, 我感覺 vi 更難了, 應該不是我個人資質的問題, 全班會的人五隻手指頭數的出來。果然印證之前難學的傳聞, 這也是為什麼我用 linux 後, 想把 vi 學好的原因。不過我後來才知道有個更難學的 emacs。
 
 在向 linux 靠攏後, 我不再使用 ide, 這讓我學習到程式的本質, 而不是按個鈕下去通通搞定, 我們是造車的人, 一定要從輪子造起, 現在我偶爾寫寫 windows 程式, 也是使用 command line 方式, 不是和自己過不去, 而是已經習慣了, 我想知道整個編譯/連結流程, 這是寫程式最基本的認識。侯老師也是這樣建議初學 c/c++, 不自己下 command, 怎麼知道整個編譯過程, 在 ide 選單為什麼是這樣的設計?
@@ -90,7 +92,7 @@ vxd, ocx, ole, vc++, dos extend 這些技術, 我幾乎都很陌生, 就算現�
 <a href="https://picasaweb.google.com/lh/photo/-dDFwVWGqY_gFvPsex2AhNMTjNZETYmyPJy0liipFm0?feat=embedwebsite" style="clear: left; float: left; margin-bottom: 1em; margin-right: 1em;"><img height="400" src="https://lh4.googleusercontent.com/-cdJ6T7Lx6zs/UPImx19uu2I/AAAAAAAAj60/JJnzRw4hBDM/s400/IMGP7679.JPG" width="300" /></a>
 那時候的 ms 世界流行著事件驅動程式設計, c++ 大軍壓境, application framewrok (mfc, owl), rad (delphi, bcb), 充斥在 ms 平台上, 我也在這時愛上了 c++, 不過 linux 這邊的世界還是以 c 為主要開發語言, 但我仍然鍾情於 c++, framework 我沒缺席, 我捨棄了 c 的 gtk, 學習 c++ 的 qt framework, 從 qt 2.0 算起, 到 2013 的 qt 5.2, 還是能用, owl 呢? mfc, delphi, bcb 似乎沒當年勇, ms 平台流行的開發環境主流變成 .net, c#, java, qt 也慢慢佔有一席之地, 甚至像 mobile 平台進軍, 支援android, ios, 繼續擴大其支援的範圍, 我心理想道:「好險阿! 沒挑錯!」mfc 有 <a href="http://www.amazon.com/MFC-Internals-Microsoft-Foundation-Architecture/dp/0201407213" target="_blank">mfc internals</a>, 深入淺出 mfc, 兩本介紹其實作的書籍, 我也想看本 qt internal 的書 (<a href="http://qt-project.org/wiki/Category:QtInternals" target="_blank">QtInternals</a> 勉強解解渴)。
 
-2013 的 ms, 影響力沒這麼大了, 資訊領域變化真快, 掌控作業系統平台的廠商竟然也吃鱉, 為什麼? 因為另外更大的平台出現了, 手機、平版、網路, 手機被 apple, google 掌控, 網路服務則是 google, facebook, amazon 的天下, 誰要寫 windows 程式阿, 難道又要被你 ms 綁架, 很多程式以 web 方式執行在 windows ... 扼 ... 應該說是瀏覽器上, 免得你 ms 一改, 我就要跟著改; 遊戲世界倒是沒變, 依然是 ms 天下, 不過 linux 也有所長進。還有很熱的嵌入式領域, ms 在這方面, 力道上並不如桌面平台那麼強勢, mcu, arm 平台非常熱門, linux 在這裡可是蓬勃地發展著。當年 windows 95 的測試版本可還要自己花錢買, 現在的 windows 8.0 呢? 微軟還怕你不用呢? 我認為侯老師後來研究的主題大多和 os 平台無關, 多少也有點關係, 誰希望自己辛苦所學付之一炬呢?
+2013 的 ms, 影響力沒這麼大了, 資訊領域變化真快, 掌控作業系統平台的廠商竟然也吃鱉, 看看浪潮之顛第二版 (下), 你可以知道 ms 因為作業系統的壟斷, 幹掉 netscape, realplayer ... 一堆有來歷的公司, 實力之強無需懷疑。 那為什麼呢? 因為另外更大的平台出現了, 手機、平版、網路, 手機被 apple, google 掌控, 網路服務則是 google, facebook, amazon 的天下, 誰要寫 windows 程式阿, 難道又要被你 ms 綁架, 很多程式以 web 方式執行在 windows ... 扼 ... 應該說是瀏覽器上, 免得你 ms 一改, 我就要跟著改; 遊戲世界倒是沒變, 依然是 ms 天下 (當然手機、網頁平台也很蓬勃), 不過 linux 也有所長進。還有很熱的嵌入式領域, ms 在這方面, 力道上並不如桌面平台那麼強勢, mcu, arm 平台非常熱門, linux 在這裡可是蓬勃地發展著。當年 windows 95 的測試版本可還要自己花錢買, 現在的 windows 8.0 呢? 微軟還怕你不用呢? 我認為侯老師後來研究的主題大多和 os 平台無關, 多少也有點關係, 誰希望自己辛苦所學付之一炬呢?
 
 <a href="https://picasaweb.google.com/lh/photo/cDs7VU0TDQtatYedfubjydMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="300" src="https://lh5.googleusercontent.com/-5g0-MRZ9aOk/UPImvoPkHkI/AAAAAAAAj6k/SiyY4WPIADk/s400/IMGP7677.JPG" width="400" /></a> 
 
