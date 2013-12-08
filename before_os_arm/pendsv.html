@@ -1,0 +1,246 @@
+目的是要喚起 pendsv 這個 isr, 這個程式碼其實不難, 原理也不複雜, 可是卻花了好大功夫才搞定。
+
+L41 ~ 43, L51 ~ 53, 在設定 priority, 預期在 svc_isr 之後, 要跳進 pendsv_handle。在 svc_isr 設定 pendsv 的 pending bit, 等著離開 svc_isr 之後被喚起。
+
+嘗試很久都無法喚起 pendsv_handle, 都無法成功, 我甚至還另外寫了一個 c 的版本, c 的版本順利 work, 終於讓我找到問題。
+
+問題是 ... 沒有問題, 這個程式從頭開始就是對的, 只是 pendsv_handle 並不是在離開 svc_isr 後立刻執行, 而是在過了一段時間之後才執行。真是奇怪阿！
+
+由於這緣故, 讓我多花了好幾天解決這問題。
+
+程式碼註解中有提到可 dump 哪些暫存器來觀察, 你有和我買一樣的書會很方便, 沒有的話就看: 
+Cortex™-M3 Technical Reference Manual (filename:DDI0337E_cortex_m3_r1p1_trm.pdf)
+
+<fieldset>
+<legend>pendsv.S</legend>
+<pre style="white-space: pre-wrap;"><b>  1</b> <span style="color: #4444ff;"># test pendSV handler and systick
+<b>  2</b> 
+<b>  3</b> .equ STACK_TOP, 0x20000800
+<b>  4</b> .text
+<b>  5</b> .global _start
+<b>  6</b> .code 16
+<b>  7</b> .syntax unified
+<b>  8</b> <span style="color: #2040a0;">_start:</span>
+<b>  9</b>   .word STACK_TOP, start
+<b> 10</b>   .type start, function @ let lsb to 1
+<b> 11</b>   .word int_isr+1
+<b> 12</b>   .word int_isr+1
+<b> 13</b>   .word int_isr+1
+<b> 14</b>   .word int_isr+1
+<b> 15</b>   .word int_isr+1
+<b> 16</b>   .word int_isr+1
+<b> 17</b>   .word int_isr+1
+<b> 18</b>   .word int_isr+1
+<b> 19</b>   .word int_isr+1
+<b> 20</b>   .word svc_isr+1 @ svc isr
+<b> 21</b>   .word int_isr+1
+<b> 22</b>   .word int_isr+1
+<b> 23</b>   .word pendsv_handle+1
+<b> 24</b>   .word systick_isr+1
+<b> 25</b>   .word int_isr+1
+<b> 26</b>   .word int_isr+1
+<b> 27</b>   .word int_isr+1
+<b> 28</b> 
+<b> 29</b> <span style="color: #2040a0;">start:</span>
+<b> 30</b> 
+<b> 31</b>   @ ref:  arm cortex-m3: 嵌入式系統設計入門 p8-10
+<b> 32</b> @  ldr r0, =0xe000ed0c
+<b> 33</b> @  ldr r1, =0x05fa0500
+<b> 34</b> @  strb r1, [r0]
+<b> 35</b> @
+<b> 36</b> @ ref: @ Cortex™-M3 Technical Reference Manual (file name: DDI0337E_cortex_m3_r1p1_trm.pdf)
+<b> 37</b> @    System Handler Priority Registers (p8-27)
+<b> 38</b>   @ pendsv priority
+<b> 39</b> 
+<b> 40</b> 
+<b> 41</b> <b>  ldr</b> r0, =0xe000ed22
+<b> 42</b> <b>  mov</b> r1, #0xff
+<b> 43</b> <b>  strb</b> r1, [r0]
+<b> 44</b> 
+<b> 45</b>   @ systick priority
+<b> 46</b> <b>  ldr</b> r0, =0xe000ed23
+<b> 47</b> <b>  mov</b> r1, #0xff
+<b> 48</b> <b>  strb</b> r1, [r0]
+<b> 49</b> 
+<b> 50</b>   @ svc priority
+<b> 51</b> <b>  ldr</b> r0, =0xe000ed1f
+<b> 52</b> <b>  mov</b> r1, #0xff
+<b> 53</b> <b>  strb</b> r1, [r0]
+<b> 54</b> 
+<b> 55</b> 
+<b> 56</b> @ systick setting
+<b> 57</b> #if 0
+<b> 58</b> @ 0xe000ed24 check systick isr active
+<b> 59</b> @ 0xe000e018 check systick count
+<b> 60</b> <b>  ldr</b> r0, =0xe000e010 @ control reg
+<b> 61</b> <b>  mov</b> r1, #0
+<b> 62</b> <b>  str</b> r1, [r0]
+<b> 63</b> <b>  ldr</b> r1, =0x3fff
+<b> 64</b> <b>  str</b> r1, [r0, #4]
+<b> 65</b> <b>  str</b> r1, [r0, #8]
+<b> 66</b> <b>  mov</b> r1, #0x7
+<b> 67</b> <b>  str</b> r1, [r0] @ enable systick
+<b> 68</b> #else
+<b> 69</b> <b>  svc</b> 0
+<b> 70</b> #endif
+<b> 71</b> 
+<b> 72</b> @  cpsie i
+<b> 73</b> 
+<b> 74</b> @ watch 0xe000ed24, 0xe000ed04 ref: arm cortex-m3: 嵌入式系統設計入門 p8-9
+<b> 75</b> <b>  mov</b> r1, #0x33
+<b> 76</b> <span style="color: #2040a0;">deadloop:</span>
+<b> 77</b> <b>  mov</b> r1, #0x22
+<b> 78</b> <b>  b</b> deadloop
+<b> 79</b> 
+<b> 80</b> <span style="color: #2040a0;">pendsv_handle:</span>
+<b> 81</b> <b>  movs</b> r2, #0x12
+<b> 82</b> <b>  nop</b>
+<b> 83</b> <b>  bx</b> lr
+<b> 84</b> 
+<b> 85</b> <span style="color: #2040a0;">svc_isr:</span>
+<b> 86</b> <b>  push</b> {r4-r11, lr}
+<b> 87</b> #if 1
+<b> 88</b>   @ enable pendsv ref: STM32F207 高性能网络型 MCU 嵌入式系统设计 p 412
+<b> 89</b> <b>  ldr</b> r0, =0xe000ed04 
+<b> 90</b> <b>  ldr</b> r1, [r0]
+<b> 91</b> <b>  orr</b> r1, #0x10000000
+<b> 92</b> <b>  str</b> r1, [r0]
+<b> 93</b> #endif
+<b> 94</b> <b>  nop</b>
+<b> 95</b> <b>  movs</b> r3, #0x56
+<b> 96</b> <b>  pop</b> {r4-r11, pc}
+<b> 97</b>   #bx lr
+<b> 98</b> 
+<b> 99</b> <span style="color: #2040a0;">systick_isr:</span>
+<b>100</b> <b>  PUSH</b>    {R14}
+<b>101</b>   @ enable pendsv ref: STM32F207 高性能网络型 MCU 嵌入式系统设计 p 412
+<b>102</b> <b>  ldr</b> r0, =0xe000ed04 
+<b>103</b> <b>  ldr</b> r1, [r0]
+<b>104</b> <b>  orr</b> r1, #0x10000000
+<b>105</b> <b>  str</b> r1, [r0]
+<b>106</b> <b>  movs</b> r0, #0x98
+<b>107</b> @  bx lr
+<b>108</b> <b>  POP</b>     {R14}
+<b>109</b> 
+<b>110</b> <span style="color: #2040a0;">int_isr:</span>
+<b>111</b> <b>  nop</b>
+<b>112</b> <b>  movs</b> r1, #0xf
+<b>113</b> @  push {r1}
+<b>114</b> <b>  bx</b> lr
+<b>115</b> 
+<b>116</b> .data
+<b>117</b> .space  0x200, 0
+<b>118</b> <span style="color: #2040a0;">psp_stack_top:</span>
+<b>119</b> 
+<b>120</b> .space  0x400, 0
+<b>121</b> <span style="color: #2040a0;">msp_stack_top:</span>
+<b>122</b> </span>
+</pre>
+</fieldset>
+
+以下為&nbsp; gdb trace 的結果, 在 svc_isr, pendsv_handle 我加入一些說明。
+
+<fieldset>
+<legend>gdb.result</legend>
+<pre style="white-space: pre-wrap;"><b> 1</b> descent@descent-u:stm32f4_prog$ arm-none-eabi-gdb -x g.sh 
+<b> 2</b> GNU gdb (Sourcery CodeBench Lite 2012.03-56) 7.2.50.20100908-cvs
+<b> 3</b> Copyright (C) 2010 Free Software Foundation, Inc.
+<b> 4</b> License GPLv3+: GNU GPL version 3 or later &lt;http://gnu.org/licenses/gpl.html&gt;
+<b> 5</b> This is free software: you are free to change and redistribute it.
+<b> 6</b> There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+<b> 7</b> and "show warranty" for details.
+<b> 8</b> This GDB was configured as "--host=i686-pc-linux-gnu --target=arm-none-eabi".
+<b> 9</b> For bug reporting instructions, please see:
+<b>10</b> &lt;https://support.codesourcery.com/GNUToolchain/&gt;.
+<b>11</b> Breakpoint 1 at 0x7c: file pendsv.S, line 89.
+<b>12</b> Breakpoint 2 at 0x74: file pendsv.S, line 82.
+<b>13</b> start () at pendsv.S:41
+<b>14</b> 41        ldr r0, =0xe000ed22
+<b>15</b> (gdb) c
+<b>16</b> Continuing.
+<b>17</b> Note: automatically using hardware breakpoints for read-only addresses.
+<b>18</b> 
+<b>19</b> Breakpoint 1, svc_isr () at pendsv.S:89
+<b>20</b> 89        ldr r0, =0xe000ed04 
+<b>21</b> (gdb) x/1xw 0xe000ed04
+<b>22</b> 0xe000ed04:     0x0000080b
+<b>23</b> (gdb) x/1xw 0xe000ed24
+<b>24</b> 0xe000ed24:     0x00000080</pre>
+<pre style="white-space: pre-wrap;"><span style="color: blue;">進入 svc_isr 之後, dump 0xe000ed04, 0xe000ed24
+從 0xe000ed04/0xe000ed24 register 知道 svc 正在執行</span></pre>
+<pre style="white-space: pre-wrap;"><b>25</b> (gdb) n
+<b>26</b> 90        ldr r1, [r0]
+<b>27</b> (gdb) n
+<b>28</b> 91        orr r1, #0x10000000
+<b>29</b> (gdb) n
+<b>30</b> 92        str r1, [r0]
+<b>31</b> (gdb) n
+<b>32</b> 94        nop
+<b>33</b> (gdb) n
+<b>34</b> 95        movs r3, #0x56
+<b>35</b> (gdb) x/1xw 0xe000ed04
+<b>36</b> 0xe000ed04:     0x1000e80b
+<b>37</b> (gdb) x/1xw 0xe000ed24
+<b>38</b> 0xe000ed24:     0x00000080</pre>
+<pre style="white-space: pre-wrap;"><span style="color: blue;">set pendsv pend bit, L28 </span></pre>
+<pre style="white-space: pre-wrap;"><b>39</b> (gdb) n
+<b>40</b> 96        pop {r4-r11, pc}
+<b>41</b> (gdb) n
+<b>42</b> start () at pendsv.S:75
+<b>43</b> 75        mov r1, #0x33
+<b>44</b> (gdb) n
+<b>45</b> deadloop () at pendsv.S:77
+<b>46</b> 77        mov r1, #0x22
+<b>47</b> (gdb) n
+<b>48</b> 78        b deadloop
+<b>49</b> (gdb) n
+<b>50</b> 77        mov r1, #0x22
+<b>51</b> (gdb) n
+<b>52</b> 78        b deadloop
+<b>53</b> (gdb) n
+<b>54</b> 77        mov r1, #0x22
+<b>55</b> (gdb) n
+<b>56</b> 78        b deadloop
+<b>57</b> (gdb) n
+<b>58</b> 77        mov r1, #0x22
+<b>59</b> (gdb) c
+<b>60</b> Continuing.
+<b>61</b> 
+<b>62</b> Breakpoint 2, pendsv_handle () at pendsv.S:82
+<b>63</b> 82        nop</pre>
+<pre style="white-space: pre-wrap;"><span style="color: blue;">離開 svc_isr 進入 deadloop 後才跳到 pendsv_handle </span></pre>
+<pre style="white-space: pre-wrap;"><b>64</b> (gdb) n
+<b>65</b> 83        bx lr
+<b>66</b> (gdb) x/1xw 0xe000ed04
+<b>67</b> 0xe000ed04:     0x0000080e
+<b>68</b> (gdb) x/1xw 0xe000ed24
+<b>69</b> 0xe000ed24:     0x00000400</pre>
+<pre style="white-space: pre-wrap;"><span style="color: blue;">得知 pendsv 正在執行 </span></pre>
+<pre style="white-space: pre-wrap;"><b>70</b> (gdb) n
+<b>71</b> deadloop () at pendsv.S:77</pre>
+<pre style="white-space: pre-wrap;"><span style="color: blue;">回到 deadloop</span> </pre>
+<pre style="white-space: pre-wrap;"><b>72</b> 77        mov r1, #0x22
+<b>73</b> (gdb) n
+<b>74</b> 78        b deadloop
+<b>75</b> (gdb) n
+<b>76</b> 77        mov r1, #0x22
+<b>77</b> (gdb) n
+<b>78</b> 78        b deadloop
+<b>79</b> (gdb) c
+<b>80</b> Continuing.
+<b>81</b> ^C
+<b>82</b> Program received signal SIGTRAP, Trace/breakpoint trap.
+<b>83</b> deadloop () at pendsv.S:77
+<b>84</b> 77        mov r1, #0x22
+</pre>
+</fieldset>
+
+你一定會有點疑惑, 為什麼要介紹這個對吧！嗯 ... 讓我賣個關子。
+
+ref:
+<ul>
+<li><a href="http://community.arm.com/thread/2309">how to invoke arm cortex m3 pendsv handle (我在 arm 論壇的發問)</a></li>
+<li><a href="http://stackoverflow.com/questions/2752151/which-cortex-m3-interrupts-can-i-use-for-general-purpose-work">http://stackoverflow.com/questions/2752151/which-cortex-m3-interrupts-can-i-use-for-general-purpose-work</a></li>
+<li><a href="http://forums.arm.com/index.php?/topic/15984-cortex-m3-pendsv-svc-and-priorities/">http://forums.arm.com/index.php?/topic/15984-cortex-m3-pendsv-svc-and-priorities/</a></li>
+</ul>
+
