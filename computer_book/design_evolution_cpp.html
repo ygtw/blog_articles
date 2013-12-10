@@ -335,3 +335,67 @@ cfront (198408 第1個版本發佈) 1986 移植到 pc/at, cfront 並不是 c++ c
 c++ 的設計理念之一, 『你只需要為你用的東西付出代價。』用上 class, 和 c 的 struct 一樣, 不會有任何負擔, 加上 virtual function, 呃 ... 這和 c 就不同了, 得付出一點代價。
 
 p77 介紹了對於 operator[]() 這個 operator 重新定義時會有的問題, 以 string 為例子, 引入了輔助用 class 來分別處理左值、右值, 真是巧妙。
+
+garbage collection 在 2.13, 3.9, 10.7 被談到, 尤其是 10.7 花了不少篇幅在討論 garbage collection 所帶來的空間/時間開銷, 這會讓 c++ 威力大減。只提出了 optional garbage collection 的概念
+
+3.8
+對於 const 這個關鍵字表現的意義在 c 和 c++ 有所不同, 不過 const 關鍵字可是由 Bjarne 引進到 c 的, 意外吧! 不過當時使用的是 readonly, writeonly 這兩個關鍵字, 最後是由 ANSI C 改用 const 而成為 C 標準, 這是 Bjarne 第一次的標準化經驗, 不過 c 的 const 無法使用在 const expression。
+
+ex:
+
+const int max = 14;
+int a[max+1];
+
+在 c 無法這樣使用。別再說 c++ 改變了 c 的 const 用法, 而是 ANSI C 標準委員會沒有採納 Bjarne 的 const 用法。
+
+3.11.1
+// 則是由 BCPL 的注解風格, 因為還蠻好用的, Bjarne 就引進了 c++, C99 也支援這個注解風格。
+
+3.11.4 在探討 initialization of global objects, Bjarne 並不是只考慮完成這功能, 還要考慮效率問題, C++ 的設計原則:
+"a C++ feature not only has to be usefuel, it also has to be affordable."
+這個 c++ 特性不只要有用, 還要能負擔的起。
+而這個解決辦法會帶來效率上的問題, 所以說負擔不起。
+這個方法是 Jerry Schwarz 所提供。現在的 c++ 似乎已經解決這問題 (我不確定)。
+
+<fieldset><legend>g.c</legend>
+<pre>
+<b> 1</b> double fabc()
+<b> 2</b> {
+<b> 3</b>   return 2.34;
+<b> 4</b> }
+<b> 5</b>
+<b> 6</b> double PI = 22/7;
+<b> 7</b> double sq = fabc();
+<b> 8</b>
+<b> 9</b> int main(int argc, char *argv[])
+<b>10</b> {
+<b>11</b>   return 0;
+<b>12</b> }
+</pre>
+</fieldset>
+
+看來很平凡的程式, 在 c 中是無法編譯成功的, c++ 則可以, 這便是 initialization of global objects 這問題。
+
+descent@debianlinux:tmp$ gcc g.c
+g.c:7:1: error: initializer element is not constant
+ double sq = fabc();
+ ^
+descent@debianlinux:tmp$ g++ g.c
+descent@debianlinux:tmp$ 
+
+我之前遇到類似的問題, 現在證實了這個的確是 c++ 程式, 而不是 c 程式。
+http://descent-incoming.blogspot.tw/2012/09/c-c-global-variable-initialize.html
+
+簡單說, c++ compiler 產生這個:
+_Z41__static_initialization_and_destruction_0ii()
+幫你完成
+sq = fabc();
+動作。
+
+simula, algo68, clu, ada, ml, c++ 受這些語言的影響, 
+
+K&R2 (the c programming language 2nd) 裡頭的範例程式碼, 皆可以用 cfront 來編譯, 為了測試與 c 的相容性。
+
+What Is Object-Oriented Programming?
+http://www.stroustrup.com/whatis.pdf
+這是 Bjarne 應邀在 ASU (The Association of SIMULA Users) 上做的關於 c++ 報告。
