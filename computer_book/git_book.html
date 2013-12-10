@@ -11,9 +11,7 @@ Git 权威指南 (Git 權威指南) 89 rmb (534 nt)
 <li>定价: 89.00 rmb</li>
 <li>ISBN: 9787111349679</li>
 </ul>
-<table>
-<caption>目录</caption>
-<tbody>
+<table><caption>目录</caption> <tbody>
 <tr> <td>
 <pre>前　言
 第1篇　初识Git
@@ -586,8 +584,8 @@ git rebase --onto &lt;newbase&gt; &lt;since&gt; &lt;till&gt;
 這就是 12.3.2 的範例之一。
 
 rebase 很複雜, 如果遇上 rebase conflict, 可能會害怕自己會不會搞砸 repository。
-這篇介紹 rebase 用法: http://blog.yorkxin.org/posts/2011/07/29/git-rebase
-我認為要寫出這篇文章真不容易, rebase 這概念還真不是很好描述出來。
+這篇介紹 rebase 用法: <a href="http://blog.yorkxin.org/posts/2011/07/29/git-rebase">http://blog.yorkxin.org/posts/2011/07/29/git-rebase</a>
+我認為要寫出這篇文章並不是容易的事, rebase 這概念還真不是很好描述出來。
 
 第 13 章介紹 git clone, 告訴我們 bare 的 repository 和 non-bare repository 有什麼不同, 對 push/pull 的行為有什麼不同。這也是我曾經在網路看到的問題。在本章, 你會看到 git push repos/a.git master:master 這樣的指令。到了這裡, 基本上已經可以上手 git 了, 總共是 186 頁, 辛苦了。再把第 3 篇讀完吧, 還有 109 頁, 不難，這樣 git 應該已經可以用得得心應手。
 
@@ -605,7 +603,7 @@ git tag 也沒想像中的簡單, 看看第 17 章 git 里程碑。
 
 第 19 章遠端版本庫也一樣重要, 這是分散式版本控制系統厲害的地方, 沒有這個, 那 git 就像 rcs 純個人使用了, 把之前的努力累積起來, 讀起來可能更加迷惑了, 但記得的部份已經足夠使用, 過陣子再來回味吧！
 
-chapter 33 介紹 github, gitorious 這兩個 git 伺服器, 不算詳細, 所以作者在 http://www.worldhello.net/gotgithub/ 補上談 github 的書籍, clone 下來慢慢看吧！
+chapter 33 介紹 github, gitorious 這兩個 git 伺服器, 不算詳細, 所以作者在 <a href="http://www.worldhello.net/gotgithub/">http://www.worldhello.net/gotgithub/</a> 補上談 github 的書籍, clone 下來慢慢看吧！
 
 第 6 篇的 34, 35 兩章在說明如何將 cvs, svn 遷移到 git, 在我使用 git 時, 我便把之前的 svn repository 轉移到 git。
 
@@ -618,8 +616,7 @@ chapter 33 介紹 github, gitorious 這兩個 git 伺服器, 不算詳細, 所�
 你大概可以看出我花了很大心力在學 git, 因為我認為這是一個值得投資的軟體 (又跨平台, 這點很重要), 但我不希望重演 rcs, cvs, svn, git, ??? 的戲碼, 不僅浪費我的投資, 轉換各種 repository 可是很痛苦的。
 
 以下是 Bitbucket 建立一個新的 repository 時給的命令:
-<pre class="cmd">
-cd /path/to/my/repo
+<pre class="cmd">cd /path/to/my/repo
 git remote add origin ssh://git@bitbucket.org/dsung/a_prog.git
 git push -u origin --all # pushes up the repo and its refs for the first time
 git push -u origin --tags # pushes up any tags
@@ -652,12 +649,12 @@ http://ihower.tw/git/files/ihower-git.pdf
 
 ref:
 “21天教你学会C++”
-http://coolshell.cn/articles/2250.html
+<a href="http://coolshell.cn/articles/2250.html">http://coolshell.cn/articles/2250.html</a>
 
 git internals (qrtt1 推薦)
-https://github.com/pluralsight/git-internals-pdf/releases
+<a href="https://github.com/pluralsight/git-internals-pdf/releases">https://github.com/pluralsight/git-internals-pdf/releases</a>
 
-<hr/>
+<hr />
 
 這是我在某聚會分享的 5 分鐘 git 就上手 - 不可能, 說明 working tree, index, repository 的相關操作。主要不是 git 教學, 而是說明 git 很難學。
 <iframe allowfullscreen="" frameborder="0" height="480" src="//www.youtube.com/embed/4iLVH1vOum8" width="640"></iframe>
@@ -676,6 +673,6 @@ merge 2 commit to 1 commit
 use git checkout/rebase/cherry-pick 
 use git rebase
 
-<iframe width="640" height="360" src="//www.youtube.com/embed/YAdj0U5DxXc" frameborder="0" allowfullscreen></iframe>
+<iframe allowfullscreen="" frameborder="0" height="360" src="//www.youtube.com/embed/YAdj0U5DxXc" width="640"></iframe>
 
 這次沒有說明的很好, 我應該先解釋, working tree, index, branch, 還有 branch 指標, 以及 --soft, --hard 才是。
