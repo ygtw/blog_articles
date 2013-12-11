@@ -15,16 +15,15 @@ A : jmp 後面的是位址
 p: 32 or 48 bit pointer 
 
 ptr16:16 表示這位址由兩個部份組成 segment + offset,
-藍色的 <span style="color: blue;">00 00</span> 是 segment, 是一個 selector 0,
+藍色的 <span style="color: blue;">00 00</span> 是 segment part, 在真實模式和保護模式有不同的意思, 而程式需要的是真實模式, 所以將這個 segment 改成真實模式下需要的值。
 
 紅色的<span style="color: red;">bd 03</span>是 offset,
 
-L1便是在修改 L3 的藍色部份 (segment), 填入當時的 %ax, 用來返回真實模式。哇！我到現在才懂 (20130923), 之前我看不懂, 只是照抄。
+L1便是在修改 L3 的藍色部份 (segment), 填入當時的 %ax (載入這個 .com 時, 還在真實模式下的 %ax), 用來返回真實模式。哇! 我到現在才懂 (20130923), 之前看不懂, 只是照抄。
 
 <pre><b>1</b> movw %ax, (LABEL_GO_BACK_TO_REAL+3)
-
 <b>2</b> LABEL_GO_BACK_TO_REAL:
 <b>3</b>    jmp     $0, $LABEL_REAL_ENTRY   
 </pre>
 
-這篇的文字很少, 但可是累積不少金字塔知識以及查閱 intel 手冊才能完成這篇。
+這篇的文字很少, 不過金字塔知識門檻很高, 並且還要查閱 intel 手冊才能完成這篇。
