@@ -315,14 +315,14 @@
 </td> </tr>
 </tbody></table>
 
-原文版出版自 199405
+原文版出版自 199405, 簡體中文出版於 2002 年, 我買的是 201209 再版第二刷。
 
 <a href="https://picasaweb.google.com/lh/photo/TXSfz-DVld3H02_VwzB2kx7lyzyq0Rg6WnM09MTnQXU?feat=embedwebsite" style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;"><img src="https://lh6.googleusercontent.com/-MRnNlwCY-vU/UmUVxAYYSWI/AAAAAAAAtQU/cgbc1fKDZNw/s400/IMG_6888.JPG" /></a>一開始 Bjarne 談及使用 Simula 來開發他博士論文需要的模擬器與相關的 os 系統。Simula 很好, 也很不好, 最後改用 BCPL 重新把模擬器改寫, 得到了需要的數據, 也順利取得博士學位。這時候他對程式語言有了自己的一套想法, 這些概念, 最後都在 c++ 裡頭實現了。而根據 Bjarne 自己的哲學思想, c++ 就是要支援各種不同的風格, function base, object base, oop, generic programming ... c++11 還來個 functional programming。
 
 p6 有張圖, 秀出一些電腦語言的出生時間點,
 
 p23 提到 Cpre (1981 第1個版本發佈), 這是 c with class 的 preprocessor
-p34 說明 this 為什麼是 this 而不是 self, 
+p34 說明 this 為什麼是 this 而不是 self (取自 simula), 為什麼是 pointer 而不是 reference (因為這時候還沒有 reference)
 c 的 f(void), 竟然是被 Bjarne 所遺棄的語法, c++ f() 相當於 c f(void), 這是和 c 不同的地方, 也就是和 c 不相容, 所以 c++ 真的是另外一種語言。
 2.7 (p37) 這應該是很多人的疑問, 為什麼是 C, Bjarne 大約用了兩頁在說明原因, 並提到從 simula, algol68, bcpl 那裡「偷」了什麼來 c++ 中。
 2.8.1 介紹了 -> 來代替 *, 我的老天, 還好最後 Bjarne 沒這麼做。int v[10]-> 等同於 int *v[10], int f(char)->[10]->(double)-> 對於習慣 c 宣告的我來說, 這也不怎麼高明. 讓 typedef 來對付複雜宣告就好。
@@ -399,3 +399,86 @@ K&R2 (the c programming language 2nd) 裡頭的範例程式碼, 皆可以用 cfr
 What Is Object-Oriented Programming?
 http://www.stroustrup.com/whatis.pdf
 這是 Bjarne 應邀在 ASU (The Association of SIMULA Users) 上做的關於 c++ 報告。
+
+<fieldset><legend>b.cpp</legend>
+<pre style="white-space: pre-wrap;">
+<b>1</b> typedef char *T;
+<b>2</b>
+<b>3</b> class Y
+<b>4</b> {
+<b>5</b>   T f(){T a=0; return a;}
+<b>6</b>   typedef int T;
+<b>7</b> };
+</pre>
+</fieldset>
+
+g++ 4.8.1 不會過
+
+p126 提到的例子我看不懂。
+
+<fieldset><legend>b.cpp</legend>
+<pre style="white-space: pre-wrap;">
+<b> 1</b> #include &lt;iostream&gt;
+<b> 2</b> #include &lt;typeinfo&gt;
+<b> 3</b> using namespace std;
+<b> 4</b>
+<b> 5</b> typedef int P();
+<b> 6</b> typedef int Q();
+<b> 7</b>
+<b> 8</b> class X
+<b> 9</b> {
+<b>10</b>   static P(Q); // equivalent static int Q()
+<b>11</b> };
+</pre>
+</fieldset>
+
+這是 6.3.2 p127 提到的暫時物件生命周期, 我把完整程式碼完成並測試。
+
+<fieldset><legend>t.cpp</legend>
+<pre style="white-space: pre-wrap;">
+<b> 1</b> #include &lt;string&gt;
+<b> 2</b> #include &lt;cstdio&gt;
+<b> 3</b> 
+<b> 4</b> using namespace std;
+<b> 5</b> 
+<b> 6</b> class Mystring
+<b> 7</b> {
+<b> 8</b>   public:
+<b> 9</b>     friend Mystring operator+(const Mystring&amp;, const Mystring&amp;);
+<b>10</b>     Mystring(const char *s)
+<b>11</b>     {
+<b>12</b>       sprintf(str_, &quot;%s&quot;, s);
+<b>13</b>     }
+<b>14</b>     ~Mystring()
+<b>15</b>     {
+<b>16</b>       printf(&quot;~Mystring: %s\n&quot;, str_);
+<b>17</b>       str_[0]='1';
+<b>18</b>       str_[1]=0x0;
+<b>19</b>     }
+<b>20</b>     operator const char*()
+<b>21</b>     {
+<b>22</b>       return str_;
+<b>23</b>     }
+<b>24</b>   private:
+<b>25</b>     char str_[100];
+<b>26</b> };
+<b>27</b> 
+<b>28</b> Mystring operator+(const Mystring &amp;s1, const Mystring &amp;s2)
+<b>29</b> {
+<b>30</b>   char str[100];
+<b>31</b>   sprintf(str,&quot;%s%s&quot;, s1.str_, s2.str_);
+<b>32</b>   return Mystring(str);
+<b>33</b> }
+<b>34</b> 
+<b>35</b> int main(int argc, char *argv[])
+<b>36</b> {
+<b>37</b>   Mystring s1(&quot;123&quot;), s2(&quot;abc&quot;); 
+<b>38</b>   const char *p = s1+s2;
+<b>39</b>   printf(&quot;%s\n&quot;, p);
+<b>40</b>   return 0;
+<b>41</b> }
+</pre>
+</fieldset>
+
+和書中所提結果一樣, L38 之後, 暫時物件就解構了， L39 的 p 就不能保證其正確性。
+
