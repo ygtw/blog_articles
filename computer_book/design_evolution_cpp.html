@@ -400,7 +400,9 @@ What Is Object-Oriented Programming?
 http://www.stroustrup.com/whatis.pdf
 這是 Bjarne 應邀在 ASU (The Association of SIMULA Users) 上做的關於 c++ 報告。
 
+第六章提到標準化的議題, 要將一個語言標準化有很多難題要克服, 也需要有一個清楚的說明, 更要對於好多人的要求有所妥協, 這裡有各國人馬, 有大公司代表, 要搞定這些人, 想想就不容易。
 
+以下己個程式碼於書中討論, 我好奇的輸入到目前的 c++ 編譯器 (g++ 4.8.1) 中測試:
 
 p124
 <fieldset><legend>b.cpp</legend>
@@ -415,7 +417,7 @@ p124
 </pre>
 </fieldset>
 
-g++ 4.8.1 不會過
+不會過
 
 p126 提到的例子我看不懂。
 
@@ -484,6 +486,39 @@ p126 提到的例子我看不懂。
 </fieldset>
 
 和書中所提結果一樣, L38 之後, 暫時物件就解構了， L39 的 p 就不能保證其正確性。
+
+6.5 提到兩個沒被接受的特性, keyword argument, restricted pointers, restricted pointers 似乎在 c99 已經提供了 restrict keyword, 用來處理兩段記憶體有無重疊。
+ref: http://liquid0118.pixnet.net/blog/post/48494846-c%E9%97%9C%E9%8D%B5%E5%AD%97----volatile,-restrict
+
+6.5.3 character set 提到了很有趣的往事, 原來 # (??=), \(??/) 這些表示法的由來, 我好奇很久了。
+
+<fieldset><legend>a.c</legend>
+<pre style="white-space: pre-wrap;">
+<b>1</b> int main(int argc, char *argv[])
+<b>2</b> {
+<b>3</b>   if (1 &amp;&amp; 2)
+<b>4</b>   {
+<b>5</b>   }
+<b>6</b>   return 0;
+<b>7</b> }
+</pre>
+</fieldset>
+
+可以寫成這樣:
+
+<fieldset><legend>a.c</legend>
+<pre style="white-space: pre-wrap;">
+<b>1</b> int main(int argc, char *argv[])
+<b>2</b> {
+<b>3</b>   if (1 and 2)
+<b>4</b>   {
+<b>5</b>   }
+<b>6</b>   return 0;
+<b>7</b> }
+</pre>
+</fieldset>
+c
+
 
 Errata for The Design and Evolution of C++ (原文版本)
 http://www.stroustrup.com/dne_errata.html
