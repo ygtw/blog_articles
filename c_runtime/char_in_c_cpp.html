@@ -1,0 +1,24 @@
+<fieldset>
+<legend>sizeof.c</legend>
+<pre><a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line1" name="line1">1</a> <span style="color: blue;"><b>#include <span style="color: green;">&lt;stdio.h&gt;</span></b></span>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line2" name="line2">2</a> <b>int</b> <span style="color: #2040a0;">main</span><span style="color: #4444ff;">(</span><b>int</b> <span style="color: #2040a0;">argc</span>, <b>const</b> <b>char</b> <span style="color: #4444ff;">*</span><span style="color: #2040a0;">argv</span><span style="color: #4444ff;">[</span><span style="color: #4444ff;">]</span><span style="color: #4444ff;">)</span>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line3" name="line3">3</a> <span style="color: #4444ff;"><b>{</b></span>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line4" name="line4">4</a>   <span style="color: #2040a0;">printf</span><span style="color: #4444ff;">(</span><span style="color: green;">"sizeof('a'): %d<span style="color: #77dd77;">\n</span>"</span>, <b>sizeof</b><span style="color: #4444ff;">(</span><span style="color: green;">'a'</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>       
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line5" name="line5">5</a>   <b>return</b> <span style="color: red;">0</span><span style="color: #4444ff;">;</span>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line6" name="line6">6</a> <span style="color: #4444ff;"><b>}</b></span>
+</pre>
+</fieldset>
+
+真令人驚訝: 
+'a' type is int in c;
+sizeof('a'): 4
+
+'a' type is char in c++;
+sizeof('a'): 1
+
+這篇提到的問題:&nbsp; <a href="http://www.ptt.cc/bbs/C_and_CPP/M.1357715450.A.04C.html">http://www.ptt.cc/bbs/C_and_CPP/M.1357715450.A.04C.html</a> 在 Expert C Programming 上看到彼此的不同。
+
+永遠有難倒人的題目。小心走火入魔變成王語嫣。
+
+
+
