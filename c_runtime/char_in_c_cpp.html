@@ -1,9 +1,11 @@
-<fieldset><legend>a.c</legend>
-<pre style="white-space: pre-wrap;">
-<b>1</b> #include &lt;stdio.h&gt;
+1st edition: 20130117 08:03:00
+2nd edition: 20131215 21:39:50
+<fieldset>
+<legend>a.c</legend>
+<pre style="white-space: pre-wrap;"><b>1</b> #include &lt;stdio.h&gt;
 <b>2</b> int main(int argc, const char *argv[])
 <b>3</b> {
-<b>4</b>   printf(&quot;sizeof('a'): %d\n&quot;, sizeof('a'));
+<b>4</b>   printf("sizeof('a'): %d\n", sizeof('a'));
 <b>5</b>   return 0;
 <b>6</b> }
 </pre>
@@ -26,7 +28,6 @@ sizeof('a'): 1
 cout &lt;&lt; 'X'; 會得到 88 (X ascii code), 因為
 operator&lt;&lt;(int)
 operator&lt;&lt;(char)
-這兩個無法符合 overloaded, 這是被當作是相同的參數, 在將 'X' 當作 char 而不是 int 後, cout 才能正常印出 char。
+這兩個無法符合 overloaded 規則, 這是被當作是相同的參數函式, 在將 'X' 當作 char 而不是 int 後, cout 才能正常印出 char。
 
-ref: The Design and Evolution of C++ 11.2
-
+ref: The Design and Evolution of C++ 11.2 section
