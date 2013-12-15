@@ -1,11 +1,11 @@
-<fieldset>
-<legend>sizeof.c</legend>
-<pre><a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line1" name="line1">1</a> <span style="color: blue;"><b>#include <span style="color: green;">&lt;stdio.h&gt;</span></b></span>
-<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line2" name="line2">2</a> <b>int</b> <span style="color: #2040a0;">main</span><span style="color: #4444ff;">(</span><b>int</b> <span style="color: #2040a0;">argc</span>, <b>const</b> <b>char</b> <span style="color: #4444ff;">*</span><span style="color: #2040a0;">argv</span><span style="color: #4444ff;">[</span><span style="color: #4444ff;">]</span><span style="color: #4444ff;">)</span>
-<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line3" name="line3">3</a> <span style="color: #4444ff;"><b>{</b></span>
-<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line4" name="line4">4</a>   <span style="color: #2040a0;">printf</span><span style="color: #4444ff;">(</span><span style="color: green;">"sizeof('a'): %d<span style="color: #77dd77;">\n</span>"</span>, <b>sizeof</b><span style="color: #4444ff;">(</span><span style="color: green;">'a'</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>       
-<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line5" name="line5">5</a>   <b>return</b> <span style="color: red;">0</span><span style="color: #4444ff;">;</span>
-<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629#line6" name="line6">6</a> <span style="color: #4444ff;"><b>}</b></span>
+<fieldset><legend>a.c</legend>
+<pre style="white-space: pre-wrap;">
+<b>1</b> #include &lt;stdio.h&gt;
+<b>2</b> int main(int argc, const char *argv[])
+<b>3</b> {
+<b>4</b>   printf(&quot;sizeof('a'): %d\n&quot;, sizeof('a'));
+<b>5</b>   return 0;
+<b>6</b> }
 </pre>
 </fieldset>
 
@@ -20,5 +20,13 @@ sizeof('a'): 1
 
 永遠有難倒人的題目。小心走火入魔變成王語嫣。
 
+這可能有不少人知道, 但為什麼 c++ 要做如此的改動呢?
+原因出在 iostream library:
 
+cout &lt;&lt; 'X'; 會得到 88 (X ascii code), 因為
+operator&lt;&lt;(int)
+operator&lt;&lt;(char)
+這兩個無法符合 overloaded, 這是被當作是相同的參數, 在將 'X' 當作 char 而不是 int 後, cout 才能正常印出 char。
+
+ref: The Design and Evolution of C++ 11.2
 
