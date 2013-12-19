@@ -1,6 +1,6 @@
 <a href="https://picasaweb.google.com/lh/photo/L3oAt90DzNthPG8lk_GxhNMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="480" src="https://lh4.googleusercontent.com/-uBqq6rbiHgw/UmOkcmQqLuI/AAAAAAAAtO8/LeEPRAPRPuQ/s640/IMGP7914.JPG" width="640" /></a>
 
-自然, 我讀的是簡體中文版本: C++语言的设计与演化, 20131015 委託<a href="http://descent-incoming.blogspot.tw/2013/11/0.html" target="_blank">代買</a>, 20131021 拿到, 60.2/86 rmb, 實際款項 83+60.2*5.1 = 390 nt, 不貴, 在台灣書店買可能需要 86*5 = 430 nt, 重點是我在台灣找不到這本書。
+自然, 我讀的是簡體中文版本: C++语言的设计与演化, 20131015 委託<a href="http://descent-incoming.blogspot.tw/2013/11/0.html" target="_blank">代買</a>, 20131021 拿到, 60.2/86 rmb, 實際款項 83+60.2*5.1 = 390 nt, 不貴, 在台灣書店買可能需要 86*5 = 430 nt, 重點是我在台灣找不到這本書。這篇心得只是第一部份 (1 ~ 9 章)。
 
 <h2>
 目录</h2>
@@ -317,13 +317,13 @@
 
 原文版出版日期: 199405, 簡體中文出版於 2002 年, 我買的是 201209 再版第二刷。英文版我好早就已經買了, 不過卻不曾好好閱讀過,  當然是我的英文閱讀能力問題。The C++ Programming Language 我已經讀過 (當然是中文版本), 再來應該讀讀 c++  的歷史了。這是一本在說明 c++ 的歷史以及 c++ 為什麼會這樣設計的回憶錄。
 
-<a href="https://picasaweb.google.com/lh/photo/TXSfz-DVld3H02_VwzB2kx7lyzyq0Rg6WnM09MTnQXU?feat=embedwebsite" style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;"><img src="https://lh6.googleusercontent.com/-MRnNlwCY-vU/UmUVxAYYSWI/AAAAAAAAtQU/cgbc1fKDZNw/s400/IMG_6888.JPG" /></a>一開始 Bjarne 談及使用 Simula 來開發他博士論文需要的模擬器與相關的 os 系統。Simula 很好 (效率問題), 也很不好, 最後改用 BCPL 重新把模擬器改寫, 得到了需要的數據, 也順利取得博士學位。
+<a href="https://picasaweb.google.com/lh/photo/TXSfz-DVld3H02_VwzB2kx7lyzyq0Rg6WnM09MTnQXU?feat=embedwebsite" style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;"><img src="https://lh6.googleusercontent.com/-MRnNlwCY-vU/UmUVxAYYSWI/AAAAAAAAtQU/cgbc1fKDZNw/s400/IMG_6888.JPG" /></a>一開始 Bjarne 談及使用 Simula 來開發他博士論文需要的模擬器與相關的 os 系統。Simula 很好, 也很不好 (效率問題), 最後改用 BCPL 重新把模擬器改寫, 得到了需要的數據, 也順利取得博士學位。
 
 這時候他對程式語言有了自己的一套想法, 這些概念, 最後都在 c++ 裡頭實現了。
 
 而根據 Bjarne 自己的哲學思想, c++ 就是要支援各種不同的風格, function base, object base, oop, generic programming ... c++11 還來個 functional programming。
 
-p6 有張圖, 秀出一些電腦語言的出生時間點,我很喜歡這張圖, 清楚的了解程式語言的先後順序, 第一個高階語言是 fortran, 第二個是 lisp, 後面的不用管了 (因為我沒興趣了解了)。
+p6 有張圖, 秀出一些電腦語言的出生時間點,我很喜歡這張圖, 清楚的了解程式語言的先後順序, 第一個高階語言是 fortran, 第二個是 lisp。
 
 <a href="https://picasaweb.google.com/lh/photo/ag0ZgKNq1tfnFUOUMrPJ2x7lyzyq0Rg6WnM09MTnQXU?feat=embedwebsite"><img height="800" src="https://lh5.googleusercontent.com/-a6ZmX309Yas/Uq8U1oOjh8I/AAAAAAAAul4/k2zjFTJHES0/s800/cl_.jpg" width="733" /></a> 
 
@@ -332,24 +332,24 @@ p34 說明 this 為什麼是 this 而不是 self (取自 simula), 為什麼是 p
 
 c 的 f(void), 竟然是被 Bjarne 所遺棄的語法, c++ f() 相當於 c f(void), 這是和 c 不同的地方, 也就是和 c 不相容, 所以 c++ 真的是另外一種語言。
 
-2.7 (p37) 這應該是很多人的疑問, 為什麼是 C, Bjarne 大約用了兩頁在說明原因, 並提到從 simula, algol68, bcpl 那裡「偷」了什麼特性用到 c++ 中。
+2.7 (p37) 這應該是很多人的疑問, 為什麼是架構在 c 而不是發明一個全新的語言? Bjarne 大約用了兩頁在說明原因, 並提到從 simula, algol68, bcpl 那裡「偷」了什麼特性用到 c++ 中。
 
-2.8.1 介紹了 -&gt; 來代替 *, 我的老天, 還好最後 Bjarne 沒這麼做。int v[10]-&gt; 等同於 int *v[10], int f(char)-&gt;[10]-&gt;(double)-&gt; 對於習慣 c 宣告的我來說, 這也不怎麼高明. 讓 typedef 來對付複雜宣告就好。
+2.8.1 介紹了 -&gt; 來代替 *, 這是為了改善 c 的宣告語法, 我的老天, 還好最後 Bjarne 沒這麼做。int v[10]-&gt; 等同於 int *v[10], int f(char)-&gt;[10]-&gt;(double)-&gt; 對於習慣 c 宣告的我來說, 這似乎也不怎麼高明. 讓 typedef 來對付複雜宣告就好。
 
 c++ 一開始被取名為 C84 (一點都不威阿), 後來 Rick Mascitti 提出了 c++ 這個名字 (真是厲害), 這個名字看來厲害多了。
 
-g++ 1.13 在 198712 公佈, 這是第1個 g++ 版本。
+g++ 1.13 在 198712 公佈, 這是第一個 g++ 版本。
 
-cfront (198408 第一個發佈版本) 1986 移植到 pc/at, cfront 並不是 c++ compiler, p59 有張圖可以了解 cfront 的角色, 簡單說透過 cfront 產生的原始碼還要經過 c compiler, 所以才叫 cfront 阿!
+cfront (198408 第一個發佈版本) 1986 移植到 pc/at, cfront 並不是 c++ compiler, p59 有張圖可以了解 cfront 的角色, 簡單說透過 cfront 產生的原始碼還要經過 c compiler, 所以才叫 cfront。
 
 c++ 的設計理念之一, 『你只需要為你用的東西付出代價。』用上 class, 和 c 的 struct 一樣, 不會有任何負擔, 加上 virtual function, 呃 ... 這和 c 就不同了, 得付出一點代價。
 
 p77 介紹了對於 operator[]() 這個 operator 重新定義時會有的問題, 以 string 為例子, 引入了輔助用 class 來分別處理左值、右值, 真是巧妙。
 
-garbage collection 在 2.13, 3.9, 10.7 被談到, 尤其是 10.7 花了不少篇幅在討論 garbage collection 所帶來的空間/時間開銷, 這會讓 c++ 威力大減。只提出了 optional garbage collection 的概念
+garbage collection 在 2.13, 3.9, 10.7 被談到, 尤其是 10.7 花了不少篇幅在討論 garbage collection 所帶來的空間/時間開銷, 這會讓 c++ 威力大減。只提出了 optional garbage collection 的概念, c++11 似乎要加入這個, 我不相信魚與熊掌能兼得, 希望這功能是可以關閉的, 而不是強迫使用。 
 
 3.8
-對於 const 這個關鍵字表現的意義在 c 和 c++ 有所不同, 不過 const 關鍵字可是由 Bjarne 引進到 c 的, 意外吧! 不過當時使用的是 readonly, writeonly 這兩個關鍵字, 最後是由 ANSI C 改用 const 而成為 C 標準, 這是 Bjarne 第一次的標準化經驗, 不過 c 的 const 無法使用 const expression, 和 c++ 的 const 語意所有不同。
+對於 const 這個關鍵字的意義在 c 和 c++ 有所不同, 不過 const 關鍵字可是由 Bjarne 引進到 c 的, 意外吧! 不過當時使用的是 readonly, writeonly 這兩個關鍵字, 最後是由 ANSI C 改用 const 而成為 C 標準, 這是 Bjarne 第一次的標準化經驗 (對象是 c 語言), 不過 c 的 const 無法使用 const expression, 和 c++ 的 const 語意所有不同。
 
 ex:
 
@@ -363,9 +363,7 @@ int a[max+1];
 
 3.11.4 在探討 initialization of global objects, Bjarne 並不是只考慮完成這功能, 還要考慮效率問題, C++ 的設計原則:
 "a C++ feature not only has to be usefuel, it also has to be affordable."
-這個 c++ 特性不只要有用, 還要能負擔的起。
-而這個解決辦法會帶來效率上的問題, 所以說負擔不起。
-這個方法是 Jerry Schwarz 所提供。現在的 c++ 似乎已經解決這問題 (我不確定)。
+這個 c++ 特性不只要有用, 還要能負擔的起 (直翻就是這樣, 完全沒有美感, 請原諒我)。而這個解決辦法會帶來效率上的問題, 所以才說負擔不起。這個方法是 Jerry Schwarz 所提供。現在的 c++ 似乎已經解決這問題 (我不確定)。
 
 <fieldset>
 <legend>g.c</legend>
@@ -396,15 +394,13 @@ descent@debianlinux:tmp$
 我之前遇到類似的問題, 現在證實了這個的確是 c++ 程式, 而不是 c 程式。
 <a href="http://descent-incoming.blogspot.tw/2012/09/c-c-global-variable-initialize.html">http://descent-incoming.blogspot.tw/2012/09/c-c-global-variable-initialize.html</a>
 
-簡單說, c++ compiler 產生這個:
+簡單說, c++ compiler 產生這個 (test in g++ 4.8.1):
 _Z41__static_initialization_and_destruction_0ii()
-幫你完成
-sq = fabc();
-動作。
+幫你完成 sq = fabc(); 動作, 當然也在你不知道的情況下執行了這行程式碼, 所以這麼簡單的一行就要付出一些代價, 程式碼變大, 多了 function call。
 
-simula, algo68, clu, ada, ml, c++ 受這些語言的影響。 
+c++ 受到 simula, algo68, clu, ada, ml 的影響。 
 
-K&amp;R2 (the c programming language 2nd) 裡頭的範例程式碼, 皆可以用 cfront 來編譯, 這是為了測試與 c 的相容性。
+K&amp;R2 (the c programming language 2nd) 裡頭的範例程式碼, 皆可以用 cfront 來編譯, 這是為了測試與 c 的相容性, 畢竟 c++ 還是很重視和 c 的相容性, 但要相容哪些特性那可讓人傷透腦筋。
 
 What Is Object-Oriented Programming?
 <a href="http://www.stroustrup.com/whatis.pdf">http://www.stroustrup.com/whatis.pdf</a>
@@ -412,7 +408,7 @@ What Is Object-Oriented Programming?
 
 第六章提到標準化的議題, 要將一個語言標準化有很多難題要克服, 也需要有一個清楚的說明, 更要對於好多人的要求有所妥協, 這裡有各國人馬, 有大公司代表, 要搞定這些人, 想想就不容易。
 
-以下己個程式碼於書中討論, 我好奇的輸入到目前的 c++ 編譯器 (g++ 4.8.1) 中測試:
+以下幾個程式碼出現於書中, 我好奇的輸入到目前的 c++ 編譯器 (g++ 4.8.1) 中測試:
 
 p124
 <fieldset>
@@ -427,11 +423,13 @@ p124
 </pre>
 </fieldset>
 
-不會過
+不會過 ... 是正常的, T 在被使用過之後被重新定義, c++ 不允許這樣的使用。
 
 p126 提到的例子我看不懂, P(Q); Q(P) 還真是怪異。
 所以我 po 了這問題, 得到解答:
 <a href="http://www.ptt.cc/bbs/C_and_CPP/M.1386775835.A.71F.html">http://www.ptt.cc/bbs/C_and_CPP/M.1386775835.A.71F.html</a> 
+
+int i; 和 int(i); 有這一樣的效果。果然是搞語言標準的人才能提出的問題。
 
 <fieldset>
 <legend>b.cpp</legend>
@@ -450,7 +448,7 @@ p126 提到的例子我看不懂, P(Q); Q(P) 還真是怪異。
 </pre>
 </fieldset>
 
-這是 6.3.2 p127 提到的暫時物件生命周期, 我寫了個完整程式碼並測試。
+這是 6.3.2 p127 提到的暫時物件生命周期, 我寫了個完整程式並實際測試。
 
 <fieldset>
 <legend>t.cpp</legend>
@@ -498,18 +496,18 @@ p126 提到的例子我看不懂, P(Q); Q(P) 還真是怪異。
 </pre>
 </fieldset>
 
-和書中所提結果一樣, L38 之後, 暫時物件就解構了， L39 的 p 就不能保證其正確性。
+和書中所提結果一樣, L38 之後, 暫時物件就解構了， L39 的 p 就不能保證其正確性。讓我吃驚, 我之前沒想過這樣的問題。
 
 6.5 提到兩個沒被接受的特性, keyword argument, restricted pointers, restricted pointers 似乎在 c99 已經提供了 restrict keyword, 用來處理兩段記憶體有無重疊。
 ref: <a href="http://liquid0118.pixnet.net/blog/post/48494846-c%E9%97%9C%E9%8D%B5%E5%AD%97----volatile,-restrict">C關鍵字 volatile, restrict</a>
 
-6.5.3 character set 提到了很有趣的往事, 原來 # (??=), \(??/) 這些表示法的由來, 我好奇很久了。
+6.5.3 character set 提到了很有趣的往事, 說明 # (??=), \(??/) 這些表示法的由來, 我好奇很久了。
 
 <a href="https://picasaweb.google.com/lh/photo/i7RDHA_pUuRhhR5Hvgtk-B7lyzyq0Rg6WnM09MTnQXU?feat=embedwebsite"><img height="640" src="https://lh4.googleusercontent.com/-J0d7s5hwuvw/Uqr8cQkkFzI/AAAAAAAAulM/RTvt1GyvAXI/s640/P1350142.JPG" width="480" /></a>
 
 這是同一個程式在不同 character set 上的呈獻方式, 就算是 Bjarne 也很難看懂那些丹麥字母在 c 程式裡頭的意思吧?
 
-{, } 在丹麥的字母表上, 會是 æ, å, 這想必令丹麥人頭痛不已。
+{, } 在丹麥的字母表上, 會是 æ, å, 這想必令丹麥人頭痛不已, 所以大括弧就變成了 æ, å。
 
 另外一例:
 <fieldset>
@@ -525,7 +523,7 @@ ref: <a href="http://liquid0118.pixnet.net/blog/post/48494846-c%E9%97%9C%E9%8D%B
 </fieldset>
 
 可以寫成這樣:
-and 是可以用的。
+and 是可以用的, 相信讓不少人訝異。
 
 <fieldset>
 <legend>a.c</legend>
@@ -539,21 +537,20 @@ and 是可以用的。
 </pre>
 </fieldset>
 
-第七章比較軟, 和 c++ 的推廣/成長有關, The C++ Report, The C++ Journal (很可惜, 已經停刊) 的創刊, Bjarne 自己的書被翻譯了十幾中語言。PC 上的編譯器從 Cfront 的移植到完全是自己開發的商業用的 c++ compiler。
+第七章比較軟, 和 c++ 的推廣/成長有關, The C++ Report, The C++ Journal (很可惜, 已經停刊) 的創刊, Bjarne 自己的書被翻譯了十幾中語言。PC 上的編譯器從 Cfront 的移植到完全是自己開發的商業用的 c++ 編譯器。
 
-c++ 學習上的幾個問題, 是不是先學 c? 需要學 smalltalk 嗎? 擔心使用 c++ 新特徵帶來的效率問題 ... 7.2 (6 頁) 就花了我一小時閱讀。
+c++ 學習上的幾個問題, 是不是先學 c? 需要學 smalltalk 嗎? 擔心使用 c++ 新特徵帶來的效率問題 ... 7.2 (6 頁) 就花了我一小時閱讀 (還是覺得是翻譯的問題)。
 
 [Russo, 1988, A C++ Interpreter for Scheme]
 [Russo, 1990, C++ and Operating System Performance]
 [Keffer, 1992, Why C++ Will Replace Fortran]
 這三篇在討論 c++ 的效率, 還是有人懷疑 c++ 的效率。
 
-
-c++ 使用的人數統計, 1979/10 只有一個人使用, 誰呢? 還會有別人嗎?
+有趣的 c++ 使用人數統計, 1979/10 只有一個人使用, 誰呢? 還會有別人嗎?
 
 <a href="https://picasaweb.google.com/lh/photo/1ExIO007T5ktF9V653C4pB7lyzyq0Rg6WnM09MTnQXU?feat=embedwebsite"><img height="480" src="https://lh4.googleusercontent.com/-KjjEep6Kq8Y/Uqr8fp9vwWI/AAAAAAAAulc/NpyUtLgQsyk/s640/P1350144.JPG" width="640" /></a>
 
-8.2.1 談到幾個設計 libary 的原則, 我覺得很有用, 列出來給大家參考, 簡體中文翻譯實在粗糙, 我還是打英文好了, 並不太難懂。
+8.2.1 談到幾個設計 libary 的原則, 我覺得很有參考價值, 列出來給大家欣賞, 簡體中文翻譯實在粗糙, 我還是打英文好了, 並不太難懂。
 
 <ul>
 <li>Emphasize run-time efficiency?</li>
@@ -571,9 +568,9 @@ c++ 使用的人數統計, 1979/10 只有一個人使用, 誰呢? 還會有別�
 p 165 提到 iostream 影響了 char 的定義, 我整理了一篇：
 <a href="http://descent-incoming.blogspot.tw/2013/12/c-character-literal-is-different-from-c.html">c character literal is different from c++</a>
 
-第九章提到對 c++ 的回顧, 從這章可以看出 Bjarne 對 c++ 很有信心, 可以用於大多數的開發環境, 從低階系統程式設計到高階應用程式載到嵌入式系統, 都能用 c++ 來開發, Bjarne 對效率上的謹慎, 對物件導向的支援皆花了不少苦心, 有這樣的自信也能想像, 他應該很得意自己開發的 c++ 語言吧!我也很喜歡 c++, 不過 2013 競爭對手/開發環境也不同於 1994, c++ 要面對更多的挑戰。
+第九章提到對 c++ 的回顧, 從這章可以看出 Bjarne 對 c++ 很有信心, 可以用於大多數的開發環境, 從低階系統程式設計到高階應用程式載到嵌入式系統, 都能用 c++ 來開發, Bjarne 對效率上的謹慎, 對物件導向的支援, 對於泛型的設計皆花了不少苦心, 有這樣的自信也能想像, 他應該很得意自己開發的 c++ 語言吧! 我也很喜歡 c++, 不過 2013 競爭對手/開發環境也不同於 1994, c++ 要面對更多的挑戰。
 
-簡體中文版本翻譯的實在難看, 也很枯燥乏味 (我認為翻譯要付很大責任), 第一部分就花了我不少時間, 也對於 c++ 的技術沒太多幫助, 我只是因為喜歡 c++ 所以才看這本書, 真希望侯老師可以翻譯這本, 應該可以縮短我的閱讀時間。
+簡體中文版本翻譯的實在很難讀, 大多數章節讀來詰屈聱牙, 也很枯燥乏味 (我認為翻譯要付很大責任, 這本書讀來不應該是這樣), 第一部分就花了我不少時間, 對於 c++ 的技術本書沒太多幫助, 我只是因為喜歡 c++ 所以才看這本書, 真希望侯老師可以翻譯這本, 應該可以縮短我的閱讀時間。
 
 接下來不急著閱讀第二部份, 轉換學習的東西, 看點新技術。
 
