@@ -177,6 +177,43 @@ l
 m
 n
 </pre>
+
+a.6 的問題很有趣, 如何判斷一個變數是 unsigned/signed, 這可不是單純的考試題目, 在 printf 中就會用到這個了。
+
+這篇提出了 ansi 的解答版本, 我想了老半天實在想不到答案, 原來要用這招, 厲害。
+http://stackoverflow.com/questions/7316862/how-to-determine-whether-a-variable-is-unsigned-or-not-in-ansi-c
+
+stackoverflow 的答案沒有比較高竿, 在這個答案上, 很多是沒有幫助或是錯的, 用我生硬的英文看了幾篇回文之後, 終於看到這個答案。
+#define ISUNSIGNED(a) (a>=0 && ((a=~a)>=0 ? (a=~a, 1) : (a=~a, 0)))
+
+#define ISUNSIGNED(a) (a >= a-a && ~a >= a-a)
+是錯的, 我覺得很奇怪, 提出答案的人都不事先試試看的嗎? 把這行輸入程式碼一點也不難阿? 這答案被下面一位網友吐嘈 (Artefacto: http://stackoverflow.com/questions/7469915/value-vs-type-code-to-determine-if-a-variable-is-signed-or-not), 根本沒有用。
+
+<fieldset><legend>s.c</legend>
+<pre style="white-space: pre-wrap;">
+<b> 1</b> #include &quot;type.h&quot;
+<b> 2</b>
+<b> 3</b> #include &lt;stdio.h&gt;
+<b> 4</b>
+<b> 5</b> int main(int argc, char *argv[])
+<b> 6</b> {
+<b> 7</b>   u16 a = 0xffff;
+<b> 8</b>   s16 a1 = 0xffff;
+<b> 9</b>   printf(&quot;a: %d\n&quot;, a);
+<b>10</b>   printf(&quot;a1: %d\n&quot;, a1);
+<b>11</b>   return 0;
+<b>12</b> }
+</pre>
+</fieldset>
+
+result:
+<pre class="cmd">
+a: 65535
+a1: -1
+</pre>
+
+printf 知道 0xffff 要印出 65535 和 -1, 所以在這之前, printf 得先知道 0xffff 到底代表 65535 還是 -1, 你有什麼好辦法嗎?
+
 本書翻譯的不是很好, 詞句有些不順暢, 讀來詰屈聱牙, 雖然薄薄一本, 還是得花點心力看完, 下一本就好多了。
 
 <span style="font-size: x-large;">c trap and pitfalls (C 陷阱与缺陷)</span>
