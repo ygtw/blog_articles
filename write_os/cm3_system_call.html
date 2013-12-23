@@ -1,5 +1,7 @@
 我好像忘記提 system call 的實作, 雖然我在 simple_os 已經實作過 system call, 不過那時候的程式碼是從書上抄來, 我打算在 arm cortex m3 重新實作一次, 果然遇到不少麻煩, 別人的東西就是別人的, 沒有親身體會這段, 就沒有烙印在自己身上的記憶。現在來補上這塊拼圖。
 
+system call 會涉及到 context switch, 所以需要先理解 context switch (可不是教科書說的理論那種理解, 而是能寫出 context switch code 的那種理解) 才能看懂這裡提到的程式碼。 
+
 <b>麻煩一</b>
 在使用 svc 來實作 system call, 還是要保存 context, 也就是 context switch 要做的事情, 都要再做一次, 怎麼讓他們共用這段程式碼呢？
 
@@ -225,4 +227,48 @@ get_ticks() 是 system call, 將 {sys_get_ticks(), arg} 當成參數傳給 servi
 
 程式若用上兩個 stack 會簡單點, 但這麼<b>直白</b>的程式, 比較好理解整個來龍去脈, 裡頭有著 user process, kernel code 的 stack 切換, 可以了解到一個 system call 的複雜, 和一般的 function call 可是有本質上的不同。
 
-三個麻煩順利解決 (你說麻煩一沒解決是吧, 管他的, 做出來最重要, 美感的話再說了), 痛快。
+三個麻煩順利解決 (你說<b>麻煩一</b>沒解決是吧, 管他的, 做出來最重要, 美感的話再說了), 痛快。
+
+system call 和 function call 有什麼不同呢? Expert C Programming a.4 提到了這個面試題目, 還很好心地給了答案:
+
+<table border="1"><caption> Library Call versus System Call </caption> <tbody>
+<tr> <td>
+Library Call </td> <td>
+System Call</td> </tr>
+<tr> <td>
+The C library is the same on every ANSI C implementation</td> <td>
+The systems calls are different in each OS</td> </tr>
+<tr> <td>
+Is a call to a routine in a library </td> <td>
+Is a call to the kernel for a service</td> </tr>
+<tr> <td>
+Linked with the user program 
+
+</td> <td>
+Is an entry point to the OS</td> </tr>
+<tr> <td>
+Executes in the user address space </td> <td>
+Executes in the kernel address space</td> </tr>
+<tr> <td>
+Counts as part of the "user" time </td> <td>
+Counts as part of the "system" time</td> </tr>
+<tr> <td>
+Has the lower overhead of a procedure call </td> <td>
+Has high overhead context switch to kernel and
+back</td> </tr>
+<tr> <td>
+There are about 300 routines in the C library libc </td> <td>
+There are about 90 system calls in UNIX, (fewer in MS-DOS)</td> </tr>
+<tr> <td>
+Documented in Section 3 of the UNIX OS
+manual
+
+</td> <td>
+Documented in Section 2 of the UNIX OS manual</td> </tr>
+<tr> <td>
+Typical C library calls: system, fprintf, malloc 
+
+</td> <td>
+Typical system calls: chdir, fork, write, brk</td> </tr>
+</tbody></table>
+
