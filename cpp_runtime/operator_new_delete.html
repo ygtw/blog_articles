@@ -1,0 +1,167 @@
+這一樣是作業系統等級的程式碼, 在完成了 global/static object 的研究之後, 來看看怎麼實作 new/delete。
+
+<fieldset>
+<legend>no_new_delete.cpp</legend>
+<pre style="white-space: pre-wrap;"><b> 1</b> <span style="color: #2040a0;">__asm__</span><span style="color: #4444ff;">(</span><span style="color: green;">".code16gcc<span style="color: #77dd77;">\n</span>"</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b> 2</b> <span style="color: blue;"><b>#include <span style="color: green;">"io.h"</span></b></span>
+<b> 3</b> <span style="color: blue;"><b>#include <span style="color: green;">"obj.h"</span></b></span>
+<b> 4</b> 
+<b> 5</b> <b>typedef</b> <b>signed</b> <b>char</b> <span style="color: #2040a0;">s8</span><span style="color: #4444ff;">;</span>
+<b> 6</b> <b>typedef</b> <b>signed</b> <b>short</b> <span style="color: #2040a0;">s16</span><span style="color: #4444ff;">;</span>
+<b> 7</b> <b>typedef</b> <b>signed</b> <b>int</b> <span style="color: #2040a0;">s32</span><span style="color: #4444ff;">;</span>
+<b> 8</b> 
+<b> 9</b> <b>typedef</b> <b>unsigned</b> <b>char</b> <span style="color: #2040a0;">u8</span><span style="color: #4444ff;">;</span>
+<b>10</b> <b>typedef</b> <b>unsigned</b> <b>short</b> <span style="color: #2040a0;">u16</span><span style="color: #4444ff;">;</span>
+<b>11</b> <b>typedef</b> <b>unsigned</b> <b>int</b> <span style="color: #2040a0;">u32</span><span style="color: #4444ff;">;</span>
+<b>12</b> 
+<b>13</b> <span style="color: blue;"><b>#define BOCHS_MB __asm__ __volatile__(<span style="color: green;">"xchg %bx, %bx"</span>);</b></span>
+<b>14</b> 
+<b>15</b> <b>extern</b> <b>int</b> <span style="color: #2040a0;">_start_ctors</span><span style="color: #4444ff;">;</span>
+<b>16</b> <b>extern</b> <b>int</b> <span style="color: #2040a0;">_end_ctors</span><span style="color: #4444ff;">;</span>
+<b>17</b> 
+<b>18</b> <b>void</b> <span style="color: #2040a0;">s16_print_int</span><span style="color: #4444ff;">(</span><b>int</b> <span style="color: #2040a0;">i</span>, <b>int</b> <span style="color: #2040a0;">radix</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>19</b> <b>void</b> <span style="color: #2040a0;">print_str</span><span style="color: #4444ff;">(</span><b>const</b> <b>char</b>   <span style="color: #4444ff;">*</span><span style="color: #2040a0;">s</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>20</b> 
+<b>21</b> <b>extern</b> <b>int</b> <span style="color: #2040a0;">obj_count</span><span style="color: #4444ff;">;</span>
+<b>22</b> 
+<b>23</b> 
+<b>24</b> <b>const</b> <b>int</b> <span style="color: #2040a0;">SOME_BASE_ADDRESS</span> <span style="color: #4444ff;">=</span> <span style="color: red;">0x500</span><span style="color: #4444ff;">;</span>
+<b>25</b> 
+<b>26</b> <b>void</b> <span style="color: #2040a0;">myfree</span><span style="color: #4444ff;">(</span><b>void</b> <span style="color: #4444ff;">*</span><span style="color: #2040a0;">ptr</span><span style="color: #4444ff;">)</span>
+<b>27</b> <span style="color: #4444ff;"><b>{</b></span>
+<b>28</b>   <span style="color: #2040a0;">print_str</span><span style="color: #4444ff;">(</span><span style="color: green;">"myfree<span style="color: #77dd77;">\r</span><span style="color: #77dd77;">\n</span>"</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>29</b> <span style="color: #4444ff;"><b>}</b></span>
+<b>30</b> 
+<b>31</b> <b>void</b> <span style="color: #4444ff;">*</span><span style="color: #2040a0;">mymalloc</span><span style="color: #4444ff;">(</span><b>int</b> <span style="color: #2040a0;">size</span><span style="color: #4444ff;">)</span>
+<b>32</b> <span style="color: #4444ff;"><b>{</b></span>
+<b>33</b>   <span style="color: #2040a0;">print_str</span><span style="color: #4444ff;">(</span><span style="color: green;">"size: "</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>34</b>   <span style="color: #2040a0;">s16_print_int</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">size</span>, <span style="color: red;">10</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>35</b>   <span style="color: #2040a0;">print_str</span><span style="color: #4444ff;">(</span><span style="color: green;">"<span style="color: #77dd77;">\r</span><span style="color: #77dd77;">\n</span>"</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>36</b>   <b>static</b> <b>char</b> <span style="color: #2040a0;">mem</span><span style="color: #4444ff;">[</span><span style="color: red;">256</span><span style="color: #4444ff;">]</span><span style="color: #4444ff;">;</span>
+<b>37</b>   <b>return</b> <span style="color: #2040a0;">mem</span><span style="color: #4444ff;">;</span>
+<b>38</b> <span style="color: #4444ff;"><b>}</b></span>
+<b>39</b> 
+<b>40</b> <span style="color: blue;"><b>#if 0</b></span>
+<b>41</b> <span style="color: #444444;">// ref: http://wiki.osdev.org/C%2B%2B#The_Operators_.27new.27_and_.27delete.27</span>
+<b>42</b> <b>void</b> <span style="color: #4444ff;">*</span><b>operator</b> <b>new</b><span style="color: #4444ff;">(</span><b>unsigned</b> <b>int</b> <span style="color: #2040a0;">s</span><span style="color: #4444ff;">)</span>
+<b>43</b> <span style="color: #4444ff;"><b>{</b></span>
+<b>44</b>   <b>return</b> <span style="color: #2040a0;">mymalloc</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">s</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>45</b> <span style="color: #4444ff;"><b>}</b></span>
+<b>46</b> 
+<b>47</b> <b>void</b> <b>operator</b> <b>delete</b><span style="color: #4444ff;">(</span><b>void</b> <span style="color: #4444ff;">*</span><span style="color: #2040a0;">p</span><span style="color: #4444ff;">)</span>
+<b>48</b> <span style="color: #4444ff;"><b>{</b></span>
+<b>49</b>   <span style="color: #2040a0;">myfree</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">p</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>50</b> <span style="color: #4444ff;"><b>}</b></span>
+<b>51</b> <span style="color: blue;"><b>#endif</b></span>
+<b>52</b> 
+<b>53</b> <b>extern</b> <span style="color: green;">"C"</span> <b>int</b> <span style="color: #2040a0;">cpp_main</span><span style="color: #4444ff;">(</span><b>void</b><span style="color: #4444ff;">)</span>
+<b>54</b> <span style="color: #4444ff;"><b>{</b></span>
+<b>55</b>   <span style="color: #2040a0;">print_str</span><span style="color: #4444ff;">(</span><span style="color: green;">"cpp_main<span style="color: #77dd77;">\r</span><span style="color: #77dd77;">\n</span>"</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>56</b>   <span style="color: #2040a0;">s16_print_int</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">obj_count</span>, <span style="color: red;">10</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>57</b>   <span style="color: #2040a0;">print_str</span><span style="color: #4444ff;">(</span><span style="color: green;">"<span style="color: #77dd77;">\r</span><span style="color: #77dd77;">\n</span>"</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>58</b>   
+<span style="background-color: #999999;"><b>59</b>   <span style="color: #2040a0;">Io</span> <span style="color: #4444ff;">*</span><span style="color: #2040a0;">io_p</span> <span style="color: #4444ff;">=</span> <b>new</b> <span style="color: #2040a0;">Io</span><span style="color: #4444ff;">;</span></span>
+<b>60</b>   <b>const</b> <b>char</b> <span style="color: #4444ff;">*</span><span style="color: #2040a0;">ver</span><span style="color: #4444ff;">=</span><span style="color: #2040a0;">__VERSION__</span><span style="color: #4444ff;">;</span>
+<b>61</b>   <span style="color: #2040a0;">io_p</span><span style="color: #4444ff;">-</span><span style="color: #4444ff;">&gt;</span><span style="color: #2040a0;">print</span><span style="color: #4444ff;">(</span><span style="color: green;">"io_p g++ version: "</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>62</b>   <span style="color: #2040a0;">io_p</span><span style="color: #4444ff;">-</span><span style="color: #4444ff;">&gt;</span><span style="color: #2040a0;">print</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">ver</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>63</b>   <span style="color: #2040a0;">io_p</span><span style="color: #4444ff;">-</span><span style="color: #4444ff;">&gt;</span><span style="color: #2040a0;">print</span><span style="color: #4444ff;">(</span><span style="color: green;">"<span style="color: #77dd77;">\r</span><span style="color: #77dd77;">\n</span>"</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>64</b>   <b>delete</b> <span style="color: #2040a0;">io_p</span><span style="color: #4444ff;">;</span>
+<b>65</b> 
+<b>66</b>   <b>return</b> <span style="color: red;">0</span><span style="color: #4444ff;">;</span>
+<b>67</b> <span style="color: #4444ff;"><b>}</b></span>
+</pre>
+</fieldset>
+
+L59 和我們平常使用的 c++ new 用法一模一樣, new 會做類似 malloc 的動作, 先去要一塊記憶體, 並呼叫 ctor, 可是我根本沒有去要記憶體的程式碼 (記得我們沒有 c++ runtime 嗎), 那來編譯看看會怎麼樣?
+
+<pre class="cmd">descent@debian-vm:dos_cpp$ make new_test.bin
+ld -m elf_i386 -static -Tcpp.ld -nostdlib -M -o new_test.elf cpp_init.o new_test.o io.o cpp_abi.o obj.o dos_io.o &gt; new_test.elf.map
+new_test.o: In function `cpp_main':
+/home/descent/git/simple_os/cpp_runtime/global_object/dos_cpp/new_test.cpp:59: undefined reference to `operator new(unsigned int)'
+/home/descent/git/simple_os/cpp_runtime/global_object/dos_cpp/new_test.cpp:64: undefined reference to `operator delete(void*)'
+make: *** [new_test.elf] Error 1
+</pre>
+
+呵呵, 果然有錯誤, 沒錯誤反而令我害怕。訊息很容易理解, 沒定義 operator new, operator delete, 所以怎麼辦, 自己定義就好了。
+
+new_test.cpp L41 ~ L49 就提供了 operator new, operator delete,比想像中還要簡單吧, 這時候在編譯就沒問題了。有問題的是那個 mymalloc 要怎麼寫是吧?
+
+這個的確是個問題, 得先搞定記憶體管理才能把這部份寫好, 一開始也困擾我許久, 因為我這部份還沒做得很好 (有趣吧! 我的 simple os 竟然沒有記憶體管理機制), 不過我只想搞定 c++ runtime new/delete, 並不是要實作記憶體管理機制 (這個就不容易了), 所以想了個簡單的辦法來模擬 malloc 的行為。
+
+L26, L31 的 mymalloc/myfree 應該很簡單, 簡單到不用說明吧!
+
+<fieldset>
+<legend>new_test.cpp</legend>
+<pre style="white-space: pre-wrap;"><b> 1</b> <span style="color: #2040a0;">__asm__</span><span style="color: #4444ff;">(</span><span style="color: green;">".code16gcc<span style="color: #77dd77;">\n</span>"</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b> 2</b> <span style="color: blue;"><b>#include <span style="color: green;">"io.h"</span></b></span>
+<b> 3</b> <span style="color: blue;"><b>#include <span style="color: green;">"obj.h"</span></b></span>
+<b> 4</b> 
+<b> 5</b> <b>typedef</b> <b>signed</b> <b>char</b> <span style="color: #2040a0;">s8</span><span style="color: #4444ff;">;</span>
+<b> 6</b> <b>typedef</b> <b>signed</b> <b>short</b> <span style="color: #2040a0;">s16</span><span style="color: #4444ff;">;</span>
+<b> 7</b> <b>typedef</b> <b>signed</b> <b>int</b> <span style="color: #2040a0;">s32</span><span style="color: #4444ff;">;</span>
+<b> 8</b> 
+<b> 9</b> <b>typedef</b> <b>unsigned</b> <b>char</b> <span style="color: #2040a0;">u8</span><span style="color: #4444ff;">;</span>
+<b>10</b> <b>typedef</b> <b>unsigned</b> <b>short</b> <span style="color: #2040a0;">u16</span><span style="color: #4444ff;">;</span>
+<b>11</b> <b>typedef</b> <b>unsigned</b> <b>int</b> <span style="color: #2040a0;">u32</span><span style="color: #4444ff;">;</span>
+<b>12</b> 
+<b>13</b> <span style="color: blue;"><b>#define BOCHS_MB __asm__ __volatile__(<span style="color: green;">"xchg %bx, %bx"</span>);</b></span>
+<b>14</b> 
+<b>15</b> <b>extern</b> <b>int</b> <span style="color: #2040a0;">_start_ctors</span><span style="color: #4444ff;">;</span>
+<b>16</b> <b>extern</b> <b>int</b> <span style="color: #2040a0;">_end_ctors</span><span style="color: #4444ff;">;</span>
+<b>17</b> 
+<b>18</b> <b>void</b> <span style="color: #2040a0;">s16_print_int</span><span style="color: #4444ff;">(</span><b>int</b> <span style="color: #2040a0;">i</span>, <b>int</b> <span style="color: #2040a0;">radix</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>19</b> <b>void</b> <span style="color: #2040a0;">print_str</span><span style="color: #4444ff;">(</span><b>const</b> <b>char</b>   <span style="color: #4444ff;">*</span><span style="color: #2040a0;">s</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>20</b> 
+<b>21</b> <b>extern</b> <b>int</b> <span style="color: #2040a0;">obj_count</span><span style="color: #4444ff;">;</span>
+<b>22</b> 
+<b>23</b> 
+<b>24</b> <b>const</b> <b>int</b> <span style="color: #2040a0;">SOME_BASE_ADDRESS</span> <span style="color: #4444ff;">=</span> <span style="color: red;">0x500</span><span style="color: #4444ff;">;</span>
+<b>25</b> 
+<b>26</b> <b>void</b> <span style="color: #2040a0;">myfree</span><span style="color: #4444ff;">(</span><b>void</b> <span style="color: #4444ff;">*</span><span style="color: #2040a0;">ptr</span><span style="color: #4444ff;">)</span>
+<b>27</b> <span style="color: #4444ff;"><b>{</b></span>
+<b>28</b>   <span style="color: #2040a0;">print_str</span><span style="color: #4444ff;">(</span><span style="color: green;">"myfree<span style="color: #77dd77;">\r</span><span style="color: #77dd77;">\n</span>"</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>29</b> <span style="color: #4444ff;"><b>}</b></span>
+<b>30</b> 
+<b>31</b> <b>void</b> <span style="color: #4444ff;">*</span><span style="color: #2040a0;">mymalloc</span><span style="color: #4444ff;">(</span><b>int</b> <span style="color: #2040a0;">size</span><span style="color: #4444ff;">)</span>
+<b>32</b> <span style="color: #4444ff;"><b>{</b></span>
+<b>33</b>   <span style="color: #2040a0;">print_str</span><span style="color: #4444ff;">(</span><span style="color: green;">"size: "</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>34</b>   <span style="color: #2040a0;">s16_print_int</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">size</span>, <span style="color: red;">10</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>35</b>   <span style="color: #2040a0;">print_str</span><span style="color: #4444ff;">(</span><span style="color: green;">"<span style="color: #77dd77;">\r</span><span style="color: #77dd77;">\n</span>"</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>36</b>   <b>static</b> <b>char</b> <span style="color: #2040a0;">mem</span><span style="color: #4444ff;">[</span><span style="color: red;">256</span><span style="color: #4444ff;">]</span><span style="color: #4444ff;">;</span>
+<b>37</b>   <b>return</b> <span style="color: #2040a0;">mem</span><span style="color: #4444ff;">;</span>
+<b>38</b> <span style="color: #4444ff;"><b>}</b></span>
+<b>39</b> 
+<b>40</b> <span style="color: #444444;">// ref: http://wiki.osdev.org/C%2B%2B#The_Operators_.27new.27_and_.27delete.27</span>
+<span style="background-color: #cccccc;"><b>41</b> <b>void</b> <span style="color: #4444ff;">*</span><b>operator</b> <b>new</b><span style="color: #4444ff;">(</span><b>unsigned</b> <b>int</b> <span style="color: #2040a0;">s</span><span style="color: #4444ff;">)</span>
+<b>42</b> <span style="color: #4444ff;"><b>{</b></span>
+<b>43</b>   <b>return</b> <span style="color: #2040a0;">mymalloc</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">s</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>44</b> <span style="color: #4444ff;"><b>}</b></span></span>
+<b>45</b> 
+<span style="background-color: #cccccc;"><b>46</b> <b>void</b> <b>operator</b> <b>delete</b><span style="color: #4444ff;">(</span><b>void</b> <span style="color: #4444ff;">*</span><span style="color: #2040a0;">p</span><span style="color: #4444ff;">)</span>
+<b>47</b> <span style="color: #4444ff;"><b>{</b></span>
+<b>48</b>   <span style="color: #2040a0;">myfree</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">p</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>49</b> <span style="color: #4444ff;"><b>}</b></span></span>
+<b>50</b> 
+<b>51</b> <b>extern</b> <span style="color: green;">"C"</span> <b>int</b> <span style="color: #2040a0;">cpp_main</span><span style="color: #4444ff;">(</span><b>void</b><span style="color: #4444ff;">)</span>
+<b>52</b> <span style="color: #4444ff;"><b>{</b></span>
+<b>53</b>   <span style="color: #2040a0;">print_str</span><span style="color: #4444ff;">(</span><span style="color: green;">"cpp_main<span style="color: #77dd77;">\r</span><span style="color: #77dd77;">\n</span>"</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>54</b>   <span style="color: #2040a0;">s16_print_int</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">obj_count</span>, <span style="color: red;">10</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>55</b>   <span style="color: #2040a0;">print_str</span><span style="color: #4444ff;">(</span><span style="color: green;">"<span style="color: #77dd77;">\r</span><span style="color: #77dd77;">\n</span>"</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>56</b>   
+<b>57</b>   <span style="color: #2040a0;">Io</span> <span style="color: #4444ff;">*</span><span style="color: #2040a0;">io_p</span> <span style="color: #4444ff;">=</span> <b>new</b> <span style="color: #2040a0;">Io</span><span style="color: #4444ff;">;</span>
+<b>58</b>   <b>const</b> <b>char</b> <span style="color: #4444ff;">*</span><span style="color: #2040a0;">ver</span><span style="color: #4444ff;">=</span><span style="color: #2040a0;">__VERSION__</span><span style="color: #4444ff;">;</span>
+<b>59</b>   <span style="color: #2040a0;">io_p</span><span style="color: #4444ff;">-</span><span style="color: #4444ff;">&gt;</span><span style="color: #2040a0;">print</span><span style="color: #4444ff;">(</span><span style="color: green;">"io_p g++ version: "</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>60</b>   <span style="color: #2040a0;">io_p</span><span style="color: #4444ff;">-</span><span style="color: #4444ff;">&gt;</span><span style="color: #2040a0;">print</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">ver</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>61</b>   <span style="color: #2040a0;">io_p</span><span style="color: #4444ff;">-</span><span style="color: #4444ff;">&gt;</span><span style="color: #2040a0;">print</span><span style="color: #4444ff;">(</span><span style="color: green;">"<span style="color: #77dd77;">\r</span><span style="color: #77dd77;">\n</span>"</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>62</b>   <b>delete</b> <span style="color: #2040a0;">io_p</span><span style="color: #4444ff;">;</span>
+<b>63</b> 
+<b>64</b>   <b>return</b> <span style="color: red;">0</span><span style="color: #4444ff;">;</span>
+<b>65</b> <span style="color: #4444ff;"><b>}</b></span>
+</pre>
+</fieldset>
+
+L57 new 發動時, L41 operator new 會被 c++ 編譯器傳入正確的 class size, 在 Io class 這個例子, size 是 4, 下圖便是在 dos 下的執行結果。
+
+<a href="https://picasaweb.google.com/lh/photo/EVXsRNKAIXz4UTQWYmyZQdMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="398" src="https://lh5.googleusercontent.com/-TwMqkpMRUWc/Urwv-tWOP2I/AAAAAAAAvAQ/fOro1jdYCVs/s640/cpp_new_delete.jpg" width="640" /></a>
+
+比起 global/static object, operator new/delete 簡單到令我驚訝。
