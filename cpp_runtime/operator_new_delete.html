@@ -1,4 +1,6 @@
-這一樣是作業系統等級的程式碼, 在完成了 global/static object 的研究之後, 來看看怎麼實作 new/delete。
+這不是在說明 overloaded new, 這件事情所有的 c++ 入門書籍都會告知你 (我儘量不去寫書上有的東西), 若你看的那本沒有, 可以考慮換掉它。
+
+本範例一樣是作業系統等級的程式碼, 在完成了 global/static object 的研究之後, 來看看怎麼實作 new/delete, 在 c++ 若不能使用 new/delete, 好像有點怪怪的。
 
 <fieldset>
 <legend>no_new_delete.cpp</legend>
@@ -72,7 +74,7 @@
 </pre>
 </fieldset>
 
-L59 和我們平常使用的 c++ new 用法一模一樣, new 會做類似 malloc 的動作, 先去要一塊記憶體, 並呼叫 ctor, 可是在作業系統之前的程式, 根本沒有記憶體管理的程式碼 (記得我們沒有 c++ runtime 嗎), 那來編譯看看會怎麼樣?
+L59 和我們平常使用的 c++ new 用法一模一樣, new 會做類似 malloc 的動作, 先去要一塊記憶體, 並呼叫 ctor, 可是在作業系統之前的程式, 根本沒有記憶體管理的程式碼 (記得我們沒有 c++ runtime 來幫我們做這件事情嗎?), 來看看編譯會怎麼樣?
 
 <pre class="cmd">descent@debian-vm:dos_cpp$ make new_test.bin
 ld -m elf_i386 -static -Tcpp.ld -nostdlib -M -o new_test.elf cpp_init.o new_test.o io.o cpp_abi.o obj.o dos_io.o &gt; new_test.elf.map
@@ -88,7 +90,7 @@ new_test.cpp L41 ~ L49 就提供了 operator new, operator delete, 比想像中�
 
 這個的確是個問題, 得先搞定記憶體管理才能把這部份寫好, 一開始也困擾我許久, 因為我這部份還沒做得很好 (有趣吧! 我的 simple os 竟然沒有記憶體管理機制), 不過我只想搞定 c++ runtime new/delete, 並不是要實作記憶體管理機制 (這個就不容易了), 所以想了個簡單的辦法來模擬 malloc 的行為。
 
-L26, L31 的 mymalloc/myfree 應該很簡單, 簡單到不用說明吧!
+L26, L31 的 mymalloc/myfree 應該很簡單, 簡單到不用說明吧?
 
 <fieldset>
 <legend>new_test.cpp</legend>
