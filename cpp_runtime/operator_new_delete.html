@@ -84,7 +84,7 @@ new_test.o: In function `cpp_main':
 make: *** [new_test.elf] Error 1
 </pre>
 
-呵呵, 果然有預期的錯誤, 要是沒錯誤反而令我害怕。訊息很容易理解, 沒定義 operator new, operator delete, 所以怎麼辦, 自己定義就好了。
+呵呵, 果然有預期的錯誤, 要是沒錯誤反而令我害怕。訊息很容易理解, 沒定義 operator new, operator delete, 所以該怎麼辦? 不難, 自己定義就好了。
 
 new_test.cpp L41 ~ L49 就提供了 operator new, operator delete, 比想像中還要簡單吧! 這時候再編譯就沒問題了。有問題的是那個 mymalloc 要怎麼寫是吧?
 
@@ -166,7 +166,7 @@ L57 new 發動時, L41 operator new 會被 c++ 編譯器傳入正確的 class si
 
 <a href="https://picasaweb.google.com/lh/photo/EVXsRNKAIXz4UTQWYmyZQdMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="398" src="https://lh5.googleusercontent.com/-TwMqkpMRUWc/Urwv-tWOP2I/AAAAAAAAvAQ/fOro1jdYCVs/s640/cpp_new_delete.jpg" width="640" /></a>
 
-比起 global/static object, operator new/delete 簡單到令我驚訝。
+比起 global/static object, operator new/delete 簡單到令我驚訝。所以現在你知道在作業系統之下寫 c++ 程式, c++ runtime library 的辛勞了。
 
 source code:
 https://github.com/descent/simple_os
