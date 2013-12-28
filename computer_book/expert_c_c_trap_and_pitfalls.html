@@ -186,8 +186,9 @@ http://stackoverflow.com/questions/7316862/how-to-determine-whether-a-variable-i
 stackoverflow 的答案沒有比較高竿, 在這個答案上, 很多是沒有幫助或是錯的, 用我生硬的英文看了幾篇回文之後, 終於看到這個答案。
 #define ISUNSIGNED(a) (a>=0 && ((a=~a)>=0 ? (a=~a, 1) : (a=~a, 0)))
 
+另外一個答案：
 #define ISUNSIGNED(a) (a >= a-a && ~a >= a-a)
-是錯的, 我覺得很奇怪, 提出答案的人都不事先試試看的嗎? 把這行輸入程式碼一點也不難阿? 這答案被下面一位網友吐嘈 (Artefacto: http://stackoverflow.com/questions/7469915/value-vs-type-code-to-determine-if-a-variable-is-signed-or-not), 根本沒有用。
+是錯的, 我覺得很奇怪, 提出答案的人都不事先試試看的嗎? 把這行輸入編輯器一點也不難阿? 這答案被下面一位網友吐嘈 (Artefacto: http://stackoverflow.com/questions/7469915/value-vs-type-code-to-determine-if-a-variable-is-signed-or-not), 根本沒有用。
 
 <fieldset><legend>s.c</legend>
 <pre style="white-space: pre-wrap;">
@@ -213,6 +214,8 @@ a1: -1
 </pre>
 
 printf 知道 0xffff 要印出 65535 和 -1, 所以在這之前, printf 得先知道 0xffff 到底代表 65535 還是 -1, 你有什麼好辦法嗎?
+
+#define ISUNSIGNED(type) ((type)0 - 1 > 0)
 
 本書翻譯的不是很好, 詞句有些不順暢, 讀來詰屈聱牙, 雖然薄薄一本, 還是得花點心力看完, 下一本就好多了。
 
