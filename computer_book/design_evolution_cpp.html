@@ -315,22 +315,26 @@
 </td> </tr>
 </tbody></table>
 
-原文版出版日期: 199405, 簡體中文出版於 2002 年, 我買的是 201209 再版第二刷。英文版我好早就已經買了, 不過卻不曾好好閱讀過,  當然是我的英文閱讀能力問題。The C++ Programming Language 我已經讀過 (當然是中文版本), 再來應該讀讀 c++  的歷史了。這是一本在說明 c++ 的歷史以及 c++ 為什麼會這樣設計的回憶錄。
+原文版出版日期: 199405, 簡體中文出版於 2002 年, 我買的是 201209 再版第二刷 (這樣的好書總算在十年後再版, 對無法看原文書的我來說, 實在珍貴)。英文版我好早就已經買了, 不過卻不曾好好閱讀過,  當然是我的英文閱讀能力問題。
 
-<a href="https://picasaweb.google.com/lh/photo/TXSfz-DVld3H02_VwzB2kx7lyzyq0Rg6WnM09MTnQXU?feat=embedwebsite" style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;"><img src="https://lh6.googleusercontent.com/-MRnNlwCY-vU/UmUVxAYYSWI/AAAAAAAAtQU/cgbc1fKDZNw/s400/IMG_6888.JPG" /></a>一開始 Bjarne 談及使用 Simula 來開發他博士論文需要的模擬器與相關的 os 系統。Simula 很好, 也很不好 (效率問題), 最後改用 BCPL 重新把模擬器改寫, 得到了需要的數據, 也順利取得博士學位。
+The C++ Programming Language (3rd) 我已經讀過 (當然是中文版本), 再來應該讀讀 c++  的歷史了。這是一本在說明 c++ 的歷史以及 c++ 為什麼會這樣設計的回憶錄。喜歡 c++ 的程式員應該會有興趣這本書。
+
+<a href="https://picasaweb.google.com/lh/photo/TXSfz-DVld3H02_VwzB2kx7lyzyq0Rg6WnM09MTnQXU?feat=embedwebsite" style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;"><img src="https://lh6.googleusercontent.com/-MRnNlwCY-vU/UmUVxAYYSWI/AAAAAAAAtQU/cgbc1fKDZNw/s400/IMG_6888.JPG" /></a>一開始 Bjarne 談及使用 Simula 來開發他博士論文需要的模擬器與相關的 os 系統。
+
+Simula 很好, 也很不好 (效率問題), 最後改用 BCPL 重新把模擬器改寫, 得到了需要的數據, 也順利取得博士學位。
 
 這時候他對程式語言有了自己的一套想法, 這些概念, 最後都在 c++ 裡頭實現了。
 
 而根據 Bjarne 自己的哲學思想, c++ 就是要支援各種不同的風格, function base, object base, oop, generic programming ... c++11 還來個 functional programming。
 
-p6 有張圖, 秀出一些電腦語言的出生時間點,我很喜歡這張圖, 清楚的了解程式語言的先後順序, 第一個高階語言是 fortran, 第二個是 lisp。
+p6 有張圖, 秀出一些電腦語言的出生時間點, 我很喜歡這張圖, 清楚的說明了程式語言的先後順序, 第一個高階語言是 fortran, 第二個是 lisp。
 
 <a href="https://picasaweb.google.com/lh/photo/ag0ZgKNq1tfnFUOUMrPJ2x7lyzyq0Rg6WnM09MTnQXU?feat=embedwebsite"><img height="800" src="https://lh5.googleusercontent.com/-a6ZmX309Yas/Uq8U1oOjh8I/AAAAAAAAul4/k2zjFTJHES0/s800/cl_.jpg" width="733" /></a> 
 
 p23 提到 Cpre (1981 第一個發佈版本), 這是 c with class 的 preprocessor。
 p34 說明 this 為什麼是 this 而不是 self (取自 simula), 為什麼是 pointer 而不是 reference (因為這時候還沒有 reference)
 
-c 的 f(void), 竟然是被 Bjarne 所遺棄的語法, c++ f() 相當於 c f(void), 這是和 c 不同的地方, 也就是和 c 不相容, 所以 c++ 真的是另外一種語言。
+c 語言的 f(void), 竟然是被 Bjarne 所遺棄的語法, c++ f() 相當於 c f(void), 這是和 c 不同的地方, 也就是和 c 不相容, 所以 c++ 真的是另外一種語言。
 
 2.7 (p37) 這應該是很多人的疑問, 為什麼是架構在 c 而不是發明一個全新的語言? Bjarne 大約用了兩頁在說明原因, 並提到從 simula, algol68, bcpl 那裡「偷」了什麼特性用到 c++ 中。
 
@@ -340,7 +344,7 @@ c++ 一開始被取名為 C84 (一點都不威阿), 後來 Rick Mascitti 提出�
 
 g++ 1.13 在 198712 公佈, 這是第一個 g++ 版本。
 
-cfront (198408 第一個發佈版本) 1986 移植到 pc/at, cfront 並不是 c++ compiler, p59 有張圖可以了解 cfront 的角色, 簡單說透過 cfront 產生的原始碼還要經過 c compiler, 所以才叫 cfront。
+cfront (1984/08 第一個發佈版本) 1986 移植到 pc/at, cfront 並不是 c++ compiler, p59 有張圖可以了解 cfront 的角色, 簡單說透過 cfront 產生的原始碼還要經過 c compiler, 所以才叫 cfront。
 
 c++ 的設計理念之一, 『你只需要為你用的東西付出代價。』用上 class, 和 c 的 struct 一樣, 不會有任何負擔, 加上 virtual function, 呃 ... 這和 c 就不同了, 得付出一點代價。
 
@@ -394,9 +398,9 @@ descent@debianlinux:tmp$
 我之前遇到類似的問題, 現在證實了這個的確是 c++ 程式, 而不是 c 程式。
 <a href="http://descent-incoming.blogspot.tw/2012/09/c-c-global-variable-initialize.html">http://descent-incoming.blogspot.tw/2012/09/c-c-global-variable-initialize.html</a>
 
-簡單說, c++ compiler 產生這個 (test in g++ 4.8.1):
+簡單說明一下 (詳情請參考上述連結) c++ compiler 產生這個 (test in g++ 4.8.1):
 _Z41__static_initialization_and_destruction_0ii()
-幫你完成 sq = fabc(); 動作, 當然也在你不知道的情況下執行了這行程式碼, 所以這麼簡單的一行就要付出一些代價, 程式碼變大, 多了 function call。
+幫你完成 sq = fabc(); 動作, 當然也在你不知道的情況下執行了這行程式碼, 所以這麼簡單的一行就要付出一些代價, 程式碼變大變慢, 多了 function call。
 
 c++ 受到 simula, algo68, clu, ada, ml 的影響。 
 
