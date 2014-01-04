@@ -1,6 +1,6 @@
 <a href="https://picasaweb.google.com/lh/photo/L3oAt90DzNthPG8lk_GxhNMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="480" src="https://lh4.googleusercontent.com/-uBqq6rbiHgw/UmOkcmQqLuI/AAAAAAAAtO8/LeEPRAPRPuQ/s640/IMGP7914.JPG" width="640" /></a>
 
-自然, 我讀的是簡體中文版本: C++语言的设计与演化, 20131015 委託<a href="http://descent-incoming.blogspot.tw/2013/11/0.html" target="_blank">代買</a>, 20131021 拿到, 60.2/86 rmb, 實際款項 83+60.2*5.1 = 390 nt, 不貴, 在台灣書店買可能需要 86*5 = 430 nt, 重點是我在台灣找不到這本書。這篇心得只是第一部份 (1 ~ 9 章)。
+這篇心得只是第二部份 (10 ~  章)。
 
 <h2>
 目录</h2>
@@ -329,3 +329,26 @@ delete[10] p2;
 不過這看來不是好主意是吧? 還是轉嫁給 c++ 語言好了。
 
 10.7 列出了使用 garbage collection 的優缺點, 如果使用 gc 能不付出任何代價, 相信沒有人會反對, 這就是使用 gc 的困難點, 也是 c++ 在效率勝出有 gc 功能的語言原因之一, 有了 gc, 很可能 c++ 變無法用來開發低階的系統程式, 但開發低階的系統程式這可是 c++ 原本的設計目標, 真是兩難, c++11 已經有了 gc 的加入, 但目前 (2013) 還沒有任何實作品。看看這些聰明的人如何搞定這個難題。
+
+p201 提到了
+operator<<(int)
+put(char c)
+在還沒有將 char, int 區分時 (為了相容 c, c 把 char, int 看成一樣), 在 stream library 上是一個問題,
+operator<<(int)
+operator<<(char c)
+這樣是不會被當成 overloaded function, 而在 c++ 區分了 char, int 後, 竟然沒有遭遇到和 c 的相容性問題, 真是幸運, 不過 sizeof('a') 是個例外。
+
+ref: http://descent-incoming.blogspot.tw/2013/12/c-character-literal-is-different-from-c.html
+
+p202 提到 strtok function prototype
+
+char *strtok(char*, const char*)
+const char *strtok(const char*, const char*)
+
+ansi c
+char *strtok(const char*, const char*)
+
+不過在 linux man page 我看到的是:
+char *strtok(char *str, const char *delim);
+
+這裡是要說明根據 const 來提供 overloaded function, 不過對於 strtok function prototype 我沒能理解。
