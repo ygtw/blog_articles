@@ -375,23 +375,32 @@ mangle 將 function 的 type 也一起當成 function 的編碼名稱, 這可以
 
 11.5.3 提到 prefix++, postfix++, 在 cfront release 1.0 是沒有這樣的區分, 為了要搞定 prefix, postfix overload 問題, 曾經有過這樣的想法：
 
-X& operator prefix++();
+X&amp; operator prefix++();
 X operator postfix++();
 
-X& prefix operator++();
+X&amp; prefix operator++();
 X postfix operator++();
 
 我個人還蠻喜歡這個
-X& ++operator();
+X&amp; ++operator();
 X operator++();
 
-X& operator++();
+X&amp; operator++();
 X operator++();
 
 這是現在用的版本
-X& operator++();
+X&amp; operator++();
 X operator++(int);
 
 11.6.1 是否要為 c++ 提供指數運算符號 (**), 也引起各方爭議, 引進 ** 可沒想像中簡單, b**c**d 的優先權就得傷透腦筋, 最後不玩了。
 
 11.6.2 竟然提到是否要提供使用者自行定義的運算符號, c++ 的野心還真大, 不過帶來的問題似乎太大最後並不支援這樣的想法。
+
+11.6.3 提到的 composite operators 很有趣, 直接給書上例子:
+Matrix a, b, c, d;
+
+a=b*c+d;
+
+Matrix operator = * + (Matrix &, Matrix &, Matrix &, Matrix &)
+
+直接對應這個運算。
