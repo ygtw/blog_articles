@@ -352,3 +352,46 @@ char *strtok(const char*, const char*)
 char *strtok(char *str, const char *delim);
 
 這裡是要說明根據 const 來提供 overloaded function, 不過對於 strtok function prototype 我沒能理解。
+
+11.2.3 提到要怎麼表現一個空指標, 大家都很習慣 c NULL macro。
+
+NULL 通常是 (void *)0
+
+在 c++ 這行不通:
+
+  char *p = (void*)0;
+
+np.cpp: In function ‘int main(int, char**)’:
+np.cpp:4:20: error: invalid conversion from ‘void*’ to ‘char*’ [-fpermissive]
+   char *p = (void*)0;
+
+所以這邊是 c++ 建議用 0, 而不要用 NULL 的原因, c++11 引入了 nullptr 解決這個問題。
+
+11.2.4 介紹了 overload keyword, 這會引發一些災難, 應該很少人用過這個 keyword。
+
+11.3 為了提供安全的連結所下的苦心, 得與 c 相容, 不能有執行/編譯/連結的額外開銷, 這可真的不容易, 所以有了 mangle, extern "C" 這樣的方式, 現在看來很當然爾, 在當時可是難倒了這些聰明, 最後才想出來的聰明辦法。
+
+mangle 將 function 的 type 也一起當成 function 的編碼名稱, 這可以拿來作為函式參數的型別檢查, 我疑惑的是為什麼沒有考慮函式的傳回值?
+
+11.5.3 提到 prefix++, postfix++, 在 cfront release 1.0 是沒有這樣的區分, 為了要搞定 prefix, postfix overload 問題, 曾經有過這樣的想法：
+
+X& operator prefix++();
+X operator postfix++();
+
+X& prefix operator++();
+X postfix operator++();
+
+我個人還蠻喜歡這個
+X& ++operator();
+X operator++();
+
+X& operator++();
+X operator++();
+
+這是現在用的版本
+X& operator++();
+X operator++(int);
+
+11.6.1 是否要為 c++ 提供指數運算符號 (**), 也引起各方爭議, 引進 ** 可沒想像中簡單, b**c**d 的優先權就得傷透腦筋, 最後不玩了。
+
+11.6.2 竟然提到是否要提供使用者自行定義的運算符號, c++ 的野心還真大, 不過帶來的問題似乎太大最後並不支援這樣的想法。
