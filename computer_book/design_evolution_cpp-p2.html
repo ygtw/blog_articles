@@ -404,3 +404,14 @@ a=b*c+d;
 Matrix operator = * + (Matrix &, Matrix &, Matrix &, Matrix &)
 
 直接對應這個運算。
+
+第 12 章提到多重繼承, 開頭有一段話, 「因為你有父親和母親」, 這大概是為了解釋為什麼 c++ 要提供重繼承吧! 不過令我意外的是: Bjarne 似乎不怎麼急著把多重繼承這特徵加進來。12.1 提到多重繼承先被實作, 後來才是 template, exception 則最晚。而 Bjarne 自己比較想要 template 這功能。1982 Bjarne 思考多重繼承的問題, 1984 發現有效的實作方式。
+
+Ole-Johann Dahl (simula 發明人, 2001 圖靈獎得主) 1996 就有考慮多重繼承, 不過因為會使 garbage collection 變得更複雜而取消。
+
+12.4 The object layout model 說明多重繼承的兩個實作方式 (有 virtual base class, virtual function), p236 提到一種 thunk 的實作方式, 用來調整 this; 深度探索 c++ 物件模型繁體中文版 p162 ~ p163 也提到 thunk, 順道提及了將 thunk 倒拼便是 knuth, 不過 th 的倒拼是 ht, 這似乎有點勉強要和 Knuth 扯上關係。
+
+12.4.1 解釋了 virtual base class 的 virtual 所謂何來?
+
+12.6 提出了 8 點在說明多重繼承的爭論, 有人不喜歡多重繼承 ... 有好多的理由, 不過 Bjarne 還是把多重繼承加進來了。
+
