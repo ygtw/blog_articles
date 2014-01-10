@@ -1,9 +1,12 @@
-這不是在說明 overloaded new, 這件事情所有的 c++ 入門書籍都會告知你 (我儘量不去寫書上有的東西), 若你看的那本沒有, 可以考慮換掉它。
+這不是在說明 overloaded operator new, 這件事情所有的 c++ 入門書籍都會告知你, 若你看的那本沒有, 可以考慮換掉它。
 
-本範例一樣是作業系統等級的程式碼, 在完成了 global/static object 的研究之後, 來看看怎麼實作 new/delete, 在 c++ 若不能使用 new/delete, 好像有點遺憾。
+本範例一樣是作業系統等級的程式碼, 在完成了 global/static object 的研究之後, 來看看怎麼實作 new/delete, 在 c++ 若不能使用 new/delete, 好像說不過去。
+
+測試方式:
+在 linux compile 成 dos .com 檔, 然後放到 qemu/dos 上執行。
 
 <fieldset>
-<legend>no_new_delete.cpp</legend>
+<legend>no_impl_new_delete.cpp</legend>
 <pre style="white-space: pre-wrap;"><b> 1</b> <span style="color: #2040a0;">__asm__</span><span style="color: #4444ff;">(</span><span style="color: green;">".code16gcc<span style="color: #77dd77;">\n</span>"</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
 <b> 2</b> <span style="color: blue;"><b>#include <span style="color: green;">"io.h"</span></b></span>
 <b> 3</b> <span style="color: blue;"><b>#include <span style="color: green;">"obj.h"</span></b></span>
@@ -43,18 +46,7 @@
 <b>37</b>   <b>return</b> <span style="color: #2040a0;">mem</span><span style="color: #4444ff;">;</span>
 <b>38</b> <span style="color: #4444ff;"><b>}</b></span>
 <b>39</b> 
-<b>40</b> <span style="color: blue;"><b>#if 0</b></span>
-<b>41</b> <span style="color: #444444;">// ref: http://wiki.osdev.org/C%2B%2B#The_Operators_.27new.27_and_.27delete.27</span>
-<b>42</b> <b>void</b> <span style="color: #4444ff;">*</span><b>operator</b> <b>new</b><span style="color: #4444ff;">(</span><b>unsigned</b> <b>int</b> <span style="color: #2040a0;">s</span><span style="color: #4444ff;">)</span>
-<b>43</b> <span style="color: #4444ff;"><b>{</b></span>
-<b>44</b>   <b>return</b> <span style="color: #2040a0;">mymalloc</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">s</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
-<b>45</b> <span style="color: #4444ff;"><b>}</b></span>
-<b>46</b> 
-<b>47</b> <b>void</b> <b>operator</b> <b>delete</b><span style="color: #4444ff;">(</span><b>void</b> <span style="color: #4444ff;">*</span><span style="color: #2040a0;">p</span><span style="color: #4444ff;">)</span>
-<b>48</b> <span style="color: #4444ff;"><b>{</b></span>
-<b>49</b>   <span style="color: #2040a0;">myfree</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">p</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
-<b>50</b> <span style="color: #4444ff;"><b>}</b></span>
-<b>51</b> <span style="color: blue;"><b>#endif</b></span>
+
 <b>52</b> 
 <b>53</b> <b>extern</b> <span style="color: green;">"C"</span> <b>int</b> <span style="color: #2040a0;">cpp_main</span><span style="color: #4444ff;">(</span><b>void</b><span style="color: #4444ff;">)</span>
 <b>54</b> <span style="color: #4444ff;"><b>{</b></span>
@@ -169,7 +161,7 @@ L57 new 發動時, L41 operator new 會被 c++ 編譯器傳入正確的 class si
 比起 global/static object, operator new/delete 簡單到令我驚訝。所以現在你知道在作業系統之下寫 c++ 程式, c++ runtime library 的辛勞了。
 
 source code:
-https://github.com/descent/simple_os
+<a href="https://github.com/descent/simple_os">https://github.com/descent/simple_os</a>
 commit 93e327234d153636e315721ca66f73df0e7c0887
 cpp_runtime branch
 
