@@ -298,6 +298,7 @@ x86, 跳過 ... A, 再跳這篇就結束了!
 </pre>
 </fieldset>
 
+longjmp 自然做的是相反的事情, 把 jmp_buf 裡頭的值設定給所有暫存器, 還原當時 setjmp 的執行環境。
 <fieldset>
 <legend>src/newlib/libc/sys/sysvi386/_longjmp.S</legend>
 <pre style="white-space: pre-wrap;"><b> 1</b> /
@@ -342,3 +343,48 @@ L19 設定這次的 function return address, 這樣離開時, 就會回到 setjm
 
 這裡 /arm-eabi-toolchain/newlib-2013.05/newlib/libc/machine/arm/setjmp.S 可以偷看哦！
 你要自己試試看, 還是等我下篇文章呢？
+
+我打算在某聚會介紹這個, 順便提提為什麼 sjlj_1.c 是有問題的, 但在我的平台可以執行這程式而沒有錯誤。
+
+<fieldset><legend>sjlj_1.c</legend>
+<pre style="white-space: pre-wrap;">
+<b> 1</b> #include &lt;stdio.h&gt;
+<b> 2</b> #include &lt;stdlib.h&gt;
+<b> 3</b> #include &lt;setjmp.h&gt;
+<b> 4</b>
+<b> 5</b> jmp_buf mark;
+<b> 6</b>
+<b> 7</b> int ret;
+<b> 8</b>
+<b> 9</b> void f1(void)
+<b>10</b> {
+<b>11</b>   char arr[1000];
+<b>12</b>   int i=0;
+<b>13</b>   for (i=0 ; i &lt; 1000; ++i)
+<b>14</b>     arr[i] = 0xff;
+<b>15</b> }
+<b>16</b>
+<b>17</b> void f(void)
+<b>18</b> {
+<b>19</b>   ret = setjmp(mark);
+<b>20</b> }
+<b>21</b>
+<b>22</b> int main(int argc, char *argv[])
+<b>23</b> {
+<b>24</b>   f();
+<b>25</b>   printf(&quot;xx ret: %d\n&quot;, ret);
+<b>26</b>   if (ret == 0)
+<b>27</b>   {
+<b>28</b>      printf(&quot;init setjmp\n&quot;);
+<b>29</b>   }
+<b>30</b>   else
+<b>31</b>   {
+<b>32</b>     printf(&quot;exit\n&quot;);
+<b>33</b>     exit(0);
+<b>34</b>   }
+<b>35</b>   printf(&quot;xxx\n&quot;);
+<b>36</b>   longjmp(mark, 5);
+<b>37</b>   return 0;
+<b>38</b> }
+</pre>
+</fieldset>
