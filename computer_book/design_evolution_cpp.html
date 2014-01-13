@@ -350,7 +350,7 @@ c++ 的設計理念之一, 『你只需要為你用的東西付出代價。』�
 
 p77 介紹了對於 operator[]() 這個 operator 重新定義時會有的問題, 以 string 為例子, 引入了輔助用 class 來分別處理左值、右值, 真是巧妙。
 
-garbage collection 在 2.13, 3.9, 10.7 被談到, 尤其是 10.7 花了不少篇幅在討論 garbage collection 所帶來的空間/時間開銷, 這會讓 c++ 威力大減。只提出了 optional garbage collection 的概念, c++11 似乎要加入這個, 我不相信魚與熊掌能兼得, 希望這功能是可以關閉的, 而不是強迫使用。 
+2.13, 3.9, 10.7 談到 garbage collection, 尤其是 10.7 花了不少篇幅在討論 garbage collection 所帶來的空間/時間開銷, 這會讓 c++ 威力大減; 只提出了 optional garbage collection 的概念, c++11 似乎要加入這個, 我不相信魚與熊掌能兼得, 希望這功能是可以關閉的, 而不是強迫使用。 
 
 3.8
 對於 const 這個關鍵字的意義在 c 和 c++ 有所不同, 不過 const 關鍵字可是由 Bjarne 引進到 c 的, 意外吧! 不過當時使用的是 readonly, writeonly 這兩個關鍵字, 最後是由 ANSI C 改用 const 而成為 C 標準, 這是 Bjarne 第一次的標準化經驗 (對象是 c 語言), 不過 c 的 const 無法使用 const expression, 和 c++ 的 const 語意所有不同。
