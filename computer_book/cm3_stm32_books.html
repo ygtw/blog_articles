@@ -6,6 +6,8 @@
 
 chapter 5 提到記憶體相關架構, bit-band 我之前一直搞不清楚, 看來這本才懂。還有 ldrex/strex 這兩個 exclusive access 指令, 因為 cm3 沒有 swp, 需要用這兩個指令來實作 mutex/spin lock, 這是 atomic 的操作, 我就是看了這章, 花了好大功夫實作出 spin lock。
 
+p5-12 有個小方格有介紹 bit-band &amp; bit-bang; p 5-7 介紹 bit-band 運算, 書上寫的很清楚，不難理解。
+
 chapter 7, 8, 9, 11 是相關的, 都在談中斷/例外, 講述如何操作 nvic 暫存器, 中斷行為, cm3 特有的中斷特性。我花了不少時間重新瀏覽這幾章的內容, 算是 cm3 的重點。
 
 p7-2 整理了系統所有的例外 (表 7-1)
