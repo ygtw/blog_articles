@@ -415,3 +415,43 @@ Ole-Johann Dahl (simula 發明人, 2001 圖靈獎得主) 1996 就有考慮多重
 
 12.6 提出了 8 點在說明多重繼承的爭論, 有人不喜歡多重繼承 ... 有好多的理由, 不過 Bjarne 還是把多重繼承加進來了。
 
+
+
+
+
+
+
+13.6 的 inherited keyword 本來已經打算引入, 不過在 Michael Tiemann 提供以下程式碼後, 就不需要了。
+
+<fieldset><legend>inherited.cpp</legend>
+<pre style="white-space: pre-wrap;">
+<b> 1</b> class employee
+<b> 2</b> {
+<b> 3</b>   public:
+<b> 4</b>   virtual void print()
+<b> 5</b>   {
+<b> 6</b>   }
+<b> 7</b> };
+<b> 8</b>
+<b> 9</b> class foreman: public employee
+<b>10</b> {
+<b>11</b>   public:
+<b>12</b>   typedef employee inherited;
+<b>13</b>   void print()
+<b>14</b>   {
+<b>15</b>   }
+<b>16</b> };
+<b>17</b>
+<b>18</b> class manager: public foreman
+<b>19</b> {
+<b>20</b>   public:
+<b>21</b>   typedef foreman inherited;
+<b>22</b>   void print();
+<b>23</b> };
+<b>24</b>
+<b>25</b> void manager::print()
+<b>26</b> {
+<b>27</b>   inherited::print();
+<b>28</b> }
+</pre>
+</fieldset>
