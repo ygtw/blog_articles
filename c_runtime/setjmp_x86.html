@@ -1,12 +1,12 @@
-setjmp/longjmp 我實在很陌生, 沒怎麼用過這對 function, 我不知道什麼場合會出動他們, 知道在 c 上可以用他們模擬類似 c++ 的 exception。c++ 上有 exception 可用, 這兩個傢伙一點都派不上用場, 在純 c 裡頭才會需要。
+setjmp/longjmp 這兩組函式我很陌生, 沒怎麼用過這對 function, 不知道什麼場合會出動他們, 只知道在 c 上可以用他們模擬類似 c++ 的 exception。c++ 上有 exception 可用, 這兩個傢伙一點都派不上用場, 在純 c 裡頭才會需要。
 
-不過我想知道「這是」怎麼做的, 我已經理解 context switch, 沒道理這兩個 function 的實作我做不出來。我想了一下, 應該很簡單, 而實際上也真的很簡單, 讓 souce code 來說話。
+我有興趣的是想: 「這是」怎麼做的, 我已經理解 context switch, 沒道理這兩個 function 的實作我做不出來。我想了一下, 應該很簡單, 而實際上也真的很簡單, 讓 souce code 來說話。
 
 不過在這之前先來看看怎麼用 setjmp/longjmp。
 
-<fieldset><legend>t0.c</legend>
-<pre style="white-space: pre-wrap;">
-<b> 1</b> #include &lt;stdio.h&gt;
+<fieldset>
+<legend>t0.c</legend>
+<pre style="white-space: pre-wrap;"><b> 1</b> #include &lt;stdio.h&gt;
 <b> 2</b> #include &lt;stdlib.h&gt;
 <b> 3</b> #include &lt;setjmp.h&gt;
 <b> 4</b> 
@@ -15,39 +15,39 @@ setjmp/longjmp 我實在很陌生, 沒怎麼用過這對 function, 我不知道�
 <b> 7</b> int main(int argc, char *argv[])
 <b> 8</b> {
 <b> 9</b>   int ret = setjmp(mark);
-<b>10</b>   printf(&quot;ret: %d\n&quot;, ret);
+<b>10</b>   printf("ret: %d\n", ret);
 <b>11</b>   if (ret == 0)
 <b>12</b>   {
-<b>13</b>     printf(&quot;init setjmp\n&quot;);
+<b>13</b>     printf("init setjmp\n");
 <b>14</b>   }
 <b>15</b>   else
 <b>16</b>   {
-<b>17</b>     printf(&quot;exit\n&quot;);
+<b>17</b>     printf("exit\n");
 <b>18</b>     exit(0);
 <b>19</b>   }
-<b>20</b>   printf(&quot;xxx\n&quot;);
+<b>20</b>   printf("xxx\n");
 <b>21</b>   longjmp(mark, 5);
 <b>22</b>   return 0;
 <b>23</b> }
 </pre>
 </fieldset>
 
-<pre class="cmd">
-執行結果:
+<pre class="cmd">執行結果:
 ret: 0
 init setjmp
 xxx
 ret: 5
 exit
-<pre>
+</pre>
 
-第一次執行 setjmp (L9), setjmp 會記住 L9 的位置, 而 ret 會設為 0, 在執行 longjmp (L21) 之後, 會跳到 L9, 並且將 ret 設為 5 (longjmp 傳入的 5)。有點神奇, 是嗎？
+第一次執行 setjmp (L9), setjmp 會記住 L9 的位置 (記住哪個位址呢?), 而 ret 會設為 0 (setjmp 傳回 0), 在執行 longjmp (L21) 之後, 會跳到 L9, 並且將 ret 設為 5 (longjmp 傳入的 5)。有點神奇, 是嗎？
 
 參考 newlib 的實作: <a href="http://sourceware.org/newlib/">http://sourceware.org/newlib/</a>
 
 x64 (沒研究, 看不懂, 跳過)
 <fieldset>
 <legend>src/newlib/libc/machine/x86_64/setjmp.S</legend>
+
 <pre style="white-space: pre-wrap;"><b> 1</b> /*
 <b> 2</b>&nbsp; * ====================================================
 <b> 3</b>&nbsp; * Copyright (C) 2007 by Ellips BV. All rights reserved.
@@ -106,6 +106,7 @@ x64 (沒研究, 看不懂, 跳過)
 msp430 (不知道在寫什麼, 跳過)
 <fieldset>
 <legend>src/newlib/libc/machine/msp430/setjmp.S</legend>
+
 <pre style="white-space: pre-wrap;"><b>  1</b> /* Copyright (c) 2013  Red Hat, Inc. All rights reserved.
 <b>  2</b> 
 <b>  3</b>    This copyrighted material is made available to anyone wishing to use,
@@ -214,10 +215,11 @@ msp430 (不知道在寫什麼, 跳過)
 </fieldset>
 
 x86, 跳過 ... A, 再跳這篇就結束了!
-終於來到我熟悉的 32bit x86, 來看看 jmp_buf 到底是什麼？真是太簡單了, 就是一塊記憶體區域, 用來存這些暫存器的值。jmp_buf 可以看成一個指標指向一塊記憶體, setjmp 會接收這個指標當參數, 然後把暫存器存在這裡。 
+終於來到我熟悉的 32bit x86, 來看看 jmp_buf 到底是什麼？真是太簡單了, 就是一塊記憶體區域, 用來存這些暫存器的值。jmp_buf 可以看成一個指標指向一塊記憶體, setjmp 會接收這個指標當參數, 然後把暫存器存在這裡 (L24~L34 那些暫存器)。
 
 <fieldset>
 <legend>include/machine/setjmp-dj.h</legend>
+
 <pre style="white-space: pre-wrap;"><b> 1</b> /*
 <b> 2</b>  * Copyright (C) 1991 DJ Delorie
 <b> 3</b>  * All rights reserved.
@@ -268,10 +270,11 @@ x86, 跳過 ... A, 再跳這篇就結束了!
 
 <a href="https://picasaweb.google.com/lh/photo/EsN2-bwwR1j6TWGaRFfQVKIDbKz5UZarlyW53DBH82Q?feat=embedwebsite"><img height="800" src="https://lh5.googleusercontent.com/-1tH45S-t3PI/UkEv-56wX9I/AAAAAAAAsnw/1rKtohBZJdA/s800/P1350039.JPG" width="600" /></a>
 
-所以 setjmp 就是把這些暫存器存起來, 那 eip 存什麼呢？就存 return address (L20, 21), 然後 longjmp <b>會想辦法</b>跳到這裡, 不過 offset 24 應該是 %ebp, 28 應該是 %esp, 把上面的這兩個欄位對就即可, 不過不影響程式的正確性, 因為 longjmp 也寫反了。
+所以 setjmp 就是把這些暫存器存起來, 那 eip 存什麼呢？就存 return address (src/newlib/libc/sys/sysvi386/_setjmp.S L20, 21), 然後 longjmp <b>會想辦法</b>跳到這裡, 不過 offset 24 應該是 %ebp, 28 應該是 %esp, 把上面的這兩個欄位對就即可, 不過不影響程式的正確性, 因為 longjmp 也寫反了。
 
 <fieldset>
 <legend>src/newlib/libc/sys/sysvi386/_setjmp.S</legend>
+
 <pre style="white-space: pre-wrap;"><b> 1</b> /
 <b> 2</b> / our buffer looks like:
 <b> 3</b> /  eax,ebx,ecx,edx,esi,edi,esp,ebp,pc
@@ -281,7 +284,7 @@ x86, 跳過 ... A, 再跳這篇就結束了!
 <b> 7</b> _setjmp:
 <b> 8</b> setjmp:
 <b> 9</b>  pushl %ebx
-<b>10</b>  movl 8(%esp), %ebx
+<b>10</b>  movl 8(%esp), %ebx # 取得 setjmp 參數, 也就是 jmp_buf
 <b>11</b>  movl %eax, (%ebx)
 <b>12</b>  popl %eax
 <b>13</b>  movl %eax, 4(%ebx)
@@ -299,8 +302,10 @@ x86, 跳過 ... A, 再跳這篇就結束了!
 </fieldset>
 
 longjmp 自然做的是相反的事情, 把 jmp_buf 裡頭的值設定給所有暫存器, 還原當時 setjmp 的執行環境。
+
 <fieldset>
 <legend>src/newlib/libc/sys/sysvi386/_longjmp.S</legend>
+
 <pre style="white-space: pre-wrap;"><b> 1</b> /
 <b> 2</b> / our buffer looks like:
 <b> 3</b> /  eax,ebx,ecx,edx,esi,edi,esp,ebp,pc
@@ -346,9 +351,10 @@ L19 設定這次的 function return address, 這樣離開時, 就會回到 setjm
 
 我打算在某聚會介紹這個, 順便提提為什麼 sjlj_1.c 是有問題的, 但在我的平台可以執行這程式而沒有錯誤。
 
-<fieldset><legend>sjlj_1.c</legend>
-<pre style="white-space: pre-wrap;">
-<b> 1</b> #include &lt;stdio.h&gt;
+<fieldset>
+<legend>sjlj_1.c</legend>
+
+<pre style="white-space: pre-wrap;"><b> 1</b> #include &lt;stdio.h&gt;
 <b> 2</b> #include &lt;stdlib.h&gt;
 <b> 3</b> #include &lt;setjmp.h&gt;
 <b> 4</b>
@@ -372,17 +378,17 @@ L19 設定這次的 function return address, 這樣離開時, 就會回到 setjm
 <b>22</b> int main(int argc, char *argv[])
 <b>23</b> {
 <b>24</b>   f();
-<b>25</b>   printf(&quot;xx ret: %d\n&quot;, ret);
+<b>25</b>   printf("xx ret: %d\n", ret);
 <b>26</b>   if (ret == 0)
 <b>27</b>   {
-<b>28</b>      printf(&quot;init setjmp\n&quot;);
+<b>28</b>      printf("init setjmp\n");
 <b>29</b>   }
 <b>30</b>   else
 <b>31</b>   {
-<b>32</b>     printf(&quot;exit\n&quot;);
+<b>32</b>     printf("exit\n");
 <b>33</b>     exit(0);
 <b>34</b>   }
-<b>35</b>   printf(&quot;xxx\n&quot;);
+<b>35</b>   printf("xxx\n");
 <b>36</b>   longjmp(mark, 5);
 <b>37</b>   return 0;
 <b>38</b> }
@@ -391,9 +397,8 @@ L19 設定這次的 function return address, 這樣離開時, 就會回到 setjm
 
 ref:
 
-全面了解setjmp与longjmp(C语言异常处理机制)
-http://blog.csdn.net/hbaizj/article/details/4008126
+全面了解setjmp与longjmp(C语言异常处理机制):
+<a href="http://blog.csdn.net/hbaizj/article/details/4008126">http://blog.csdn.net/hbaizj/article/details/4008126</a>
 
-第15集 C语言中的异常处理机制
-http://www.educity.cn/se/ExpertEyes/No151.htm
-15~19 在講怎麼用這個作類似 c++ exception 的功能。
+第15集 C语言中的异常处理机制, 15~19 在講怎麼用這個作類似 c++ exception 的功能。
+<a href="http://www.educity.cn/se/ExpertEyes/No151.htm">http://www.educity.cn/se/ExpertEyes/No151.htm</a>
