@@ -1,4 +1,10 @@
-setjmp/longjmp 這兩組函式我很陌生, 沒怎麼用過這對 function, 不知道什麼場合會出動他們, 只知道在 c 上可以用他們模擬類似 c++ 的 exception。c++ 上有 exception 可用, 這兩個傢伙一點都派不上用場, 在純 c 裡頭才會需要。
+<span style="color: red;">基礎知識:</span>
+<ol>
+<li>x86 function call 時的 stack 變化以及 function 如何 return。</li>
+</ol>
+如果你不懂 1 提到的東西, 這篇文章可能會難倒你, 可參閱組合語言書籍中呼叫 c 語言的那部份。
+
+setjmp/longjmp 這兩組函式我很陌生, 沒怎麼用過這對 function, 不知道什麼場合會出動他們, 只知道在 c 上可以用他們模擬類似 c++ 的 exception (請參閱: ref 2)。c++ 上有 exception 可用, 這兩個傢伙一點都派不上用場, 在純 c 裡頭才會需要。
 
 我有興趣的是想: 「這是」怎麼做的, 我已經理解 context switch, 沒道理這兩個 function 的實作我做不出來。我想了一下, 應該很簡單, 而實際上也真的很簡單, 讓 souce code 來說話。
 
@@ -215,6 +221,7 @@ msp430 (不知道在寫什麼, 跳過)
 </fieldset>
 
 x86, 跳過 ... A, 再跳這篇就結束了!
+
 終於來到我熟悉的 32bit x86, 來看看 jmp_buf 到底是什麼？真是太簡單了, 就是一塊記憶體區域, 用來存這些暫存器的值。jmp_buf 可以看成一個指標指向一塊記憶體, setjmp 會接收這個指標當參數, 然後把暫存器存在這裡 (L24~L34 那些暫存器)。
 
 <fieldset>
@@ -270,7 +277,7 @@ x86, 跳過 ... A, 再跳這篇就結束了!
 
 <a href="https://picasaweb.google.com/lh/photo/EsN2-bwwR1j6TWGaRFfQVKIDbKz5UZarlyW53DBH82Q?feat=embedwebsite"><img height="800" src="https://lh5.googleusercontent.com/-1tH45S-t3PI/UkEv-56wX9I/AAAAAAAAsnw/1rKtohBZJdA/s800/P1350039.JPG" width="600" /></a>
 
-所以 setjmp 就是把這些暫存器存起來, 那 eip 存什麼呢？就存 return address (src/newlib/libc/sys/sysvi386/_setjmp.S L20, 21), 然後 longjmp <b>會想辦法</b>跳到這裡, 不過 offset 24 應該是 %ebp, 28 應該是 %esp, 把上面的這兩個欄位對就即可, 不過不影響程式的正確性, 因為 longjmp 也寫反了。
+所以 setjmp 就是把這些暫存器存起來, 那 eip 存什麼呢？就存 return address (src/newlib/libc/sys/sysvi386/_setjmp.S L20, 21), 然後 longjmp <b>會想辦法</b>跳到這裡; L11 ~ L19 則是把其他暫存器存到其他的 offset 上, 不過 offset 24 應該是 %ebp, 28 應該是 %esp, 把上面的這兩個欄位對就即可, 不過不影響程式的正確性, 因為 longjmp 也寫反了。
 
 <fieldset>
 <legend>src/newlib/libc/sys/sysvi386/_setjmp.S</legend>
@@ -284,7 +291,7 @@ x86, 跳過 ... A, 再跳這篇就結束了!
 <b> 7</b> _setjmp:
 <b> 8</b> setjmp:
 <b> 9</b>  pushl %ebx
-<b>10</b>  movl 8(%esp), %ebx # 取得 setjmp 參數, 也就是 jmp_buf
+<b>10</b>  movl 8(%esp), %ebx # 取得 setjmp 參數, 也就是 jmp_buf (是一個指標), jmp_buf 存到 %ebx
 <b>11</b>  movl %eax, (%ebx)
 <b>12</b>  popl %eax
 <b>13</b>  movl %eax, 4(%ebx)
@@ -300,6 +307,8 @@ x86, 跳過 ... A, 再跳這篇就結束了!
 <b>23</b>  ret
 </pre>
 </fieldset>
+
+總之, setjmp 就是把的當時的 stack frame 的狀態存起來,但是只有暫存器的部份, 一旦用 longjmp 回到那時候的 stack frame, 但是 stack frame 裡頭的資料和當時儲存的時候不同, 那就 ... 嘿嘿, 因為 setjmp 並沒有保存 stack, 這是和 context switch 的不同之處。
 
 longjmp 自然做的是相反的事情, 把 jmp_buf 裡頭的值設定給所有暫存器, 還原當時 setjmp 的執行環境。
 
@@ -342,12 +351,24 @@ longjmp 自然做的是相反的事情, 把 jmp_buf 裡頭的值設定給所有�
 newlib/newlib/libc/machine/i386/setjmp.S
 這是另外一個版本, 有點不同。
 
-L19 設定這次的 function return address, 這樣離開時, 就會回到 setjmp 存的位址。
+L14 則是 longjmp 傳入的數字, 在 longjmp 回到 setjmp 的時候, 拿來改變 setjmp 的 return value。
+
+怎麼改變的, 以下是呼叫 setjmp 時的反組譯程式碼, setjmp 存的就是 L184, longjmp 發動時就是回到 L184, 所以改變了 %eax, 就會改變 setjmp 的回傳值。
+
+<fieldset>
+<legend>objdump -dS a.out</legend>
+<pre style="white-space: pre-wrap;"><b>181</b>    int ret = setjmp(mark);
+<b>182</b>  80484c6:    c7 04 24 20 98 04 08    movl   $0x8049820,(%esp)
+<b>183</b>  80484cd:    e8 9e fe ff ff          call   8048370 &lt;_setjmp@plt&gt;
+<b>184</b>  80484d2:    89 44 24 1c             mov    %eax,0x1c(%esp) // 把 %eax 設定給 ret
+</pre>
+</fieldset>
+
+L19 設定這次的 function return address, 這樣離開時, 就會回到 setjmp 存的位址。 
 
 知一可以求五, 舉一可以反三, 相信你可以做出 arm cortex m3 的版本。
 
-這裡 /arm-eabi-toolchain/newlib-2013.05/newlib/libc/machine/arm/setjmp.S 可以偷看哦！
-你要自己試試看, 還是等我下篇文章呢？
+這裡 /arm-eabi-toolchain/newlib-2013.05/newlib/libc/machine/arm/setjmp.S 可以偷看哦！你要自己試試看, 還是等我下篇文章呢？
 
 我打算在某聚會介紹這個, 順便提提為什麼 sjlj_1.c 是有問題的, 但在我的平台可以執行這程式而沒有錯誤。
 
@@ -397,8 +418,9 @@ L19 設定這次的 function return address, 這樣離開時, 就會回到 setjm
 
 ref:
 
-全面了解setjmp与longjmp(C语言异常处理机制):
-<a href="http://blog.csdn.net/hbaizj/article/details/4008126">http://blog.csdn.net/hbaizj/article/details/4008126</a>
+<ol>
+<li>全面了解setjmp与longjmp(C语言异常处理机制):
+<a href="http://blog.csdn.net/hbaizj/article/details/4008126">http://blog.csdn.net/hbaizj/article/details/4008126</a></li>
+<li>第15集 C语言中的异常处理机制, 15~19 在講怎麼用這個作類似 c++ exception 的功能。<a href="http://www.educity.cn/se/ExpertEyes/No151.htm">http://www.educity.cn/se/ExpertEyes/No151.htm</a></li>
+</ol>
 
-第15集 C语言中的异常处理机制, 15~19 在講怎麼用這個作類似 c++ exception 的功能。
-<a href="http://www.educity.cn/se/ExpertEyes/No151.htm">http://www.educity.cn/se/ExpertEyes/No151.htm</a>
