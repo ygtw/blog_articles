@@ -6,7 +6,7 @@
 
 setjmp/longjmp 這兩組函式我很陌生, 沒怎麼用過這對 function, 不知道什麼場合會出動他們, 只知道在 c 上可以用他們模擬類似 c++ 的 exception (請參閱: ref 2)。c++ 上有 exception 可用, 這兩個傢伙一點都派不上用場, 在純 c 裡頭才會需要。
 
-我有興趣的是想: 「這是」怎麼做的, 我已經理解 context switch, 沒道理這兩個 function 的實作我做不出來。我想了一下, 應該很簡單, 而實際上也真的很簡單, 讓 souce code 來說話。
+我有興趣的是: 「這是」怎麼做的, 我已經理解 context switch, 沒道理這兩個 function 的實作我做不出來。我想了一下, 應該很簡單, 而實際上也真的很簡單, 讓 souce code 來說話。
 
 不過在這之前先來看看怎麼用 setjmp/longjmp。
 
