@@ -415,11 +415,11 @@ Ole-Johann Dahl (simula 發明人, 2001 圖靈獎得主) 1996 就有考慮多重
 
 12.6 提出了 8 點在說明多重繼承的爭論, 有人不喜歡多重繼承 ... 有好多的理由, 不過 Bjarne 還是把多重繼承加進來了。
 
+p255 提到 mutable 並沒有像想像中那麼有用, 還是有機會要出動 const cast 消除 const 語意。
 
-
-
-
-
+p256 展示了這個程式碼:
+((X*)0)->f()
+這個就是 static member function, 程式設計師真的很聰明, 就算沒有這特性, 總是可以找到一些方法來達成, 當然在這功能加入了, 就更安全, 也有較好的語法。
 
 13.6 的 inherited keyword 本來已經打算引入, 不過在 Michael Tiemann 提供以下程式碼後, 就不需要了。
 
@@ -455,3 +455,7 @@ Ole-Johann Dahl (simula 發明人, 2001 圖靈獎得主) 1996 就有考慮多重
 <b>28</b> }
 </pre>
 </fieldset>
+
+13.8 c++ 不支援 multi-method, 書上舉了 intersect 來處理 class Shape, Rectangle, Circle, 我不理解這是要表達什麼, 13.8.1 提供了 wordaround 的方法支援 multi-method。
+
+13.11 pointers to member, 指向 class member 的指標, 在 cfront release 1.2 之後才提供這個功能, 它不僅僅是一個 offset 而已, 是個很複雜的東西。可以參考這篇: http://descent-incoming.blogspot.tw/2013/08/c-member-function-pointer.html
