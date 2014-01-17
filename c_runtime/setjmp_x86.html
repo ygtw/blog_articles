@@ -353,7 +353,7 @@ newlib/newlib/libc/machine/i386/setjmp.S
 
 L14 則是 longjmp 傳入的數字, 在 longjmp 回到 setjmp 的時候, 拿來改變 setjmp 的 return value。
 
-怎麼改變的, 以下是呼叫 setjmp 時的反組譯程式碼, setjmp 存的就是 L184, longjmp 發動時就是回到 L184, 所以改變了 %eax, 就會改變 setjmp 的回傳值。
+怎麼改變的, 以下是呼叫 setjmp 時的反組譯程式碼, setjmp 存的就是 L184 (address: 80484d2), longjmp 發動時就是回到 L184; 而改變了 %eax, 就會改變 setjmp 的回傳值 (ref L184)。
 
 <fieldset>
 <legend>objdump -dS a.out</legend>
