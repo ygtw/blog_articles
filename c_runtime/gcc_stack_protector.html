@@ -1,0 +1,104 @@
+<span style="color: #134f5c;">這篇是重寫的版本, 由於我的疏忽, 第一個版本不小心被我蓋掉了, 之前找的連結資料也都不見了, 消失的版本花了我不少心血, 就這樣沒了, 我的懊惱可想而知。</span>
+
+<span style="font-size: x-large;">以下正文開始</span>
+
+我一直很好奇 check stack 有沒爆掉是怎麼做的, 一位朋友為我解惑, 就在 stack 底端塞個值, 檢查他就好了, 我頓時茅塞頓開, 原來如此。
+
+不過讓我們看看有支援 stack protector 的 c compiler, 以下是 gcc 的 fstack-protector 實作。
+
+<fieldset>
+<legend>stack_pro.c</legend>
+<pre><b> 1</b> 
+<b> 2</b> <span style="color: blue;"><b>#include <span style="color: green;">&lt;stdio.h&gt;</span></b></span>
+<b> 3</b> <span style="color: blue;"><b>#include <span style="color: green;">&lt;string.h&gt;</span></b></span>
+<b> 4</b> 
+<b> 5</b> <b>int</b> <span style="color: #2040a0;">main</span><span style="color: #4444ff;">(</span><span style="color: #4444ff;">)</span> 
+<b> 6</b> <span style="color: #4444ff;"><b>{</b></span>
+<b> 7</b> 
+<b> 8</b>     <b>char</b> <span style="color: #2040a0;">string</span><span style="color: #4444ff;">[</span><span style="color: red;">10</span><span style="color: #4444ff;">]</span><span style="color: #4444ff;">;</span>
+<b> 9</b> 
+<b>10</b>     <span style="color: #2040a0;">strcpy</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">string</span>, <span style="color: green;">"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>11</b> 
+<b>12</b> <span style="color: #4444ff;"><b>}</b></span>
+</pre>
+</fieldset>
+
+<pre class="cmd">gcc -m32 -g -static&nbsp; -fno-stack-protector stack_pro.c -o stack_pro.nosp
+gcc -m32 -g -static&nbsp; -fstack-protector stack_pro.c -o stack_pro.sp
+</pre>
+
+<fieldset>
+<legend>objdump -d stack_pro.sp</legend>
+<pre><b> 1</b> 080482d0 &lt;main&gt;:
+<b> 2</b>  80482d0:       55                      push   %ebp
+<b> 3</b>  80482d1:       89 e5                   mov    %esp,%ebp
+<b> 4</b>  80482d3:       83 e4 f0                and    $0xfffffff0,%esp
+<b> 5</b>  80482d6:       83 ec 20                sub    $0x20,%esp
+<span style="color: red;"><b> 6</b>  80482d9:       65 a1 14 00 00 00       mov    %gs:0x14,%eax
+<b> 7</b>  80482df:       89 44 24 1c             mov    %eax,0x1c(%esp)</span>
+<b> 8</b>  80482e3:       31 c0                   xor    %eax,%eax
+<b> 9</b>  80482e5:       b8 dc 02 0b 08          mov    $0x80b02dc,%eax
+<b>10</b>  80482ea:       c7 44 24 08 23 00 00    movl   $0x23,0x8(%esp)
+<b>11</b>  80482f1:       00 
+<b>12</b>  80482f2:       89 44 24 04             mov    %eax,0x4(%esp)
+<b>13</b>  80482f6:       8d 44 24 12             lea    0x12(%esp),%eax
+<b>14</b>  80482fa:       89 04 24                mov    %eax,(%esp)
+<b>15</b>  80482fd:       e8 ee 74 00 00          call   804f7f0 &lt;memcpy&gt;
+<span style="color: red;"><b>16</b>  8048302:       8b 54 24 1c             mov    0x1c(%esp),%edx
+<b>17</b>  8048306:       65 33 15 14 00 00 00    xor    %gs:0x14,%edx</span>
+<b>18</b>  804830d:       74 05                   je     8048314 &lt;main+0x44&gt;
+<b>19</b>  804830f:       e8 2c be 00 00          call   8054140 &lt;__stack_chk_fail&gt;
+<b>20</b>  8048314:       c9                      leave  
+<b>21</b>  8048315:       c3                      ret 
+</pre>
+</fieldset>
+
+L6, 7, 16, 17 就是這些魔法施行的地方。string[10] 從 0x12(%esp) 開始, 長度 10, 所以這個魔法標記紀錄在 0x1c(%esp), 0x1c-0x12 = 0xa, 在做完 memcpy (為什麼 strcpy 變成 memcpy 就不用管他了) 之後, 再來檢查 0x1c(%esp) 值是不是之前保存 (從 %gs:0x14 得來的) 的即可, 如果不一樣, 就去執行&nbsp;__stack_chk_fail。
+
+在我測試時, 這個值是:
+%gs:0x14: 0x944bc400
+不過似乎會一直變化, 每次執行都不一樣, 不是固定值。
+
+這是把 0x1c(%esp) dump 出來, 本來應該要是 0x00 0xc4 0x4b 0x94 (little endian), 可是因為我們把 "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" 覆蓋超過了 string[10], 所以就變成 0x41 0x41 0x41 0x41 ...
+
+(gdb) x/32xb 0xffffd39c
+0xffffd39c:&nbsp;&nbsp;&nbsp;&nbsp; 0x41&nbsp;&nbsp;&nbsp; 0x41&nbsp;&nbsp;&nbsp; 0x41&nbsp;&nbsp;&nbsp; 0x41&nbsp;&nbsp;&nbsp; 0x41&nbsp;&nbsp;&nbsp; 0x41&nbsp;&nbsp;&nbsp; 0x41&nbsp;&nbsp;&nbsp; 0x41
+0xffffd3a4:&nbsp;&nbsp;&nbsp;&nbsp; 0x41&nbsp;&nbsp;&nbsp; 0x41&nbsp;&nbsp;&nbsp; 0x41&nbsp;&nbsp;&nbsp; 0x41&nbsp;&nbsp;&nbsp; 0x41&nbsp;&nbsp;&nbsp; 0x41&nbsp;&nbsp;&nbsp; 0x41&nbsp;&nbsp;&nbsp; 0x41
+
+這是執行結果, 沒有 -fstack-protector 的版本, 自然是發出 Segmentation fault。
+
+<fieldset>
+<legend>stack protector 執行結果</legend>
+<pre class="cmd"><b> 1</b> *** stack smashing detected ***: ./stack_pro.sp terminated
+<b> 2</b> ======= Backtrace: =========
+<b> 3</b> [0x8054189]
+<b> 4</b> [0x805414d]
+<b> 5</b> [0x8048314]
+<b> 6</b> [0x41414141]
+<b> 7</b> ======= Memory map: ========
+<b> 8</b> 08048000-080cf000 r-xp 00000000 08:05 18620900                           /home/descent/my-git/progs/stack_pro.sp
+<b> 9</b> 080cf000-080d1000 rw-p 00086000 08:05 18620900                           /home/descent/my-git/progs/stack_pro.sp
+<b>10</b> 080d1000-080d3000 rw-p 00000000 00:00 0 
+<b>11</b> 08f7b000-08f9d000 rw-p 00000000 00:00 0                                  [heap]
+<b>12</b> f77c9000-f77ca000 r-xp 00000000 00:00 0                                  [vdso]
+<b>13</b> ffdc2000-ffdd7000 rw-p 00000000 00:00 0                                  [stack]
+<b>14</b> Aborted
+</pre>
+</fieldset>
+
+<pre class="gray">Emit extra code to check for buffer overflows, such as stack
+  smashing attacks.  This is done by adding a guard variable to
+  functions with vulnerable objects.  This includes functions that
+  call alloca, and functions with buffers larger than <span style="color: red;">8 bytes</span>.  The
+  guards are initialized when a function is entered and then checked
+  when the function exits.  If a guard check fails, an error message
+  is printed and the program exits.
+
+  NOTE: In Ubuntu 6.10 and later versions this option is enabled by
+  default for C, C++, ObjC, ObjC++, if neither -fno-stack-protector
+  nor -nostdlib are found.
+</pre>
+
+至於 man page 的 8 byte 我怎麼試都觀察不到, 就沒辦法分享這段的意思了。stack overflow 有篇類似的, 可惜我找不到了。
+
+有人認為 c++ 的邪惡在於 c++ compiler 產生太多我們沒寫的程式碼, 類似於這樣的行為。c++ exception 也是用類似的方似塞了不少程式碼。
