@@ -1,0 +1,194 @@
+<a href="https://picasaweb.google.com/lh/photo/ySO2LK73oH9R6cHlAXDsCcnPsuF7KO6TaX3PVGp2uRQ?feat=embedwebsite" style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;"><img src="https://lh4.googleusercontent.com/-mjbLURN8EJw/ULVujmK034I/AAAAAAAAjFc/brrnCYv_6GM/s400/P1340003.JPG" /></a>stm32f4discovery 上頭有好幾顆 button, 其中有一顆名為 user button, 這次的實驗要來偵測這個 button。
+
+右圖 stm32f4discovery 的藍色 button 就是 user button, 電路板也有寫上 user, 應該很好辨識。 
+
+有兩種偵測 button 狀態的方法: polling 和中斷, 這次介紹使用 polling 來偵測按鈕有無被按下。
+
+user button 接在 PA0, 是個 GPIO, 所以用設定 gpio 的方式就可以設定相關暫存器。
+
+L140 ~ L147 就是在作這個 button 的設定。所以重點就是在如何設定這個 button 的 gpio。
+
+我沒有說明硬體相關資訊是因為我不懂這些東西, 我把這部份的程式碼簡化成這樣就是為了方便查詢這些資料, 不過現在只需要能搞定 user button 的程式碼即可, 這些等以後要「知道」的時候再查詢。
+
+簡化程式碼, 查詢如何完成這功能就花費我不少時間, 我得留些時間做些休閒活動, 休息和工作是同等重要的, 我很小心取得中間的平衡。
+
+<fieldset>
+<legend>user_button.c</legend>
+<pre style="white-space: pre-wrap;"><b>  1</b> /*
+<b>  2</b>  * ref: http://eliaselectronics.com/stm32f4-tutorials/stm32f4-gpio-tutorial/
+<b>  3</b>  *   use polling to check user button status (press/release)
+<b>  4</b>  */
+<b>  5</b> #include "stm32.h"
+<b>  6</b> 
+<b>  7</b> #include "stm32f4xx.h"
+<b>  8</b> #include "stm32f4xx_gpio.h"
+<b>  9</b> 
+<b> 10</b> #define USE_STDPERIPH_DRIVER
+<b> 11</b> 
+<b> 12</b> /*!&lt; Uncomment the following line if you need to relocate your vector Table in
+<b> 13</b>      Internal SRAM. */
+<b> 14</b> /* #define VECT_TAB_SRAM */
+<b> 15</b> #define VECT_TAB_OFFSET  0x0 /*!&lt; Vector Table base offset field.  This value must be a multiple of 0x200. */
+<b> 16</b> 
+<b> 17</b> int delay_time = 0x300000;
+<b> 18</b> 
+<b> 19</b> void Delay(uint32_t delay )
+<b> 20</b> {
+<b> 21</b>   while(delay) delay--;
+<b> 22</b> }
+<b> 23</b> 
+<b> 24</b> 
+<b> 25</b> void RCC_AHB1PeriphClockCmd(uint32_t RCC_AHB1Periph, FunctionalState NewState)
+<b> 26</b> { 
+<b> 27</b>   /* Check the parameters */
+<b> 28</b>   //assert_param(IS_RCC_AHB1_CLOCK_PERIPH(RCC_AHB1Periph));
+<b> 29</b>   
+<b> 30</b>   //assert_param(IS_FUNCTIONAL_STATE(NewState));
+<b> 31</b>   if (NewState != DISABLE)
+<b> 32</b>   {
+<b> 33</b>     RCC-&gt;AHB1ENR |= RCC_AHB1Periph;
+<b> 34</b>   } 
+<b> 35</b>   else
+<b> 36</b>   { 
+<b> 37</b>     RCC-&gt;AHB1ENR &amp;= ~RCC_AHB1Periph;
+<b> 38</b>   }
+<b> 39</b> }  
+<b> 40</b> 
+<b> 41</b> #define RCC_AHB1Periph_GPIOA             ((uint32_t)0x00000001)
+<b> 42</b> #define RCC_AHB1Periph_GPIOD             ((uint32_t)0x00000008)
+<b> 43</b> 
+<b> 44</b> void GPIO_Init(GPIO_TypeDef* GPIOx, GPIO_InitTypeDef* GPIO_InitStruct)
+<b> 45</b> {
+<b> 46</b>   uint32_t pinpos = 0x00, pos = 0x00 , currentpin = 0x00;
+<b> 47</b> 
+<b> 48</b> #if 0
+<b> 49</b>   /* Check the parameters */
+<b> 50</b>   assert_param(IS_GPIO_ALL_PERIPH(GPIOx));
+<b> 51</b>   assert_param(IS_GPIO_PIN(GPIO_InitStruct-&gt;GPIO_Pin));
+<b> 52</b>   assert_param(IS_GPIO_MODE(GPIO_InitStruct-&gt;GPIO_Mode));
+<b> 53</b>   assert_param(IS_GPIO_PUPD(GPIO_InitStruct-&gt;GPIO_PuPd));
+<b> 54</b> #endif
+<b> 55</b>   /* -------------------------Configure the port pins---------------- */
+<b> 56</b>   /*-- GPIO Mode Configuration --*/
+<b> 57</b>   for (pinpos = 0x00; pinpos &lt; 0x10; pinpos++)
+<b> 58</b>   {
+<b> 59</b>     pos = ((uint32_t)0x01) &lt;&lt; pinpos;
+<b> 60</b>     /* Get the port pins position */
+<b> 61</b>     currentpin = (GPIO_InitStruct-&gt;GPIO_Pin) &amp; pos;
+<b> 62</b> 
+<b> 63</b>     if (currentpin == pos)
+<b> 64</b>     {
+<b> 65</b>       GPIOx-&gt;MODER  &amp;= ~(GPIO_MODER_MODER0 &lt;&lt; (pinpos * 2));
+<b> 66</b>       GPIOx-&gt;MODER |= (((uint32_t)GPIO_InitStruct-&gt;GPIO_Mode) &lt;&lt; (pinpos * 2));
+<b> 67</b> 
+<b> 68</b>       if ((GPIO_InitStruct-&gt;GPIO_Mode == GPIO_Mode_OUT) || (GPIO_InitStruct-&gt;GPIO_Mode == GPIO_Mode_AF))
+<b> 69</b>       {
+<b> 70</b>         /* Check Speed mode parameters */
+<b> 71</b>         //assert_param(IS_GPIO_SPEED(GPIO_InitStruct-&gt;GPIO_Speed));
+<b> 72</b> 
+<b> 73</b>         /* Speed mode configuration */
+<b> 74</b>         GPIOx-&gt;OSPEEDR &amp;= ~(GPIO_OSPEEDER_OSPEEDR0 &lt;&lt; (pinpos * 2));
+<b> 75</b>         GPIOx-&gt;OSPEEDR |= ((uint32_t)(GPIO_InitStruct-&gt;GPIO_Speed) &lt;&lt; (pinpos * 2));
+<b> 76</b> 
+<b> 77</b>         /* Check Output mode parameters */
+<b> 78</b>         //assert_param(IS_GPIO_OTYPE(GPIO_InitStruct-&gt;GPIO_OType));
+<b> 79</b> 
+<b> 80</b>         /* Output mode configuration*/
+<b> 81</b>         GPIOx-&gt;OTYPER  &amp;= ~((GPIO_OTYPER_OT_0) &lt;&lt; ((uint16_t)pinpos)) ;
+<b> 82</b>         GPIOx-&gt;OTYPER |= (uint16_t)(((uint16_t)GPIO_InitStruct-&gt;GPIO_OType) &lt;&lt; ((uint16_t)pinpos));
+<b> 83</b>       }
+<b> 84</b> 
+<b> 85</b>       /* Pull-up Pull down resistor configuration*/
+<b> 86</b>       GPIOx-&gt;PUPDR &amp;= ~(GPIO_PUPDR_PUPDR0 &lt;&lt; ((uint16_t)pinpos * 2));
+<b> 87</b>       GPIOx-&gt;PUPDR |= (((uint32_t)GPIO_InitStruct-&gt;GPIO_PuPd) &lt;&lt; (pinpos * 2));
+<b> 88</b>     }
+<b> 89</b>   }
+<b> 90</b> }
+<b> 91</b> 
+<b> 92</b> void GPIO_SetBits(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
+<b> 93</b> {   
+<b> 94</b>   /* Check the parameters */
+<b> 95</b>   //assert_param(IS_GPIO_ALL_PERIPH(GPIOx));
+<b> 96</b>   //assert_param(IS_GPIO_PIN(GPIO_Pin));
+<b> 97</b>     
+<b> 98</b>   GPIOx-&gt;BSRRL = GPIO_Pin;
+<b> 99</b> } 
+<b>100</b> 
+<b>101</b> void GPIO_SetBits_svc(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
+<b>102</b> {   
+<b>103</b>   /* Check the parameters */
+<b>104</b>   //assert_param(IS_GPIO_ALL_PERIPH(GPIOx));
+<b>105</b>   //assert_param(IS_GPIO_PIN(GPIO_Pin));
+<b>106</b>     
+<b>107</b>   GPIOx-&gt;BSRRL = GPIO_Pin;
+<b>108</b>   __asm ("svc 0");
+<b>109</b> } 
+<b>110</b> 
+<b>111</b> 
+<b>112</b> void GPIO_ResetBits(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
+<b>113</b> {
+<b>114</b>   /* Check the parameters */
+<b>115</b>   //assert_param(IS_GPIO_ALL_PERIPH(GPIOx));
+<b>116</b>   //assert_param(IS_GPIO_PIN(GPIO_Pin));
+<b>117</b> 
+<b>118</b>   GPIOx-&gt;BSRRH = GPIO_Pin;
+<b>119</b> }
+<b>120</b> 
+<b>121</b> 
+<b>122</b> 
+<b>123</b> int init_stm32f4(void)
+<b>124</b> {
+<b>125</b>   GPIO_InitTypeDef GPIO_InitStructure;
+<b>126</b>     
+<b>127</b>   /* GPIOD Periph clock enable */
+<b>128</b>   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
+<b>129</b> 
+<b>130</b>   /* Configure PD12, PD13, PD14 and PD15 in output pushpull mode */
+<b>131</b>   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13| GPIO_Pin_14| GPIO_Pin_15;
+<b>132</b>   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+<b>133</b>   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+<b>134</b>   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+<b>135</b>   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+<b>136</b>   GPIO_Init(GPIOD, &amp;GPIO_InitStructure);
+<b>137</b> 
+<b>138</b> 
+<b>139</b> 
+<span style="color: red;"><b>140</b>   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+<b>141</b> 
+<b>142</b>   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;            // we want to configure PA0
+<b>143</b>   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;         // we want it to be an input
+<b>144</b>   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;   // this sets the pin type to push / pull (as opposed to open drain)
+<b>145</b>   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;//this sets the GPIO modules clock speed
+<b>146</b>   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;   // this enables the pulldown resistor --&gt; we want to detect a high level
+<b>147</b>   GPIO_Init(GPIOA, &amp;GPIO_InitStructure);   </span>
+<b>148</b> }
+<b>149</b> 
+<b>150</b> int main(void)
+<b>151</b> {
+<b>152</b>   init_stm32f4();
+<b>153</b>   int p;
+<b>154</b> 
+<b>155</b>   while(1)
+<b>156</b>   {
+<b>157</b>     int i=0;
+<b>158</b>     if(GPIOA-&gt;IDR &amp; 0x0001)
+<b>159</b>     {
+<b>160</b>       i=1;
+<b>161</b>     }
+<b>162</b>     else
+<b>163</b>     {
+<b>164</b>       i=2;
+<b>165</b>     }
+<b>166</b>     p = i;
+<b>167</b> 
+<b>168</b>   }
+<b>169</b> }
+</pre>
+</fieldset>
+
+程式執行之後, 按下 user button 會執行 L160。
+
+這樣的方式不算漂亮, 使用中斷是比較合適的作法, 這是為外部中斷的版本熱身用的。
+
+source code: 老地方 
+git commit 37def95d39fc81b6afa9761a21882816303165da
