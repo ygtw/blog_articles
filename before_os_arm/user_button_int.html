@@ -1,7 +1,6 @@
 看過 &lt;<a href="http://descent-incoming.blogspot.tw/2014/02/for-stm32f4discovery-81-user-button-by.html" target="_blank">作業系統之前的程式 for stm32f4discovery (8.1) - user button by polling</a>&gt; (名字取的太長了) 之後, 這次我們來看看如何使用外部中斷。
 
-如果你查過應該會看到類似的程式碼:
-<a href="https://my.st.com/public/STe2ecommunities/mcu/Lists/STM32Discovery/Flat.aspx?RootFolder=%2Fpublic%2FSTe2ecommunities%2Fmcu%2FLists%2FSTM32Discovery%2Fexternal%20interrupt%20issue&amp;FolderCTID=0x01200200770978C69A1141439FE559EB459D75800084C20D8867EAD444A5987D47BE638E0F&amp;currentviews=374">https://my.st.com/public/STe2ecommunities/mcu/Lists/STM32Discovery/Flat.aspx?RootFolder=%2Fpublic%2FSTe2ecommunities%2Fmcu%2FLists%2FSTM32Discovery%2Fexternal%20interrupt%20issue&amp;FolderCTID=0x01200200770978C69A1141439FE559EB459D75800084C20D8867EAD444A5987D47BE638E0F&amp;currentviews=374</a>
+如果你查過應該會看到類似的<a href="https://my.st.com/public/STe2ecommunities/mcu/Lists/STM32Discovery/Flat.aspx?RootFolder=%2Fpublic%2FSTe2ecommunities%2Fmcu%2FLists%2FSTM32Discovery%2Fexternal%20interrupt%20issue&amp;FolderCTID=0x01200200770978C69A1141439FE559EB459D75800084C20D8867EAD444A5987D47BE638E0F&amp;currentviews=374">程式碼</a>:
 
 <fieldset>
 <legend>exti.c</legend>
@@ -90,141 +89,10 @@ user_button.c L239 ~ L243 設定 nvic, 很簡單吧! 都有注解要參考的資
 <b> 17</b> /* #define VECT_TAB_SRAM */
 <b> 18</b> #define VECT_TAB_OFFSET  0x0 /*!&lt; Vector Table base offset field.  This value must be a multiple of 0x200. */
 <b> 19</b> 
-<b> 20</b> int delay_time = 0x300000;
-<b> 21</b> 
-<b> 22</b> void Delay(uint32_t delay )
-<b> 23</b> {
-<b> 24</b>   while(delay) delay--;
-<b> 25</b> }
-<b> 26</b> 
-<b> 27</b> void RCC_APB2PeriphClockCmd(uint32_t RCC_APB2Periph, FunctionalState NewState)
-<b> 28</b> {
-<b> 29</b>   if (NewState != DISABLE)
-<b> 30</b>   {
-<b> 31</b>     RCC-&gt;APB2ENR |= RCC_APB2Periph;
-<b> 32</b>   }
-<b> 33</b>   else
-<b> 34</b>   {
-<b> 35</b>     RCC-&gt;APB2ENR &amp;= ~RCC_APB2Periph;
-<b> 36</b>   }
-<b> 37</b> }
-<b> 38</b> 
-<b> 39</b> 
-<b> 40</b> void RCC_AHB1PeriphClockCmd(uint32_t RCC_AHB1Periph, FunctionalState NewState)
-<b> 41</b> { 
-<b> 42</b>   /* Check the parameters */
-<b> 43</b>   //assert_param(IS_RCC_AHB1_CLOCK_PERIPH(RCC_AHB1Periph));
-<b> 44</b>   
-<b> 45</b>   //assert_param(IS_FUNCTIONAL_STATE(NewState));
-<b> 46</b>   if (NewState != DISABLE)
-<b> 47</b>   {
-<b> 48</b>     RCC-&gt;AHB1ENR |= RCC_AHB1Periph;
-<b> 49</b>   } 
-<b> 50</b>   else
-<b> 51</b>   { 
-<b> 52</b>     RCC-&gt;AHB1ENR &amp;= ~RCC_AHB1Periph;
-<b> 53</b>   }
-<b> 54</b> }  
-<b> 55</b> 
-<b> 56</b> #define RCC_AHB1Periph_GPIOA             ((uint32_t)0x00000001)
-<b> 57</b> #define RCC_AHB1Periph_GPIOD             ((uint32_t)0x00000008)
-<b> 58</b> 
-<b> 59</b> void GPIO_Init(GPIO_TypeDef* GPIOx, GPIO_InitTypeDef* GPIO_InitStruct)
-<b> 60</b> {
-<b> 61</b>   uint32_t pinpos = 0x00, pos = 0x00 , currentpin = 0x00;
-<b> 62</b> 
-<b> 63</b> #if 0
-<b> 64</b>   /* Check the parameters */
-<b> 65</b>   assert_param(IS_GPIO_ALL_PERIPH(GPIOx));
-<b> 66</b>   assert_param(IS_GPIO_PIN(GPIO_InitStruct-&gt;GPIO_Pin));
-<b> 67</b>   assert_param(IS_GPIO_MODE(GPIO_InitStruct-&gt;GPIO_Mode));
-<b> 68</b>   assert_param(IS_GPIO_PUPD(GPIO_InitStruct-&gt;GPIO_PuPd));
-<b> 69</b> #endif
-<b> 70</b>   /* -------------------------Configure the port pins---------------- */
-<b> 71</b>   /*-- GPIO Mode Configuration --*/
-<b> 72</b>   for (pinpos = 0x00; pinpos &lt; 0x10; pinpos++)
-<b> 73</b>   {
-<b> 74</b>     pos = ((uint32_t)0x01) &lt;&lt; pinpos;
-<b> 75</b>     /* Get the port pins position */
-<b> 76</b>     currentpin = (GPIO_InitStruct-&gt;GPIO_Pin) &amp; pos;
-<b> 77</b> 
-<b> 78</b>     if (currentpin == pos)
-<b> 79</b>     {
-<b> 80</b>       GPIOx-&gt;MODER  &amp;= ~(GPIO_MODER_MODER0 &lt;&lt; (pinpos * 2));
-<b> 81</b>       GPIOx-&gt;MODER |= (((uint32_t)GPIO_InitStruct-&gt;GPIO_Mode) &lt;&lt; (pinpos * 2));
-<b> 82</b> 
-<b> 83</b>       if ((GPIO_InitStruct-&gt;GPIO_Mode == GPIO_Mode_OUT) || (GPIO_InitStruct-&gt;GPIO_Mode == GPIO_Mode_AF))
-<b> 84</b>       {
-<b> 85</b>         /* Check Speed mode parameters */
-<b> 86</b>         //assert_param(IS_GPIO_SPEED(GPIO_InitStruct-&gt;GPIO_Speed));
-<b> 87</b> 
-<b> 88</b>         /* Speed mode configuration */
-<b> 89</b>         GPIOx-&gt;OSPEEDR &amp;= ~(GPIO_OSPEEDER_OSPEEDR0 &lt;&lt; (pinpos * 2));
-<b> 90</b>         GPIOx-&gt;OSPEEDR |= ((uint32_t)(GPIO_InitStruct-&gt;GPIO_Speed) &lt;&lt; (pinpos * 2));
-<b> 91</b> 
-<b> 92</b>         /* Check Output mode parameters */
-<b> 93</b>         //assert_param(IS_GPIO_OTYPE(GPIO_InitStruct-&gt;GPIO_OType));
-<b> 94</b> 
-<b> 95</b>         /* Output mode configuration*/
-<b> 96</b>         GPIOx-&gt;OTYPER  &amp;= ~((GPIO_OTYPER_OT_0) &lt;&lt; ((uint16_t)pinpos)) ;
-<b> 97</b>         GPIOx-&gt;OTYPER |= (uint16_t)(((uint16_t)GPIO_InitStruct-&gt;GPIO_OType) &lt;&lt; ((uint16_t)pinpos));
-<b> 98</b>       }
-<b> 99</b> 
-<b>100</b>       /* Pull-up Pull down resistor configuration*/
-<b>101</b>       GPIOx-&gt;PUPDR &amp;= ~(GPIO_PUPDR_PUPDR0 &lt;&lt; ((uint16_t)pinpos * 2));
-<b>102</b>       GPIOx-&gt;PUPDR |= (((uint32_t)GPIO_InitStruct-&gt;GPIO_PuPd) &lt;&lt; (pinpos * 2));
-<b>103</b>     }
-<b>104</b>   }
-<b>105</b> }
-<b>106</b> 
-<b>107</b> void GPIO_SetBits(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
-<b>108</b> {   
-<b>109</b>   /* Check the parameters */
-<b>110</b>   //assert_param(IS_GPIO_ALL_PERIPH(GPIOx));
-<b>111</b>   //assert_param(IS_GPIO_PIN(GPIO_Pin));
-<b>112</b>     
-<b>113</b>   GPIOx-&gt;BSRRL = GPIO_Pin;
-<b>114</b> } 
-<b>115</b> 
-<b>116</b> void GPIO_SetBits_svc(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
-<b>117</b> {   
-<b>118</b>   /* Check the parameters */
-<b>119</b>   //assert_param(IS_GPIO_ALL_PERIPH(GPIOx));
-<b>120</b>   //assert_param(IS_GPIO_PIN(GPIO_Pin));
-<b>121</b>     
-<b>122</b>   GPIOx-&gt;BSRRL = GPIO_Pin;
-<b>123</b>   __asm ("svc 0");
-<b>124</b> } 
-<b>125</b> 
-<b>126</b> 
-<b>127</b> void GPIO_ResetBits(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
-<b>128</b> {
-<b>129</b>   /* Check the parameters */
-<b>130</b>   //assert_param(IS_GPIO_ALL_PERIPH(GPIOx));
-<b>131</b>   //assert_param(IS_GPIO_PIN(GPIO_Pin));
-<b>132</b> 
-<b>133</b>   GPIOx-&gt;BSRRH = GPIO_Pin;
-<b>134</b> }
-<b>135</b> 
-<b>136</b> 
 <b>137</b> 
 <b>138</b> int init_stm32f4(void)
 <b>139</b> {
 <b>140</b>   GPIO_InitTypeDef GPIO_InitStructure;
-<b>141</b>     
-<b>142</b> #if 0
-<b>143</b>   /* GPIOD Periph clock enable */
-<b>144</b>   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
-<b>145</b> 
-<b>146</b>   /* Configure PD12, PD13, PD14 and PD15 in output pushpull mode */
-<b>147</b>   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13| GPIO_Pin_14| GPIO_Pin_15;
-<b>148</b>   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-<b>149</b>   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-<b>150</b>   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
-<b>151</b>   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-<b>152</b>   GPIO_Init(GPIOD, &amp;GPIO_InitStructure);
-<b>153</b> #endif
-<b>154</b> 
 <b>155</b> 
 <b>156</b>   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
 <b>157</b>   RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
@@ -242,43 +110,6 @@ user_button.c L239 ~ L243 設定 nvic, 很簡單吧! 都有注解要參考的資
 <b>169</b> #endif
 <b>170</b>   GPIO_Init(GPIOA, &amp;GPIO_InitStructure);   
 <b>171</b> }
-<b>172</b> 
-<b>173</b> #if 0
-<b>174</b> ref: 
-<b>175</b> https://my.st.com/public/STe2ecommunities/mcu/Lists/STM32Discovery/Flat.aspx?RootFolder=%2Fpublic%2FSTe2ecommunities%2Fmcu%2FLists%2FSTM32Discovery%2Fexternal%20interrupt%20issue&amp;FolderCTID=0x01200200770978C69A1141439FE559EB459D75800084C20D8867EAD444A5987D47BE638E0F&amp;currentviews=374
-<b>176</b> 
-<b>177</b> 
-<b>178</b>    /* Connect EXTI Line0 to PA0 pin via SYSCFG */
-<b>179</b>     SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOA, EXTI_PinSource0);
-<b>180</b>      
-<b>181</b>     /* Configure EXTI Line0 */
-<b>182</b>      EXTI_InitStructure.EXTI_Line = EXTI_Line0;
-<b>183</b>      EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-<b>184</b>      EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising; 
-<b>185</b>      EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-<b>186</b>      EXTI_Init(&amp;EXTI_InitStructure);
-<b>187</b>       
-<b>188</b>      /* Enable and set EXTI Line0 Interrupt to the lowest priority */
-<b>189</b>      NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQn;
-<b>190</b>      NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;
-<b>191</b>      NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x01;
-<b>192</b>      NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-<b>193</b>      NVIC_Init(&amp;NVIC_InitStructure);
-<b>194</b> 
-<b>195</b> 
-<b>196</b> DM00031020.pdf 
-<b>197</b> chapter 8: System configuration controller (SYSCFG)
-<b>198</b> 
-<b>199</b> The system configuration controller is mainly used to remap the memory accessible in the 
-<b>200</b> code area, select the Ethernet PHY interface and manage the "external interrupt line" connection to the GPIOs.
-<b>201</b> 
-<b>202</b> SYSCFG external interrupt configuration register 1
-<b>203</b> (SYSCFG_EXTICR1)
-<b>204</b> Address offset: 0x08
-<b>205</b> Reset value: 0x0000
-<b>206</b> 
-<b>207</b> STM32F4xx_DSP_StdPeriph_Lib_V1.1.0\Project\STM32F4xx_StdPeriph_Examples\EXTI\EXTI_Example\main.c
-<b>208</b> #endif
 <b>209</b> 
 <b>210</b> 
 <b>211</b> int main(void)
@@ -298,16 +129,6 @@ user_button.c L239 ~ L243 設定 nvic, 很簡單吧! 都有注解要參考的資
 <b>225</b>   EXTI_InitStructure.EXTI_LineCmd = ENABLE;
 <b>226</b>   EXTI_Init(&amp;EXTI_InitStructure);
 <b>227</b> 
-<b>228</b> #if 0
-<b>229</b>   NVIC_InitTypeDef   NVIC_InitStructure;
-<b>230</b> 
-<b>231</b>   /* Enable and set EXTI Line0 Interrupt to the lowest priority */
-<b>232</b>   NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQn;
-<b>233</b>   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;
-<b>234</b>   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x01;
-<b>235</b>   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-<b>236</b>   NVIC_Init(&amp;NVIC_InitStructure);
-<b>237</b> #endif
 <b>238</b> 
 <span style="color: red;"><b>239</b> #if 1
 <b>240</b>   // ref:  arm cortex-m3: 嵌入式系統設計入門 p8-3
@@ -348,9 +169,6 @@ user_button.c L239 ~ L243 設定 nvic, 很簡單吧! 都有注解要參考的資
 
 再來是 L264 是怎麼來的? 這要看 stm32.h L166, 剛好是外部中斷第六號, wwdg_isr 是第零號, 依序數下去。
 
-
-
-
 <fieldset>
 <legend>stm32.h</legend>
 <pre style="white-space: pre-wrap;"><b>  1</b> #ifndef STM32_H
@@ -378,39 +196,6 @@ user_button.c L239 ~ L243 設定 nvic, 很簡單吧! 都有注解要參考的資
 <b> 23</b>   main();
 <b> 24</b> }
 <b> 25</b> 
-<b> 26</b> void pendsv_isr(void)
-<b> 27</b> {
-<b> 28</b>   int i=5;
-<b> 29</b> 
-<b> 30</b>   ++i;
-<b> 31</b> #if 1
-<b> 32</b>   //void test_led();
-<b> 33</b>   //test_led();
-<b> 34</b>   /* PD12 to be toggled */
-<b> 35</b>   GPIO_SetBits(GPIOD, GPIO_Pin_12); 
-<b> 36</b>   /* Insert delay */
-<b> 37</b>   Delay(0x3FFFFF);
-<b> 38</b> 
-<b> 39</b> #endif
-<b> 40</b> }
-<b> 41</b> 
-<b> 42</b> void svc_isr(void)
-<b> 43</b> {
-<b> 44</b>   // pendsv set:
-<b> 45</b>   //ref: @ Cortex™-M3 Technical Reference Manual (file name: DDI0337E_cortex_m3_r1p1_trm.pdf) p8-19
-<b> 46</b>   *( unsigned long *) 0xE000ED04 |= 0x10000000;
-<b> 47</b>   GPIO_SetBits(GPIOD, GPIO_Pin_13); 
-<b> 48</b>   /* Insert delay */
-<b> 49</b>   Delay(0x3FFFFF);
-<b> 50</b> }
-<b> 51</b> 
-<b> 52</b> void systick_isr(void)
-<b> 53</b> {
-<b> 54</b> }
-<b> 55</b> 
-<b> 56</b> void int_isr(void)
-<b> 57</b> {
-<b> 58</b> }
 <b> 59</b> 
 <b> 60</b> void wwdg_isr(void)
 <b> 61</b> {
