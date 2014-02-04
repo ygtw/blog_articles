@@ -486,70 +486,18 @@ user_button.c L239 ~ L 243 在設定 nvic, 很簡單吧! 都有住解要參考�
 
 這篇<a href="http://wiki.csie.ncku.edu.tw/embedded/GPIO">文章</a>幫了我大忙, 卡在 button isr 一直會被觸發, 需要設定 Pending register (EXTI_PR) 才不會一值發動 isr。所以才有 user_button.c L269 這行。
 
-cm3 外部中斷 
-ref: DM00031020.pdf p248
-
-Table 43. Vector table for STM32F40x and STM32F41x 
-Position 
-Priority 
-Type of&nbsp; 
-priority Acronym Description Address 
-- - - Reserved 0x0000 0000 
--3 fixed Reset Reset 0x0000 0004 
--2 fixed NMI 
-Non maskable interrupt. The&nbsp; 
-RCC Clock Security System&nbsp; 
-(CSS) is linked to the NMI vector. 
-0x0000 0008 
--1 fixed HardFault All class of fault 0x0000 000C 
-0 settable MemManage Memory management 0x0000 0010 
-1 settable BusFault Pre-fetch fault, memory access&nbsp; 
-fault 
-0x0000 0014 
-2 settable UsageFault Undefined instruction or illegal&nbsp; 
-state 
-0x0000 0018 
-- - - Reserved 
-0x0000 001C -&nbsp; 
-0x0000 002B 
-3 settable SVCall System service call via SWI&nbsp; 
-instruction 
-0x0000 002C 
-4 settable Debug Monitor Debug Monitor 0x0000 0030 
-- - - Reserved 0x0000 0034 
-5 settable PendSV Pendable request for system&nbsp; 
-service 
-0x0000 0038 
-6 settable SysTick System tick timer 0x0000 003C 
-0 7 settable WWDG Window Watchdog interrupt 0x0000 0040 
-1 8 settable PVD PVD through EXTI line detection&nbsp; 
-interrupt 
-0x0000 0044 
-29settableTAMP_STAMP Tamper and TimeStamp&nbsp; 
-interrupts through the EXTI line 
-0x0000 0048 
-310settableRTC_WKUP RTC Wakeup interrupt through&nbsp; 
-the EXTI line 
-0x0000 004C 
-4 11 settable FLASH Flash global interrupt 0x0000 0050 
-5 12 settable RCC RCC global interrupt 0x0000 0054 
-6 13 settable EXTI0 EXTI Line0 interrupt 0x0000 0058 
-7 14 settable EXTI1 EXTI Line1 interrupt 0x0000 005C 
-8 15 settable EXTI2 EXTI Line2 interrupt 0x0000 0060 
-9 16 settable EXTI3 EXTI Line3 interrupt 0x0000 0064 
-10 17 settable EXTI4 EXTI Line4 interrupt 0x0000 0068 
-11 18 settable DMA1_Stream0 DMA1 Stream0 global interrupt&nbsp; 0x0000 006C 
-12 19 settable DMA1_Stream1 DMA1 Stream1 global interrupt 0x0000 0070 
-13 20 settable DMA1_Stream2 DMA1 Stream2 global interrupt 0x0000 0074
-
-
-
+我並非所有的資訊都是來自文件, 有些是直接看程式碼的, 要是每份文件去掃完, 可能現在還在看文件, 這是查詢範例程式碼的優點; 文件/程式碼各有其優缺點, 交互參照可以提升效率。
 
 source code: <a href="https://github.com/descent/stm32f4_prog">https://github.com/descent/stm32f4_prog</a>
-&nbsp;commit 1f10eecb06dfecc5a1fc0731c30c01ecd10ff58b
-
+commit 1f10eecb06dfecc5a1fc0731c30c01ecd10ff58b
 
 ref:
-http://wiki.csie.ncku.edu.tw/embedded/GPIO
+
+<ul>
+<li> cm3 外部中斷 
+DM00031020.pdf p248
+Table 43. Vector table for STM32F40x and STM32F41x </li>
+<li><a href="http://wiki.csie.ncku.edu.tw/embedded/GPIO">http://wiki.csie.ncku.edu.tw/embedded/GPIO</a></li>
+</ul>
 
 
