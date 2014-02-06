@@ -1,6 +1,6 @@
 <a href="https://picasaweb.google.com/lh/photo/L3oAt90DzNthPG8lk_GxhNMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="480" src="https://lh4.googleusercontent.com/-uBqq6rbiHgw/UmOkcmQqLuI/AAAAAAAAtO8/LeEPRAPRPuQ/s640/IMGP7914.JPG" width="640" /></a>
 
-這篇心得只是第二部份 (10 ~  章)。
+這篇心得是剩下的第二部份 (10 ~  18 章)
 
 <h2>
 目录</h2>
@@ -331,11 +331,11 @@ delete[10] p2;
 10.7 列出了使用 garbage collection 的優缺點, 如果使用 gc 能不付出任何代價, 相信沒有人會反對, 這就是使用 gc 的困難點, 也是 c++ 在效率勝出有 gc 功能的語言原因之一, 有了 gc, 很可能 c++ 變無法用來開發低階的系統程式, 但開發低階的系統程式這可是 c++ 原本的設計目標, 真是兩難, c++11 已經有了 gc 的加入, 但目前 (2013) 還沒有任何實作品。看看這些聰明的人如何搞定這個難題。
 
 p201 提到了
-operator<<(int)
+operator&lt;&lt;(int)
 put(char c)
 在還沒有將 char, int 區分時 (為了相容 c, c 把 char, int 看成一樣), 在 stream library 上是一個問題,
-operator<<(int)
-operator<<(char c)
+operator&lt;&lt;(int)
+operator&lt;&lt;(char c)
 這樣是不會被當成 overloaded function, 而在 c++ 區分了 char, int 後, 竟然沒有遭遇到和 c 的相容性問題, 真是幸運, 不過 sizeof('a') 是個例外。
 
 ref: http://descent-incoming.blogspot.tw/2013/12/c-character-literal-is-different-from-c.html
@@ -365,11 +365,11 @@ np.cpp: In function ‘int main(int, char**)’:
 np.cpp:4:20: error: invalid conversion from ‘void*’ to ‘char*’ [-fpermissive]
    char *p = (void*)0;
 
-所以這邊是 c++ 建議用 0, 而不要用 NULL 的原因, c++11 引入了 nullptr 解決這個問題。
+所以 c++ 建議用 0, 而不要用 NULL, c++11 引入了 nullptr 解決這個問題。
 
 11.2.4 介紹了 overload keyword, 這會引發一些災難, 應該很少人用過這個 keyword。
 
-11.3 為了提供安全的連結所下的苦心, 得與 c 相容, 不能有執行/編譯/連結的額外開銷, 這可真的不容易, 所以有了 mangle, extern "C" 這樣的方式, 現在看來很當然爾, 在當時可是難倒了這些聰明, 最後才想出來的聰明辦法。
+11.3 為了提供安全的連結所下的苦心, 得與 c 相容, 不能有執行/編譯/連結的額外開銷, 這可真的不容易, 所以有了 mangle, extern "C" 這樣的方式, 現在看來很當然爾, 在當時可是難倒了這些聰明的人, 最後才想出來的聰明辦法。
 
 mangle 將 function 的 type 也一起當成 function 的編碼名稱, 這可以拿來作為函式參數的型別檢查, 我疑惑的是為什麼沒有考慮函式的傳回值?
 
