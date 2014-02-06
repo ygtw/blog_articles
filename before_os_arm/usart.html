@@ -3,6 +3,9 @@
 
 usart 是很重要的輸入/輸出功能, stm32f4discovery 有好幾組 usart, 這範例選用了 usart2 這組, 接腳是 PA2, PA3, 另外的 gnd, 5v 用, 可接可不接。
 
+感謝 JuluOSDev 陳?毅補充:
+<span style="color: red;">「VCC 不需要接 但是 GND 需要接的 不接的話叫作 floating 兩邊的電位不見得相同可能會有奇怪現象, GND相接, 共地才會有一個正確的參考電位平面!」</span>
+
 <a href="https://picasaweb.google.com/lh/photo/IAWlUN14Eh8tNJik5hl0GcnPsuF7KO6TaX3PVGp2uRQ?feat=embedwebsite"><img height="360" src="https://lh4.googleusercontent.com/-vtRcdOw8qNQ/UWAZLO1nzbI/AAAAAAAAlr0/T4T0_QV3Vlc/s640/IMG_5528.JPG" width="640" /></a>
 
 整條線長這樣, <b>fea</b> 提供了這個方法, 減輕了硬體工作負擔, 一個純軟體開發人員, 去焊一個 uart 出來, 實在有點困難。插上 pc 的 usb 端之後, 當然沒搞定, 還有 usart code 要寫。
@@ -57,8 +60,7 @@ source code:
 <a href="https://github.com/descent/stm32f4_prog">https://github.com/descent/stm32f4_prog</a>
 myur.c
 
-<pre class="cmd">
-make myur.bin
+<pre class="cmd">make myur.bin
 </pre>
 
 這系列暫時先這樣, 有了基本的 uart 輸入/輸出, 又有了 led, 應該有足夠的武器開工了。
