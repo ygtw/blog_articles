@@ -526,3 +526,50 @@ exception handle 翻譯為處理器, 我一開始還以為是 cpu 之類的東�
 16.6.1 wordaround for resumption 則提供了一個作法來達到類似 resumption 的功能。
 
 
+17.4 namespace 討論時期的語法
+
+
+17.6 提到 namespace 和 c function 的問題：
+
+<fieldset><legend>n.cpp</legend>
+<pre style="white-space: pre-wrap;">
+<b> 1</b> #include &lt;iostream&gt;
+<b> 2</b>
+<b> 3</b> using namespace std;
+<b> 4</b>
+<b> 5</b> namespace X
+<b> 6</b> {
+<b> 7</b>   extern &quot;C&quot; void f(int i)
+<b> 8</b>   {
+<b> 9</b>     cout &lt;&lt; &quot;X:: &quot; &lt;&lt; i &lt;&lt; endl;
+<b>10</b>   }
+<b>11</b> }
+<b>12</b>
+<b>13</b>
+<b>14</b> namespace Y
+<b>15</b> {
+<b>16</b>   extern &quot;C&quot; void f(int i)
+<b>17</b>   {
+<b>18</b>     cout &lt;&lt; &quot;Y:: &quot; &lt;&lt; i &lt;&lt; endl;
+<b>19</b>   }
+<b>20</b> }
+<b>21</b>
+<b>22</b> int main(int argc, char *argv[])
+<b>23</b> {
+<b>24</b>
+<b>25</b>   return 0;
+<b>26</b> }
+</pre>
+</fieldset>
+
+<fieldset>
+<legend>g++ 的錯誤訊息</legend>
+descent@debian-vm:namespace_c_func$ g++ n.cpp
+/tmp/ccWPK35h.s: Assembler messages:
+/tmp/ccWPK35h.s:42: Error: symbol `f' is already defined
+</fieldset>
+
+我從來沒想過這樣的問題, 不過我能理解會有這樣的錯誤訊息, 這是 c 語言的問題, 而不是 c++ namespace 的問題, 真是討人厭的 c 兼容性。
+
+chapter 18 頁數不多, 主題是 c preprocessor (cpp),  Bjarne 不喜歡 cpp, 想要廢掉 cpp, 我終於知道為什麼他不鼓勵 c++ 程式員用 c preprocessor。不過到了 2014, cpp 也還是存在 c++ 程式中。cpp 提供了不少功能, c++ 的某些特性可以代替它, 但還沒有什麼好辦法可以完全不使用它。
+
