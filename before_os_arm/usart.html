@@ -1,0 +1,73 @@
+<center>
+<a href="https://picasaweb.google.com/lh/photo/W2rIoFIOyinA8JvC3VbMYMnPsuF7KO6TaX3PVGp2uRQ?feat=embedwebsite"><img height="800" src="https://lh4.googleusercontent.com/-4sIY4ajARAw/UWAZHtHpprI/AAAAAAAAlrk/XsZcQe_fFO4/s800/IMG_5526.JPG" width="450" /></a></center>
+
+usart 是很重要的輸入/輸出功能, stm32f4discovery 有好幾組 usart, 這範例選用了 usart2 這組, 接腳是 PA2, PA3, 另外的 gnd, 5v 用, 可接可不接。
+
+<a href="https://picasaweb.google.com/lh/photo/IAWlUN14Eh8tNJik5hl0GcnPsuF7KO6TaX3PVGp2uRQ?feat=embedwebsite"><img height="360" src="https://lh4.googleusercontent.com/-vtRcdOw8qNQ/UWAZLO1nzbI/AAAAAAAAlr0/T4T0_QV3Vlc/s640/IMG_5528.JPG" width="640" /></a>
+
+整條線長這樣, <b>fea</b> 提供了這個方法, 減輕了硬體工作負擔, 一個純軟體開發人員, 去焊一個 uart 出來, 實在有點困難。插上 pc 的 usb 端之後, 當然沒搞定, 還有 usart code 要寫。
+
+<a href="https://picasaweb.google.com/lh/photo/r8-06QZJt4Mnka900fcDYMnPsuF7KO6TaX3PVGp2uRQ?feat=embedwebsite"><img height="480" src="https://lh3.googleusercontent.com/-j9KtPhWnqDQ/UWAaQxwnQyI/AAAAAAAAlsE/6tjUIncECKc/s640/usb_ur.jpg" width="640" /></a>
+
+45 NT 參加<a href="http://goods.ruten.com.tw/item/show?21205188859267">團購</a>購得, 20130406 拿到, 上圖是接腳圖示。
+
+PA2: usart2_tx -&gt; 白色線 (rx)
+PA3: usart2_rx -&gt; 綠色線 (tx)
+
+PA2, PA3 定義請參考: &nbsp;UM1472 User Manual STM32F4DISCOVERY STM32F4 high-performance discovery board 4.11
+
+我為 uart 困擾很久, 不知道怎麼處理, 本想使用 usb cdc, 不過 usb code 實在複雜, 現在有此方案, usart code 也相對容易些, 總算可以在&nbsp;stm32f4discovery 印東西了。
+
+<a href="https://picasaweb.google.com/lh/photo/GaHS4fHocxg0oOJsr_rIesnPsuF7KO6TaX3PVGp2uRQ?feat=embedwebsite"><img height="500" src="https://lh6.googleusercontent.com/-o7P_rtWw7wY/UWPcZOru62I/AAAAAAAAltE/03uZ3G27HtI/s800/stm32f4_af.jpeg" width="640" /></a>
+
+alternate function register 稍微提一下, 我也不確定是不是這樣, 看不懂 datasheet 的內容。uart2 rx/tx 是 AF7, PA2, PA3 的 2, 3 是屬於 0..7 所以要設定 0x20 (GPIO alternate function low register) 這組暫存器。
+
+Bits 31:0 AFRLy: Alternate function selection for port x bit y (y = 0..7)
+These bits are written by software to configure alternate function I/Os
+AFRLy selection:
+0000: AF0
+0001: AF1
+0010: AF2
+0011: AF3
+0100: AF4
+0101: AF5
+0110: AF6
+0111: AF7
+1000: AF8
+1001: AF9
+1010: AF10
+1011: AF11
+1100: AF12
+1101: AF13
+1110: AF14
+1111: AF15
+
+<div>
+AF7 的值是 0111, 也就是 0x7, 所以設定 GPIO alternate function low register。</div>
+<div>
+PA2: 8-11 為 0x7</div>
+<div>
+PA3: 12-15 為 0x7</div>
+
+就是 GPIO_PinAFConfig() 做的設定。
+
+除此之外 source code 沒什麼好介紹的, 從 fea 的版本小改而來 (另外參考網路上抓的 ur 程式碼), 使用 polling mode, 再從 st library 複製/貼上。這程式的價值在於, 我縮到只有一個 .c 檔, 方便對照 datasheet 查閱, 不用和整個 library 奮戰。
+
+source code: 
+<a href="https://github.com/descent/stm32f4_prog">https://github.com/descent/stm32f4_prog</a>
+myur.c
+
+這系列暫時先這樣, 有了基本的 uart 輸入/輸出, 又有了 led, 應該有足夠的武器開工了。
+
+20130425 補充:
+
+由於我的無知, 這個 ur 程式有一個致命的缺點, 我沒有設定 cpu 的工作時脈, 所以 cpu 運作在 16000000 下, 而當我將 cpu 時脈設為 168000000 時, 此 ur 程式無法正常工作, 除錯中 ...
+
+不介意這點的話, 勉強可用。
+
+20130510 補充:
+This version can work on 168M HZ cpu clock. 
+source code: 
+<a href="https://github.com/descent/stm32f4_prog/tree/master/myur_168M">https://github.com/descent/stm32f4_prog/tree/master/myur_168M</a>
+
+
