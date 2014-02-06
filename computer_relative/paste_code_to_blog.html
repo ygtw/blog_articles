@@ -1,0 +1,114 @@
+想在 blog 貼上程式碼 (source code ex: c/c++/組合語言), 需要先將程式碼轉成 html 語法, 沒想到花費的力氣比我想像中的大, google 好幾天, 不是太複雜 (要修改一堆 css/js ) 就是不合我用。我只需要行號和語法顏色。當然, 最好能在 linux 下使用。
+<ul>
+<li>code2html</li>
+<li>vi  的 :TOhtml</li>
+<li><a href="http://www.opinionatedgeek.com/DotNet/Tools/HTMLEncode/Encode.aspx">http://www.opinionatedgeek.com/DotNet/Tools/HTMLEncode/Encode.aspx</a></li>
+<li><a href="http://blog.xuite.net/givemepassxd/blog/40467229">http://blog.xuite.net/givemepassxd/blog/40467229</a></li>
+<li><a href="http://fly2sky999.blogspot.tw/2012/03/blogger-css-block-google-code-prettify.html">http://fly2sky999.blogspot.tw/2012/03/blogger-css-block-google-code-prettify.html</a></li>
+</ul>
+
+最後選了 code2html (用 apt-get install code2html 輕鬆搞定)
+<pre style="border: 1px inset; margin: 0px; overflow: auto; padding: 6px; text-align: left; width: 600px;">code2html -H -n -l as 5M_mem_rw.S  &gt; 5M_mem_rw.html</pre>
+
+
+<pre style="border: 1px inset; margin: 0px; overflow: auto; padding: 6px; text-align: left; width: 600px;">code2html -H -n -l c k.c  &gt; k.html</pre>
+
+用這些 option 出來的結果前後加上
+<pre style="border: 1px inset; margin: 0px; overflow: auto; padding: 6px; text-align: left; width: 600px;"><span style="color: #2040a0;"><b><span style="color: #4444ff;"><b>&lt;</b></span><span style="color: #2040a0;">pre</span><span style="color: #4444ff;"><b>&gt;</b></span></b></span>
+<span style="color: #2040a0;"><b><span style="color: #4444ff;"><b>&lt;</b></span><span style="color: #2040a0;">/pre</span><span style="color: #4444ff;"><b>&gt;</b></span></b></span></pre>
+<span style="font-family: monospace;">即可貼到<b>網頁/blog</b> 上。</span>
+
+以下是我用的 pre 有邊框的效果。
+<pre style="border: 1px inset; margin: 0px; overflow: auto; padding: 6px; text-align: left; width: 600px;"><span style="color: #2040a0;"><b><span style="color: #4444ff;"><b>&lt;</b></span><span style="color: #2040a0;">pre</span> <span style="color: #2040a0;">style=</span><span style="color: green;">"border: 1px inset ; margin: 0px; padding: 6px; overflow: auto; width: 600px; text-align: left;"</span><span style="color: #4444ff;"><b>&gt;</b></span></b></span>
+<span style="color: #2040a0;"><b><span com="" gif="" img="" style="color: #4444ff;"><b>&lt;</b></span><span style="color: #2040a0;">/pre</span><span style="color: #4444ff;"><b>&gt;</b></span></b></span></pre>
+
+
+支援的語言:
+<pre style="border: 1px inset; margin: 0px; overflow: auto; padding: 6px; text-align: left; width: 600px;">descent@ubuntu:1.5$ code2html --mode
+Defined modes: ada, ada95, awk, c, c++, cc, cpp, cxx, gpasm, groff, html, java,
+javascript, js, lisp, m4, make, makefile, pas, pascal, patch, perl, plain, pov,
+povray, python, ruby, sh, shellscript, sql.
+
+Defined outputformats: html, html-dark, html-fntlck, html-light, html-nobg,
+html-nocolor, html-simple.</pre>
+
+
+方便的 script
+<fieldset>
+<legend>h.sh</legend>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629" name="line1">1</a> <span style="color: blue;"><b>#!/bin/sh</b></span>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629" name="line2">2</a>
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629" name="line3">3</a> echo <span style="color: green;">"&lt;fieldset&gt;&lt;legend&gt;<span style="color: #2040a0;">$1</span>&lt;/legend&gt;"</span> &gt; <span style="color: #2040a0;">$1</span>.html
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629" name="line4">4</a> code2html -H -n -l <span style="color: #2040a0;">$2</span> <span style="color: #2040a0;">$1</span>  &gt;&gt; <span style="color: #2040a0;">$1</span>.html
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629" name="line5">5</a> echo <span style="color: green;">"&lt;/fieldset&gt;"</span> &gt;&gt; <span style="color: #2040a0;">$1</span>.html</fieldset>
+
+
+<fieldset>
+<legend>組合語言</legend>
+./h.sh 5M_mem_rw_mix_c.S  gpasm</fieldset>
+
+
+<fieldset>
+<legend>c 語言</legend>
+./h.sh k.c c</fieldset>
+
+
+清除 number link: blogger 會填上 link 的內容, 所以把 a tag 換成 b tag, 使用 sed_cmd 來處理即可。
+
+<fieldset>
+<legend>link</legend>
+<pre><a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629" name="line1">1</a> &lt;a href="" name="line9"&gt;  9&lt;/a&gt;   xor     %eax, %eax
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629" name="line2">2</a> &lt;b&gt;  9&lt;/b&gt;   xor     %eax, %eax
+</pre>
+</fieldset>
+
+<fieldset>
+<legend>sed_cmd</legend>
+<pre><a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629" name="line1">1</a> sed -i -e 's/&lt;\/a&gt;/&lt;\/b&gt;/g' simple_proc.S.html 
+<a href="http://www.blogger.com/blogger.g?blogID=3574663204983450629" name="line2">2</a> sed -i -e 's/&lt;a name="line[0-9]*"&gt;/&lt;b&gt;/g' simple_proc.S.html 
+</pre>
+</fieldset>
+
+加上 sed 的版本
+<fieldset><legend>h.sh</legend>
+<pre style="white-space: pre-wrap;">
+<b> 1</b> #!/bin/sh
+<b> 2</b> # use code2html to generate html for blog.
+<b> 3</b> # language:
+<b> 4</b> # ada, ada95, awk, c, c++, cc, cpp, cxx, gpasm, groff, html, java,
+<b> 5</b> # javascript, js, lisp, m4, make, makefile, pas, pascal, patch, perl, plain, pov,
+<b> 6</b> # povray, python, ruby, sh, shellscript, sql.
+<b> 7</b> 
+<b> 8</b> if [ &quot;$1&quot; == &quot;&quot; ]; then
+<b> 9</b>   echo &quot;usage: $0 code_filename language&quot;
+<b>10</b>   echo &quot;code2html support language syntax&quot;
+<b>11</b>   code2html --mode
+<b>12</b>   exit 0
+<b>13</b> #else
+<b>14</b> #  echo 'usage: code_filename $1'
+<b>15</b> fi
+<b>16</b> L=plain
+<b>17</b> 
+<b>18</b> if [ &quot;$2&quot; == &quot;&quot; ]; then
+<b>19</b>   echo &quot;language syntax: $L&quot;
+<b>20</b> else
+<b>21</b>   L=$2
+<b>22</b> fi
+<b>23</b> 
+<b>24</b> 
+<b>25</b> echo &quot;&lt;fieldset&gt;&lt;legend&gt;$1&lt;/legend&gt;&quot; &gt; $1.html
+<b>26</b> echo '&lt;pre style=&quot;white-space: pre-wrap;&quot;&gt;' &gt;&gt; $1.html
+<b>27</b> code2html -H -n -l $L $1 &gt;&gt; $1.html
+<b>28</b> #code2html -H -N -l $L $1 &gt;&gt; $1.html
+<b>29</b> echo &quot;&lt;/pre&gt;&quot; &gt;&gt; $1.html
+<b>30</b> echo &quot;&lt;/fieldset&gt;&quot; &gt;&gt; $1.html
+<b>31</b> 
+<b>32</b> sed -i -e 's/&lt;\/a&gt;/&lt;\/b&gt;/g' $1.html
+<b>33</b> sed -i -e 's/&lt;a name=&quot;line[0-9]*&quot;&gt;/&lt;b&gt;/g' $1.html
+<b>34</b> 
+<b>35</b> echo &quot;generate $1.html&quot;
+</pre>
+</fieldset>
+
+組合語言和 C 語言的效果:
+<a href="http://descent-incoming.blogspot.tw/2012/05/0-hello-xyz.html">http://descent-incoming.blogspot.tw/2012/05/0-hello-xyz.html</a>

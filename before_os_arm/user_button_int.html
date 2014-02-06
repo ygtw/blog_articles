@@ -1,0 +1,284 @@
+看過 &lt;<a href="http://descent-incoming.blogspot.tw/2014/02/for-stm32f4discovery-81-user-button-by.html" target="_blank">作業系統之前的程式 for stm32f4discovery (8.1) - user button by polling</a>&gt; (名字取的太長了) 之後, 這次我們來看看如何使用外部中斷。
+
+如果你查過應該會看到類似的<a href="https://my.st.com/public/STe2ecommunities/mcu/Lists/STM32Discovery/Flat.aspx?RootFolder=%2Fpublic%2FSTe2ecommunities%2Fmcu%2FLists%2FSTM32Discovery%2Fexternal%20interrupt%20issue&amp;FolderCTID=0x01200200770978C69A1141439FE559EB459D75800084C20D8867EAD444A5987D47BE638E0F&amp;currentviews=374">程式碼</a>:
+
+<fieldset>
+<legend>exti.c</legend>
+<pre style="white-space: pre-wrap;"><b> 1</b> void main()
+<b> 2</b> {
+<b> 3</b>   /* Configure EXTI Line0 (connected to PA0 pin) in interrupt mode ********/
+<b> 4</b>   /* Enable GPIOA clock */
+<b> 5</b>    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+<b> 6</b>   /* Enable SYSCFG clock */
+<b> 7</b>    SYSCFG_CompensationCellCmd(ENABLE);
+<b> 8</b>     
+<b> 9</b>    /* Configure PA0 pin as input floating */
+<b>10</b>     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+<b>11</b>     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+<b>12</b>     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
+<b>13</b>     GPIO_Init(GPIOA, &amp;GPIO_InitStructure);
+<b>14</b>      
+<b>15</b>     /* Connect EXTI Line0 to PA0 pin via SYSCFG */
+<b>16</b>     SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOA, EXTI_PinSource0);
+<b>17</b>      
+<b>18</b>     /* Configure EXTI Line0 */
+<b>19</b>      EXTI_InitStructure.EXTI_Line = EXTI_Line0;
+<b>20</b>      EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+<b>21</b>      EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising; 
+<b>22</b>      EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+<b>23</b>      EXTI_Init(&amp;EXTI_InitStructure);
+<b>24</b>       
+<b>25</b>      /* Enable and set EXTI Line0 Interrupt to the lowest priority */
+<b>26</b>      NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQn;
+<b>27</b>      NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;
+<b>28</b>      NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x01;
+<b>29</b>      NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+<b>30</b>      NVIC_Init(&amp;NVIC_InitStructure);
+<b>31</b> }
+<b>32</b> 
+<span style="color: red;"><b>33</b> void EXTI0_IRQHandler(void)
+<b>34</b> {
+<b>35</b>    int x = 2;
+<b>36</b> }</span>
+</pre>
+</fieldset>
+
+stm32 提供了 libray, 用起來像是這樣, 簡單的不得了, 不過你一定想知道更深入吧! 尤其是那個 exti.c L33 EXTI0_IRQHandler 到底是怎麼來的? 我也是, 所以才有這篇文章。而事實上若是沒有 stm32 的 library, 要完成這樣的功能比想像中還要麻煩不少, 難度是 5 個數量級以上。
+
+首先得先查詢 user button 接在哪裡, 答案是 PA0。這是 GPIO 的部份, 所以接下來要設定 GPIO; 再來是外部中斷, user button 被歸類在外部中斷, 來找出相關暫存器的設定資料吧! 有:
+<ol>
+<li>System configuration controller (SYSCFG)</li>
+<li>Interrupts and events</li>
+<li>nvic register </li>
+</ol>
+根據 <a href="http://www.st.com/st-web-ui/static/active/en/resource/technical/document/reference_manual/DM00031020.pdf">stm32f407 datasheet</a> 備齊以上這些資訊之後, 才能正確設定這些暫存器。
+
+搞了這麼久, 終於設定完畢, 可以寫 button isr 了, 疑! user button 的中斷編號是?
+直接告訴你: 外部中斷第六號, 就是那個 EXTI0_IRQHandler, 還沒完, 那你知道 button isr 要放在哪個位址嗎?
+
+事實上要能來到這裡, 你還得搞定如何寫出開機的程式, library 當然幫了不少忙, 這也不算簡單, 若有跟著這系列的朋友 (系列 1, 2 已經有提過了), 應該不是難題。
+
+你可能會有個疑問, 那用 library 不就好了, 這當然不是壞事, 你可以這樣選擇, 我只是想把整個過程搞清楚。所以別人可能花一小時完成這功能 (google 完, 貼上 code, 搞定, 睡大覺去了), 我得要花上兩個寂寞的晚上。
+
+來看程式碼:
+
+這次不小心把程式分成幾個檔案: user_button.c exti.c syscfg.c
+
+exti.c syscfg.c 對照 datasheet 看就可以了。
+
+user_button.c L239 ~ L243 設定 nvic, 很簡單吧! 都有注解要參考的資料了, 不會很難懂。其他和 <a href="http://descent-incoming.blogspot.tw/2014/02/for-stm32f4discovery-81-user-button-by.html">8.1</a> 的設定都一樣 (因為是從 8.1 抄過來的阿)。
+
+<fieldset>
+<legend>user_button.c</legend>
+<pre style="white-space: pre-wrap;"><b>  1</b> /*
+<b>  2</b>  * ref: http://eliaselectronics.com/stm32f4-tutorials/stm32f4-gpio-tutorial/
+<b>  3</b>  *   use polling to check user button status (press/release)
+<b>  4</b>  */
+<b>  5</b> #include "stm32.h"
+<b>  6</b> 
+<b>  7</b> #include "stm32f4xx.h"
+<b>  8</b> #include "stm32f4xx_gpio.h"
+<b>  9</b> #include "stm32f4xx_exti.h"
+<b> 10</b> #include "stm32f4xx_syscfg.h"
+<b> 11</b> #include "stm32f4xx_rcc.h"
+<b> 12</b> 
+<b> 13</b> #define USE_STDPERIPH_DRIVER
+<b> 14</b> 
+<b> 15</b> /*!&lt; Uncomment the following line if you need to relocate your vector Table in
+<b> 16</b>      Internal SRAM. */
+<b> 17</b> /* #define VECT_TAB_SRAM */
+<b> 18</b> #define VECT_TAB_OFFSET  0x0 /*!&lt; Vector Table base offset field.  This value must be a multiple of 0x200. */
+<b> 19</b> 
+<b>137</b> 
+<b>138</b> int init_stm32f4(void)
+<b>139</b> {
+<b>140</b>   GPIO_InitTypeDef GPIO_InitStructure;
+<b>155</b> 
+<b>156</b>   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+<b>157</b>   RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
+<b>158</b> 
+<b>159</b>   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;            // we want to configure PA0
+<b>160</b>   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;         // we want it to be an input
+<b>161</b> #ifdef POLL_USER_BUTTON
+<b>162</b>   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;   // this sets the pin type to push / pull (as opposed to open drain)
+<b>163</b>   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;//this sets the GPIO modules clock speed
+<b>164</b>   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;   // this enables the pulldown resistor --&gt; we want to detect a high level
+<b>165</b> 
+<b>166</b> #else
+<b>167</b>   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+<b>168</b>   //GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;   // this enables the pulldown resistor --&gt; we want to detect a high level
+<b>169</b> #endif
+<b>170</b>   GPIO_Init(GPIOA, &amp;GPIO_InitStructure);   
+<b>171</b> }
+<b>209</b> 
+<b>210</b> 
+<b>211</b> int main(void)
+<b>212</b> {
+<b>213</b>   init_stm32f4();
+<b>214</b>   int p;
+<b>215</b> 
+<b>216</b>   /* Connect EXTI Line0 to PA0 pin */
+<b>217</b>   // if no line, it can work.
+<b>218</b>   SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOA, EXTI_PinSource0);
+<b>219</b> 
+<b>220</b>   EXTI_InitTypeDef   EXTI_InitStructure;// ext interupt structure
+<b>221</b>   /* Configure EXTI Line0 */
+<b>222</b>   EXTI_InitStructure.EXTI_Line = EXTI_Line0;
+<b>223</b>   EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+<b>224</b>   EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
+<b>225</b>   EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+<b>226</b>   EXTI_Init(&amp;EXTI_InitStructure);
+<b>227</b> 
+<b>238</b> 
+<span style="color: red;"><b>239</b> #if 1
+<b>240</b>   // ref:  arm cortex-m3: 嵌入式系統設計入門 p8-3
+<b>241</b>   *(volatile unsigned long*) 0xE000E100 = 0;
+<b>242</b>   *(volatile unsigned long*) 0xE000E100 |= (1 &lt;&lt; 6);
+<b>243</b> #endif</span>
+<b>244</b> 
+<b>245</b>   while(1)
+<b>246</b>   {
+<b>247</b> #ifdef POLL_USER_BUTTON
+<b>248</b>     int i=0;
+<b>249</b>     if(GPIOA-&gt;IDR &amp; 0x0001)
+<b>250</b>     {
+<b>251</b>       i=1;
+<b>252</b>     }
+<b>253</b>     else
+<b>254</b>     {
+<b>255</b>       i=2;
+<b>256</b>     }
+<b>257</b>     p = i;
+<b>258</b> #else
+<b>259</b>     p = 5;
+<b>260</b> #endif
+<b>261</b>   }
+<b>262</b> }
+<b>263</b> 
+<b>264</b> void exti0_isr(void)
+<b>265</b> {
+<b>266</b>   int a=6;
+<b>267</b>   
+<b>268</b>   // if no line, it will envoke exti0_isr().
+<span style="color: red;"><b>269</b>   EXTI_ClearITPendingBit(EXTI_Line0);</span>
+<b>270</b> 
+<b>271</b> }   
+<b>272</b> 
+</pre>
+</fieldset>
+
+再來是 L264 是怎麼來的? 這要看 stm32.h L166, 剛好是外部中斷第六號, wwdg_isr 是第零號, 依序數下去。
+
+<fieldset>
+<legend>stm32.h</legend>
+<pre style="white-space: pre-wrap;"><b>  1</b> #ifndef STM32_H
+<b>  2</b> #define STM32_H
+<b>  3</b> 
+<b>  4</b> #include "lib_mygpio_led.h"
+<b>  5</b> 
+<b>  6</b> #define STACK_SIZE 64
+<b>  7</b> extern unsigned long _etext;
+<b>  8</b> extern unsigned long _data;
+<b>  9</b> extern unsigned long _edata;
+<b> 10</b> extern unsigned long _bss;
+<b> 11</b> extern unsigned long _ebss;
+<b> 12</b> 
+<b> 13</b> void ResetISR(void)
+<b> 14</b> {
+<b> 15</b>   unsigned long *pulSrc, *pulDest;
+<b> 16</b> 
+<b> 17</b>   pulSrc = &amp;_etext;
+<b> 18</b>   for (pulDest = &amp;_data; pulDest &lt; &amp;_edata;)
+<b> 19</b>     *pulDest++ = *pulSrc++;
+<b> 20</b>   for (pulDest = &amp;_bss; pulDest &lt; &amp;_ebss;)
+<b> 21</b>     *pulDest++ = 0;
+<b> 22</b> 
+<b> 23</b>   main();
+<b> 24</b> }
+<b> 25</b> 
+<b> 59</b> 
+<b> 60</b> void wwdg_isr(void)
+<b> 61</b> {
+<b> 62</b>   int b=33;
+<b> 63</b> }
+<b> 64</b> void pvd_isr(void)
+<b> 65</b> {
+<b> 66</b> }
+<b> 67</b> void tamp_stamp_isr(void)
+<b> 68</b> {
+<b> 69</b> }
+<b> 70</b> 
+<b> 71</b> void rtc_wkup_isr(void)
+<b> 72</b> {
+<b> 73</b> }
+<b> 74</b> void flash_isr(void)
+<b> 75</b> {
+<b> 76</b> }
+<b> 77</b> void rcc_isr(void)
+<b> 78</b> {
+<b> 79</b> }
+<b> 80</b> 
+<b> 81</b> void exti0_isr(void);
+<b> 82</b> 
+<b> 83</b> 
+<b> 84</b> typedef void (*pfnISR)(void);
+<b> 85</b> __attribute__((section(".stackares")))
+<b> 86</b> static unsigned long pulStack[STACK_SIZE];
+<b> 87</b> 
+<b> 88</b> 
+<b> 89</b> __attribute__((section(".isr_vector")))
+<b> 90</b> pfnISR VectorTable[]=
+<b> 91</b> {
+<b> 92</b>   (pfnISR)((unsigned long)pulStack+sizeof(pulStack)),
+<b> 93</b>   ResetISR, // 1
+<b> 94</b>   int_isr,
+<b> 95</b>   int_isr,
+<b> 96</b>   int_isr,
+<b> 97</b>   int_isr,
+<b> 98</b>   int_isr,
+<b> 99</b>   int_isr,
+<b>100</b>   int_isr,
+<b>101</b>   int_isr,
+<b>102</b>   int_isr,
+<b>103</b>   svc_isr,    // 11
+<b>104</b>   int_isr,
+<b>105</b>   int_isr,
+<b>106</b>   pendsv_isr, // 14
+<b>107</b>   systick_isr, // 15
+<b>108</b> 
+<b>109</b>   // External Interrupts
+<b>110</b>   wwdg_isr,                   // Window WatchDog
+<b>111</b>   pvd_isr,                   // PVD through EXTI Line detection                      
+<b>112</b>   tamp_stamp_isr,            // Tamper and TimeStamps through the EXTI line
+<b>113</b>   rtc_wkup_isr,              // RTC Wakeup through the EXTI line                     
+<b>114</b>   flash_isr,                 // FLASH                                           
+<b>115</b>   rcc_isr,                   // RCC                                             
+<b>116</b>   exti0_isr                  // EXTI Line0 
+<b>117</b> };
+<b>118</b> 
+<b>119</b> #endif
+</pre>
+</fieldset>
+
+把所有的努力集合起來就是: 設定好相關暫存器, 確定外部中斷號碼, 建立相關 isr, 搞定。
+
+在 user button 按下的時候, 就會跳到 exti0_isr 執行。
+
+我在完成這些事情之後, 測試之下, 按下 user button, 竟然會一直跳到 exti0_isr, 就差一點了, 程式就可以正常執行, 實在令人氣惱。
+
+這篇<a href="http://wiki.csie.ncku.edu.tw/embedded/GPIO">文章</a>幫了我大忙, 卡在 button isr 一直會被觸發, 需要設定 Pending register (EXTI_PR) 才不會一值發動 isr。所以才有 user_button.c L269 這行。
+
+我並非所有的資訊都是來自文件, 有些是直接看程式碼的, 要是每份文件去掃完, 可能現在還在看文件, 這是查詢範例程式碼的優點; 文件/程式碼各有其優缺點, 交互參照可以提升效率。
+
+source code: <a href="https://github.com/descent/stm32f4_prog">https://github.com/descent/stm32f4_prog</a>
+commit 1f10eecb06dfecc5a1fc0731c30c01ecd10ff58b
+
+ref:
+<ul>
+<li> cm3 外部中斷 
+DM00031020.pdf p248
+Table 43. Vector table for STM32F40x and STM32F41x </li>
+<li><a href="http://wiki.csie.ncku.edu.tw/embedded/GPIO">http://wiki.csie.ncku.edu.tw/embedded/GPIO</a></li>
+</ul>
+
+
