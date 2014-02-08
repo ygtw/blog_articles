@@ -506,16 +506,25 @@ void f(B *pb)
 
 chapter 15 的主題是 template, 最初的 c++ 設計就考慮了 parameterized types, 不過因為複雜度和其他原因被延遲到後面才實作。當時參考了 smalltalk 和 clu 的作法, 效率不好的 smalltalk 實作方式自然被捨棄了, 所以 c++ template 比較像 clu 的作法。
 
-15.7 template syntax
+15.7 template syntax, 一開始是設計程這樣:
+class template
+class vector<class T>
 
+funcion template
+T& index<class T>(vector<T> &v, int i)
+{
+}
 
+不過最後還是導入了 template keyword。
 
-15.11.3
-int()
+15.11.3 提到內建型別也有建構/解構函式, ex:
 
+<pre class="cmd">
+int i = int(2);
+</pre>
 
 chapter 16 談論的是 exception handling, 和 template 一樣, 在最初的 c++ 設計中就考慮了, 也一樣因為複雜度的關係被延遲到後期才實作。
-[Koenig, 1989b], [Koenig, 1990] 有相關的討論。
+[Koenig, 1989b], [Koenig, 1990], [Cameron, 1992] (16.9.1 實作) 有相關的討論。
 
 16.3 exception handleing 原本不想提供 3 個 keyword, 只打算使用 catch 表示拋出/捕捉 exception, 但 Bjarne 沒能說服其他人, 所以有了 thorw, 而 raise, signal 也因為是 c 標準程式庫而不能用了。
 
@@ -525,9 +534,20 @@ exception handle 翻譯為處理器, 我一開始還以為是 cpu 之類的東�
 
 16.6.1 wordaround for resumption 則提供了一個作法來達到類似 resumption 的功能。
 
+chapter 17 namespace, 17.1 199307 namespace 正式加入了 c++。17.2 提到使用 class 當作 namespace 的一些問題, 比如說: global function 需要使用 static, 這感覺就是哪裡怪怪的。
 
-17.4 namespace 討論時期的語法
+17.4 在設計 namespace 初期時的語法:
+namespace A
+{
+  void f();
+  void g();
+  void h();
+}
 
+using A; // now is : using namespace A;
+
+using A::(f,g,h);
+果然很難看。
 
 17.6 提到 namespace 和 c function 的問題：
 
@@ -573,3 +593,4 @@ descent@debian-vm:namespace_c_func$ g++ n.cpp
 
 chapter 18 頁數不多, 主題是 c preprocessor (cpp),  Bjarne 不喜歡 cpp, 想要廢掉 cpp, 我終於知道為什麼他不鼓勵 c++ 程式員用 c preprocessor。不過到了 2014, cpp 也還是存在 c++ 程式中。cpp 提供了不少功能, c++ 的某些特性可以代替它, 但還沒有什麼好辦法可以完全不使用它。
 
+終於看完了, 可以了解自己喜歡的語言是怎麼設計和演化真是一件開心的事情, 本書在 c++ 程式技術著墨不多, 最主要在說明為什麼 c++ 會設計成這個樣子, 在設計一個特性時, 考慮了哪些因素, 這些都不是容易的事情, 有個東西沒想到, 就會有大麻煩出現, 尤其 c++ 又要考慮效率, 這是最主要, 又要有 c 的相容性, 這真是難倒這些大師們。
