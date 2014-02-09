@@ -1,0 +1,76 @@
+終於要開始學習這個古老的語言了, 會對 lisp 有興趣是因為 emacs 的關係, 雖然我現在還不會使用 emacs, 不過先來學習 lisp 也不錯。它不是 c like 的語言, 我想看看學習這樣的語言以往的程式經驗還能適用嗎？我能快速上手 lisp 嗎？之前學習 python 能快速上手, 但對於 lisp 我沒有這樣的信心。
+
+一樣在 linux 環境下學習。
+
+<pre class="cmd">apt-get install gcl</pre>
+
+就可以開始練習了。
+
+我的參考書 <b>lisp 基礎</b> 李漢銘 儒林:
+<a href="http://books.google.com.tw/books/about/LISP%E5%9F%BA%E7%A4%8E.html?id=qvB6MwEACAAJ&amp;redir_esc=y">http://books.google.com.tw/books/about/LISP%E5%9F%BA%E7%A4%8E.html?id=qvB6MwEACAAJ&amp;redir_esc=y</a>
+
+為什麼沒照片? 嗯 ...
+
+薄薄的 218 頁, 我最喜歡這種學習書籍了。
+
+好像是 <a href="http://www.biolisp.org/llisp/index.html">http://www.biolisp.org/llisp/index.html</a> 中文版本。
+
+<pre class="cmd">descent@w-linux:~$ gcl 
+GCL (GNU Common Lisp)  2.6.7 CLtL1    Feb 15 2010 17:57:54
+Source License: LGPL(gcl,gmp), GPL(unexec,bfd,xgcl)
+Binary License:  GPL due to GPL'ed components: (XGCL READLINE BFD UNEXEC)
+Modifications of this banner must retain notice of a compatible license
+Dedicated to the memory of W. Schelter
+
+Use (help) to get some basic information on how to use GCL.
+Temporary directory for compiler files set to /tmp/
+
+＞(car '(1 2 3 4))
+
+1
+
+＞(cdr '(1 2 3 4))
+
+(2 3 4)
+
+＞
+</pre>
+
+令人困惑的 car, cdr
+
+page 24 ex1 的作業就難倒我: 
+把這個 list 反轉, 到這裡只有 car, adr, cons, conc 這四個 function 可用。
+((Bill 1234567) (simon 555) (jane 201))
+變這樣:
+((jane 201) (simon 555) (Bill 1234567))
+
+<pre class="cmd">＞ (cons (caddr '((Bill 1234567) (simon 555) (jane 201))) (cons (cadr '((Bill 1234567) (simon 555) (jane 201))) (cons (car '((Bill 1234567) (simon 555) (jane 201)) ) '()) ))
+</pre>
+
+很恐怖吧！
+
+<a href="http://blog.sina.com.cn/s/blog_5d90e82f0101jo6r.html">http://blog.sina.com.cn/s/blog_5d90e82f0101jo6r.html</a>
+提到的 dynamic scoping 問題, 在 gcl 運作的方式是我們預期的那樣, 在 emacs 則不是。
+
+在 emcas 可以這樣用:
+啟動 emcas, 進入 lisp-interaction-mode
+
+M-x lisp-interaction-mode
+按下
+ESC x lisp-interaction-mode
+
+(+ 3 4)
+7
+(cdr '(1 2 3 4))
+(2 3 4)
+(car '(1 2 3 4))
+1
+
+在每行程式碼最後按下 ctrl+j 就會得到結果。
+
+
+
+ref:
+<a href="http://www.wretch.cc/blog/kuangjc5566/12910327" target="_blank">你是如何成為Lisp程序員的？</a>
+<a href="http://zh.wikibooks.org/zh-tw/Lisp_%E5%85%A5%E9%96%80/%E5%BA%8F%E7%AB%A0_%E5%A6%82%E4%BD%95%E5%BC%80%E5%A7%8B">Lisp 入門 / 序章 如何開始</a>
+<a href="http://coding.derkeiler.com/Archive/Lisp/comp.lang.lisp/2006-12/msg01290.html">use gcl compile lisp porgram</a>
