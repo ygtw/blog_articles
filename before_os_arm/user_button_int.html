@@ -56,7 +56,7 @@ stm32 提供了 libray, 用起來像是這樣, 簡單的不得了, 不過你一�
 搞了這麼久, 終於設定完畢, 可以寫 button isr 了, 疑! user button 的中斷編號是?
 直接告訴你: 外部中斷第六號, 就是那個 EXTI0_IRQHandler, 還沒完, 那你知道 button isr 要放在哪個位址嗎?
 
-事實上要能來到這裡, 你還得搞定如何寫出開機的程式, library 當然幫了不少忙, 這也不算簡單, 若有跟著這系列的朋友 (系列 1, 2 已經有提過了), 應該不是難題。
+事實上要能來到這裡, 還得搞定如何寫出開機的程式, library 當然幫了不少忙, 這也不算簡單, 若有跟著這系列的朋友 (系列 1, 2 已經有提過了), 應該不是難題。
 
 你可能會有個疑問, 那用 library 不就好了, 這當然不是壞事, 你可以這樣選擇, 我只是想把整個過程搞清楚。所以別人可能花一小時完成這功能 (google 完, 貼上 code, 搞定, 睡大覺去了), 我得要花上兩個寂寞的晚上。
 
@@ -268,7 +268,7 @@ user_button.c L239 ~ L243 設定 nvic, 很簡單吧! 都有注解要參考的資
 
 這篇<a href="http://wiki.csie.ncku.edu.tw/embedded/GPIO">文章</a>幫了我大忙, 卡在 button isr 一直會被觸發, 需要設定 Pending register (EXTI_PR) 才不會一值發動 isr。所以才有 user_button.c L269 這行。
 
-我並非所有的資訊都是來自文件, 有些是直接看程式碼的, 要是每份文件去掃完, 可能現在還在看文件, 這是查詢範例程式碼的優點; 文件/程式碼各有其優缺點, 交互參照可以提升效率。
+並非所有的資訊都來自文件, 有些是直接看程式碼的, 要是每份文件去掃完, 可能現在還在看文件, 這是查詢範例程式碼的優點; 文件/程式碼各有其優缺點, 交互參照可以提升效率。
 
 source code: <a href="https://github.com/descent/stm32f4_prog">https://github.com/descent/stm32f4_prog</a>
 commit 1f10eecb06dfecc5a1fc0731c30c01ecd10ff58b
