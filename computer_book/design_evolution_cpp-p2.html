@@ -1,4 +1,5 @@
-<a href="https://picasaweb.google.com/lh/photo/L3oAt90DzNthPG8lk_GxhNMTjNZETYmyPJy0liipFm0?feat=embedwebsite"><img height="480" src="https://lh4.googleusercontent.com/-uBqq6rbiHgw/UmOkcmQqLuI/AAAAAAAAtO8/LeEPRAPRPuQ/s640/IMGP7914.JPG" width="640" /></a>
+<a href="https://picasaweb.google.com/lh/photo/TXSfz-DVld3H02_VwzB2kx7lyzyq0Rg6WnM09MTnQXU?feat=embedwebsite"><img src="https://lh6.googleusercontent.com/-MRnNlwCY-vU/UmUVxAYYSWI/AAAAAAAAtQU/cgbc1fKDZNw/s640/IMG_6888.JPG" /></a>
+
 
 這篇心得是剩下的第二部份 (10 ~  18 章)
 
@@ -315,7 +316,7 @@
 </td> </tr>
 </tbody></table>
 
-繼續第二部份, 主要在談 c++ 的特性。
+繼續第二部份, 主要在談 c++ 的特性, 沒有依照實作時間的順序在討論這些特性。
 
 10.3 array allocation 提到為 array 提供了 
 operator new[]
@@ -338,7 +339,7 @@ operator&lt;&lt;(int)
 operator&lt;&lt;(char c)
 這樣是不會被當成 overloaded function, 而在 c++ 區分了 char, int 後, 竟然沒有遭遇到和 c 的相容性問題, 真是幸運, 不過 sizeof('a') 是個例外。
 
-ref: http://descent-incoming.blogspot.tw/2013/12/c-character-literal-is-different-from-c.html
+ref: <a href="http://descent-incoming.blogspot.tw/2013/12/c-character-literal-is-different-from-c.html">http://descent-incoming.blogspot.tw/2013/12/c-character-literal-is-different-from-c.html</a>
 
 p202 提到 strtok function prototype
 
@@ -359,15 +360,15 @@ NULL 通常是 (void *)0
 
 在 c++ 這行不通:
 
-  char *p = (void*)0;
+char *p = (void*)0;
 
 np.cpp: In function ‘int main(int, char**)’:
 np.cpp:4:20: error: invalid conversion from ‘void*’ to ‘char*’ [-fpermissive]
-   char *p = (void*)0;
+char *p = (void*)0;
 
 所以 c++ 建議用 0, 而不要用 NULL, c++11 引入了 nullptr 解決這個問題。
 
-11.2.4 介紹了 overload keyword, 這會引發一些災難, 應該很少人用過這個 keyword。
+11.2.4 介紹了 <b>overload</b> keyword, 這會引發一些災難, 應該很少人用過這個 keyword, 現在已經沒有這個 keyword 了。
 
 11.3 為了提供安全的連結所下的苦心, 得與 c 相容, 不能有執行/編譯/連結的額外開銷, 這可真的不容易, 所以有了 mangle, extern "C" 這樣的方式, 現在看來很當然爾, 在當時可是難倒了這些聰明的人, 最後才想出來的聰明辦法。
 
@@ -401,7 +402,7 @@ Matrix a, b, c, d;
 
 a=b*c+d;
 
-Matrix operator = * + (Matrix &, Matrix &, Matrix &, Matrix &)
+Matrix operator = * + (Matrix &amp;, Matrix &amp;, Matrix &amp;, Matrix &amp;)
 
 直接對應這個運算。
 
@@ -418,14 +419,14 @@ Ole-Johann Dahl (simula 發明人, 2001 圖靈獎得主) 1996 就有考慮多重
 p255 提到 mutable 並沒有像想像中那麼有用, 還是有機會要出動 const cast 消除 const 語意。
 
 p256 展示了這個程式碼:
-((X*)0)->f()
+((X*)0)-&gt;f()
 這個就是 static member function, 程式設計師真的很聰明, 就算沒有這特性, 總是可以找到一些方法來達成, 當然在這功能加入了, 就更安全, 也有較好的語法。
 
 13.6 的 inherited keyword 本來已經打算引入, 不過在 Michael Tiemann 提供以下程式碼後, 就不需要了。
 
-<fieldset><legend>inherited.cpp</legend>
-<pre style="white-space: pre-wrap;">
-<b> 1</b> class employee
+<fieldset>
+<legend>inherited.cpp</legend>
+<pre style="white-space: pre-wrap;"><b> 1</b> class employee
 <b> 2</b> {
 <b> 3</b>   public:
 <b> 4</b>   virtual void print()
@@ -458,27 +459,29 @@ p256 展示了這個程式碼:
 
 13.8 c++ 不支援 multi-method, 書上舉了 intersect 來處理 class Shape, Rectangle, Circle, 我不理解這是要表達什麼, 13.8.1 提供了 wordaround 的方法支援 multi-method。
 
-13.11 pointers to member, 指向 class member 的指標, 在 cfront release 1.2 之後才提供這個功能, 它不僅僅是一個 offset 而已, 是個很複雜的東西。可以參考這篇: http://descent-incoming.blogspot.tw/2013/08/c-member-function-pointer.html
+13.11 pointers to member, 指向 class member 的指標, 在 cfront release 1.2 之後才提供這個功能, 它不僅僅是一個 offset 而已, 是個很複雜的東西。可以參考這篇: <a href="http://descent-incoming.blogspot.tw/2013/08/c-member-function-pointer.html">http://descent-incoming.blogspot.tw/2013/08/c-member-function-pointer.html</a>
 
 chapter 14 的主題是型別轉換, 簡體中文版本把 cast 翻譯成<b>強制</b>, 真的是很難理解其意思, 應該要翻做<b>強制轉換</b>比較貼近書中的意思。重要的 RTTI 也在這章有主要的說明。
 
 14.1 開頭就提到 C++ 4 個 major extension:
-templates
-exceptions
-run-type type information
-namespace
+<ol>
+<li>templates</li>
+<li>exceptions</li>
+<li>run-type type information</li>
+<li>namespace</li>
+</ol>
 
 p272 提到 Bjarne 用 2 個上午實作了實驗性質的 RTTI 版本, 說到 RTTI 比 exception, template 簡單兩個數量級, 比多重繼承簡單一個數量級, 所以現在知道哪個 C++ 特性很難搞了吧! 而 Lenkov, 1991 這篇論文則是要把 rtti 加入 c++ 的動力。
 
 14.2.2.1 介紹了當初討論的 cast 語法:
-Checked<T*>(p)
-Unchecked<T*>(p)
+Checked<t>(p)
+Unchecked<t>(p)
 
 (?T*)p
 (virtaul T*)p
 
 現在的語法是
-dynamic_cast<T*>(p)
+dynamic_cast<t>(p)
 
 14.2.5.1 說明了 class type_info, 儘量做到最小, 裡頭有個 before() 用來排序用。
 
@@ -500,18 +503,18 @@ class B{};
 class D: public A, public B{};
 void f(B *pb)
 {
-  D* pd1 = reinterpret_cast<D*>(pb);
-  D* pd2 = static_cast<D*>(pb);
+D* pd1 = reinterpret_cast<d>(pb);
+D* pd2 = static_cast<d>(pb);
 }
 
 chapter 15 的主題是 template, 最初的 c++ 設計就考慮了 parameterized types, 不過因為複雜度和其他原因被延遲到後面才實作。當時參考了 smalltalk 和 clu 的作法, 效率不好的 smalltalk 實作方式自然被捨棄了, 所以 c++ template 比較像 clu 的作法。
 
 15.7 template syntax, 一開始是設計程這樣:
 class template
-class vector<class T>
+class vector<class t="">
 
 funcion template
-T& index<class T>(vector<T> &v, int i)
+T&amp; index<class t="">(vector<t> &amp;v, int i)
 {
 }
 
@@ -519,8 +522,8 @@ T& index<class T>(vector<T> &v, int i)
 
 15.11.3 提到內建型別也有建構/解構函式, ex:
 
-<pre class="cmd">
-int i = int(2);
+</t></class></class></d></d></t></t></t>
+<pre class="cmd">int i = int(2);
 </pre>
 
 chapter 16 談論的是 exception handling, 和 template 一樣, 在最初的 c++ 設計中就考慮了, 也一樣因為複雜度的關係被延遲到後期才實作。
@@ -539,9 +542,9 @@ chapter 17 namespace, 17.1 199307 namespace 正式加入了 c++。17.2 提到使
 17.4 在設計 namespace 初期時的語法:
 namespace A
 {
-  void f();
-  void g();
-  void h();
+void f();
+void g();
+void h();
 }
 
 using A; // now is : using namespace A;
@@ -551,26 +554,26 @@ using A::(f,g,h);
 
 17.6 提到 namespace 和 c function 的問題：
 
-<fieldset><legend>n.cpp</legend>
-<pre style="white-space: pre-wrap;">
-<b> 1</b> #include &lt;iostream&gt;
+<fieldset>
+<legend>n.cpp</legend>
+<pre style="white-space: pre-wrap;"><b> 1</b> #include &lt;iostream&gt;
 <b> 2</b>
 <b> 3</b> using namespace std;
 <b> 4</b>
 <b> 5</b> namespace X
 <b> 6</b> {
-<b> 7</b>   extern &quot;C&quot; void f(int i)
+<b> 7</b>   extern "C" void f(int i)
 <b> 8</b>   {
-<b> 9</b>     cout &lt;&lt; &quot;X:: &quot; &lt;&lt; i &lt;&lt; endl;
+<b> 9</b>     cout &lt;&lt; "X:: " &lt;&lt; i &lt;&lt; endl;
 <b>10</b>   }
 <b>11</b> }
 <b>12</b>
 <b>13</b>
 <b>14</b> namespace Y
 <b>15</b> {
-<b>16</b>   extern &quot;C&quot; void f(int i)
+<b>16</b>   extern "C" void f(int i)
 <b>17</b>   {
-<b>18</b>     cout &lt;&lt; &quot;Y:: &quot; &lt;&lt; i &lt;&lt; endl;
+<b>18</b>     cout &lt;&lt; "Y:: " &lt;&lt; i &lt;&lt; endl;
 <b>19</b>   }
 <b>20</b> }
 <b>21</b>
@@ -586,8 +589,7 @@ using A::(f,g,h);
 <legend>g++ 的錯誤訊息</legend>
 descent@debian-vm:namespace_c_func$ g++ n.cpp
 /tmp/ccWPK35h.s: Assembler messages:
-/tmp/ccWPK35h.s:42: Error: symbol `f' is already defined
-</fieldset>
+/tmp/ccWPK35h.s:42: Error: symbol `f' is already defined</fieldset>
 
 我從來沒想過這樣的問題, 不過我能理解會有這樣的錯誤訊息, 這是 c 語言的問題, 而不是 c++ namespace 的問題, 真是討人厭的 c 兼容性。
 
