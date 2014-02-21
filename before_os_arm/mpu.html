@@ -4,244 +4,154 @@ MPU  Region Base Address Register 有 align 的問題, 若是要設定區域 siz
 
 先來談談遇到的問題:
 
-沒有正確設定 mpu regions, 需要設定一個 base: 0x0, size: 4g 的 region, 因為我的 privdefena = 0, privdefena = 1 的話是另外一個情形。這倒置我 enable 之後, 立刻引起 hard-hault (其實應該要引起 mem-manage 比較正常)
+沒有正確設定 mpu regions, 需要設定一個 base: 0x0, size: 4g 的 region, 因為我的 privdefena = 0, privdefena = 1 的話是另外一個情形。這導致我 enable mpu 之後, 立刻引起 hard-hault (其實應該要引起 mem-manage 比較正常)
 
 觸發 hard-fault 而不是 MemManage exception:
 SYSTEM_HANDLER_CTRL_STATE_REG |= (1 &lt;&lt; 16); // enable mem-fault exception
 搞定
 
-in mm_isr, after mm_isr return, 仍然會執行修改變數那行, 所以又回到 mm_isr, 真奇怪, 不是應該要執行下一行嗎? 不過 pc 的確紀錄著修改變數那行程式碼, 所以會一直執行 mm_isr。看不懂是吧? 舉個例子
+in mm_isr, after mm_isr return, 仍然會執行修改變數那行, 所以又回到 mm_isr, 真奇怪, 不是應該要執行下一行嗎? 不過 pc 的確紀錄著修改變數那行程式碼, 所以會一直執行 mm_isr。看不懂我在寫什麼吧? 舉個例子
 
-<fieldset><legend>r.gdb</legend>
-<pre>
-<b>1</b>   &gt;│0x8000142 &lt;mymain()+22&gt;         ldr    r3, [pc, #28]   ; (0x8000160 &lt;mymain\
+<fieldset>
+<legend>r.gdb</legend>
+<pre><b>1</b>   &gt;│0x8000142 &lt;mymain()+22&gt;         ldr    r3, [pc, #28]   ; (0x8000160 &lt;mymain\
 <b>2</b> ()+52&gt;│
 <b>3</b>    │0x8000144 &lt;mymain()+24&gt;         mov.w  r2, #10                             \
 <b>4</b>    │0x8000148 &lt;mymain()+28&gt;         str    r2, [r3, #0]
 <b>5</b>    │0x800014a &lt;mymain()+30&gt; mov.w  r3, #5                                      \
 </pre>
 </fieldset>
-L4 會發生存取問題 (我設定 read only, 這是一個寫的動作), 這時會跳到 mm_isr, 但從 mm_isr 回來的時候應該要執行 L5, 但實際還是執行 L4, 所以就會再一次執行 mm_isr, 一直重複。我不知道這是不是正常行為?
 
-<fieldset><legend>mycpp.cpp</legend>
-<pre>
-<b> 1</b> <font color="#444444">// mpu test
-</font>
-<b> 2</b> <font color="0000ff"><strong>#include <font color="#008000">&quot;stm32.h&quot;</font>
-</strong></font>
-<b> 3</b> <font color="0000ff"><strong>#include <font color="#008000">&quot;type.h&quot;</font>
-</strong></font>
-<b> 4</b> 
+r.gdb L4 會發生存取問題 (我設定 read only, 這是一個寫的動作), 這時會跳到 mm_isr, 但從 mm_isr 回來的時候應該要執行 L5, 但實際還是執行 L4, 所以就會再一次執行 mm_isr, 一直重複。我不知道這是不是正常行為?
 
-<b> 5</b> <font color="0000ff"><strong>#define MPU_TYPE_REG_ADDR 0xe000ed90
-</strong></font>
-<b> 6</b> <font color="0000ff"><strong>#define MPU_TYPE_REG (*((u32 volatile *)MPU_TYPE_REG_ADDR))
-</strong></font>
-<b> 7</b> 
-
-<b> 8</b> <font color="0000ff"><strong>#define MPU_CTRL_REG_ADDR 0xe000ed94
-</strong></font>
-<b> 9</b> <font color="0000ff"><strong>#define MPU_CTRL_REG (*((u32 volatile *)MPU_CTRL_REG_ADDR))
-</strong></font>
-<b>10</b> 
-
-<b>11</b> <font color="0000ff"><strong>#define MPU_NUM_REG_ADDR 0xe000ed98
-</strong></font>
-<b>12</b> <font color="0000ff"><strong>#define MPU_NUM_REG (*((u32 volatile *)MPU_NUM_REG_ADDR))
-</strong></font>
-<b>13</b> 
-
-<b>14</b> <font color="0000ff"><strong>#define MPU_BASE_REG_ADDR 0xe000ed9c
-</strong></font>
-<b>15</b> <font color="0000ff"><strong>#define MPU_BASE_REG (*((u32 volatile *)MPU_BASE_REG_ADDR))
-</strong></font>
-<b>16</b> 
-
-<b>17</b> <font color="0000ff"><strong>#define MPU_ATTR_SIZE_REG_ADDR 0xe000eda0
-</strong></font>
-<b>18</b> <font color="0000ff"><strong>#define MPU_ATTR_SIZE_REG (*((u32 volatile *)MPU_ATTR_SIZE_REG_ADDR))
-</strong></font>
-<b>19</b> 
-
-<b>20</b> <strong>extern</strong> <font color="#2040a0">u32</font> <font color="#2040a0">mpu_reg1_begin_</font><font color="4444FF">;</font>
-
-<b>21</b> <strong>extern</strong> <font color="#2040a0">u32</font> <font color="#2040a0">mpu_reg1_end_</font><font color="4444FF">;</font>
-
+<fieldset>
+<legend>mycpp.cpp</legend>
+<pre><b> 1</b> <span style="color: #444444;">// mpu test
+</span><b> 2</b> <span style="color: blue;"><b>#include <span style="color: green;">"stm32.h"</span>
+</b></span><b> 3</b> <span style="color: blue;"><b>#include <span style="color: green;">"type.h"</span>
+</b></span><b> 4</b> 
+<b> 5</b> <span style="color: blue;"><b>#define MPU_TYPE_REG_ADDR 0xe000ed90
+</b></span><b> 6</b> <span style="color: blue;"><b>#define MPU_TYPE_REG (*((u32 volatile *)MPU_TYPE_REG_ADDR))
+</b></span><b> 7</b> 
+<b> 8</b> <span style="color: blue;"><b>#define MPU_CTRL_REG_ADDR 0xe000ed94
+</b></span><b> 9</b> <span style="color: blue;"><b>#define MPU_CTRL_REG (*((u32 volatile *)MPU_CTRL_REG_ADDR))
+</b></span><b>10</b> 
+<b>11</b> <span style="color: blue;"><b>#define MPU_NUM_REG_ADDR 0xe000ed98
+</b></span><b>12</b> <span style="color: blue;"><b>#define MPU_NUM_REG (*((u32 volatile *)MPU_NUM_REG_ADDR))
+</b></span><b>13</b> 
+<b>14</b> <span style="color: blue;"><b>#define MPU_BASE_REG_ADDR 0xe000ed9c
+</b></span><b>15</b> <span style="color: blue;"><b>#define MPU_BASE_REG (*((u32 volatile *)MPU_BASE_REG_ADDR))
+</b></span><b>16</b> 
+<b>17</b> <span style="color: blue;"><b>#define MPU_ATTR_SIZE_REG_ADDR 0xe000eda0
+</b></span><b>18</b> <span style="color: blue;"><b>#define MPU_ATTR_SIZE_REG (*((u32 volatile *)MPU_ATTR_SIZE_REG_ADDR))
+</b></span><b>19</b> 
+<b>20</b> <b>extern</b> <span style="color: #2040a0;">u32</span> <span style="color: #2040a0;">mpu_reg1_begin_</span><span style="color: #4444ff;">;</span>
+<b>21</b> <b>extern</b> <span style="color: #2040a0;">u32</span> <span style="color: #2040a0;">mpu_reg1_end_</span><span style="color: #4444ff;">;</span>
 <b>22</b> 
-
-<b>23</b> <strong>extern</strong> <font color="#2040a0">u32</font> <font color="#2040a0">mpu_reg2_begin_</font>, <font color="#2040a0">mpu_reg2_end_</font><font color="4444FF">;</font>
-
+<b>23</b> <b>extern</b> <span style="color: #2040a0;">u32</span> <span style="color: #2040a0;">mpu_reg2_begin_</span>, <span style="color: #2040a0;">mpu_reg2_end_</span><span style="color: #4444ff;">;</span>
 <b>24</b> 
-
-<b>25</b> <font color="#2040a0">__attribute__</font> <font color="4444FF">(</font><font color="4444FF">(</font><font color="#2040a0">section</font> <font color="4444FF">(</font><font color="#008000">&quot;.mpu_r1&quot;</font><font color="4444FF">)</font><font color="4444FF">)</font><font color="4444FF">)</font>
-
-<b>26</b> <strong>int</strong> <font color="#2040a0">reg1</font><font color="4444FF">[</font><font color="#FF0000">256</font><font color="4444FF">]</font><font color="4444FF">;</font>
-
+<b>25</b> <span style="color: #2040a0;">__attribute__</span> <span style="color: #4444ff;">(</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">section</span> <span style="color: #4444ff;">(</span><span style="color: green;">".mpu_r1"</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">)</span>
+<b>26</b> <b>int</b> <span style="color: #2040a0;">reg1</span><span style="color: #4444ff;">[</span><span style="color: red;">256</span><span style="color: #4444ff;">]</span><span style="color: #4444ff;">;</span>
 <b>27</b> 
-
-<b>28</b> <font color="#2040a0">__attribute__</font> <font color="4444FF">(</font><font color="4444FF">(</font><font color="#2040a0">section</font> <font color="4444FF">(</font><font color="#008000">&quot;.mpu_r2&quot;</font><font color="4444FF">)</font><font color="4444FF">)</font><font color="4444FF">)</font>
-
-<b>29</b> <strong>void</strong> <font color="#2040a0">test_mpu</font><font color="4444FF">(</font><font color="4444FF">)</font>
-
-<b>30</b> <font color="4444FF"><strong>{</strong></font>
-
-<b>31</b>   <strong>int</strong> <font color="#2040a0">i</font><font color="4444FF">=</font><font color="#FF0000">1</font><font color="4444FF">;</font>
-
-<b>32</b>   <font color="4444FF">+</font><font color="4444FF">+</font><font color="#2040a0">i</font><font color="4444FF">;</font>
-
-<b>33</b> <font color="4444FF"><strong>}</strong></font>
-
+<b>28</b> <span style="color: #2040a0;">__attribute__</span> <span style="color: #4444ff;">(</span><span style="color: #4444ff;">(</span><span style="color: #2040a0;">section</span> <span style="color: #4444ff;">(</span><span style="color: green;">".mpu_r2"</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">)</span>
+<b>29</b> <b>void</b> <span style="color: #2040a0;">test_mpu</span><span style="color: #4444ff;">(</span><span style="color: #4444ff;">)</span>
+<b>30</b> <span style="color: #4444ff;"><b>{</b></span>
+<b>31</b>   <b>int</b> <span style="color: #2040a0;">i</span><span style="color: #4444ff;">=</span><span style="color: red;">1</span><span style="color: #4444ff;">;</span>
+<b>32</b>   <span style="color: #4444ff;">+</span><span style="color: #4444ff;">+</span><span style="color: #2040a0;">i</span><span style="color: #4444ff;">;</span>
+<b>33</b> <span style="color: #4444ff;"><b>}</b></span>
 <b>34</b> 
-
-<b>35</b> <strong>bool</strong> <font color="#2040a0">init_mpu</font><font color="4444FF">(</font><font color="4444FF">)</font><font color="4444FF">;</font>
-
+<b>35</b> <b>bool</b> <span style="color: #2040a0;">init_mpu</span><span style="color: #4444ff;">(</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
 <b>36</b> 
-
-<b>37</b> <font color="#444444">// ref: http://blog.feabhas.com/2013/02/setting-up-the-cortex-m34-armv7-m-memory-protection-unit-mpu/
-</font>
-<b>38</b> <font color="#444444">// mymain is extern &quot;C&quot; declare
-</font>
-<b>39</b> <strong>void</strong> <font color="#2040a0">mymain</font><font color="4444FF">(</font><font color="4444FF">)</font>
-
-<b>40</b> <font color="4444FF"><strong>{</strong></font>
-
-<b>41</b>   <font color="#2040a0">SYSTEM_HANDLER_CTRL_STATE_REG</font> <font color="4444FF">|</font><font color="4444FF">=</font> <font color="4444FF">(</font><font color="#FF0000">1</font> <font color="4444FF">&lt;</font><font color="4444FF">&lt;</font> <font color="#FF0000">16</font><font color="4444FF">)</font><font color="4444FF">;</font> <font color="#444444">// enable mem-fault exception
-</font>
-<b>42</b>   <font color="#2040a0">init_mpu</font><font color="4444FF">(</font><font color="4444FF">)</font><font color="4444FF">;</font>
-
-<b>43</b>   <font color="#2040a0">reg1</font><font color="4444FF">[</font><font color="#FF0000">0</font><font color="4444FF">]</font> <font color="4444FF">=</font> <font color="#FF0000">10</font><font color="4444FF">;</font>
-
-<b>44</b>   <font color="#444444">//int a = reg1[0];
-</font>
-<b>45</b>   <font color="#444444">//test_mpu();
-</font>
-<b>46</b>   <strong>int</strong> <font color="#2040a0">i</font><font color="4444FF">=</font><font color="#FF0000">5</font><font color="4444FF">;</font>
-
-<b>47</b>   <strong>while</strong><font color="4444FF">(</font><font color="#FF0000">1</font><font color="4444FF">)</font>
-
-<b>48</b>   <font color="4444FF"><strong>{</strong></font>
-
-<b>49</b>     <font color="#2040a0">i</font><font color="4444FF">+</font><font color="4444FF">+</font><font color="4444FF">;</font>
-
-<b>50</b>   <font color="4444FF"><strong>}</strong></font>
-
-<b>51</b> <font color="4444FF"><strong>}</strong></font>
-
+<b>37</b> <span style="color: #444444;">// ref: http://blog.feabhas.com/2013/02/setting-up-the-cortex-m34-armv7-m-memory-protection-unit-mpu/
+</span><b>38</b> <span style="color: #444444;">// mymain is extern "C" declare
+</span><b>39</b> <b>void</b> <span style="color: #2040a0;">mymain</span><span style="color: #4444ff;">(</span><span style="color: #4444ff;">)</span>
+<b>40</b> <span style="color: #4444ff;"><b>{</b></span>
+<b>41</b>   <span style="color: #2040a0;">SYSTEM_HANDLER_CTRL_STATE_REG</span> <span style="color: #4444ff;">|</span><span style="color: #4444ff;">=</span> <span style="color: #4444ff;">(</span><span style="color: red;">1</span> <span style="color: #4444ff;">&lt;</span><span style="color: #4444ff;">&lt;</span> <span style="color: red;">16</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span> <span style="color: #444444;">// enable mem-fault exception
+</span><b>42</b>   <span style="color: #2040a0;">init_mpu</span><span style="color: #4444ff;">(</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>43</b>   <span style="color: #2040a0;">reg1</span><span style="color: #4444ff;">[</span><span style="color: red;">0</span><span style="color: #4444ff;">]</span> <span style="color: #4444ff;">=</span> <span style="color: red;">10</span><span style="color: #4444ff;">;</span>
+<b>44</b>   <span style="color: #444444;">//int a = reg1[0];
+</span><b>45</b>   <span style="color: #444444;">//test_mpu();
+</span><b>46</b>   <b>int</b> <span style="color: #2040a0;">i</span><span style="color: #4444ff;">=</span><span style="color: red;">5</span><span style="color: #4444ff;">;</span>
+<b>47</b>   <b>while</b><span style="color: #4444ff;">(</span><span style="color: red;">1</span><span style="color: #4444ff;">)</span>
+<b>48</b>   <span style="color: #4444ff;"><b>{</b></span>
+<b>49</b>     <span style="color: #2040a0;">i</span><span style="color: #4444ff;">+</span><span style="color: #4444ff;">+</span><span style="color: #4444ff;">;</span>
+<b>50</b>   <span style="color: #4444ff;"><b>}</b></span>
+<b>51</b> <span style="color: #4444ff;"><b>}</b></span>
 <b>52</b> 
-
 <b>53</b> 
-
-<b>54</b> <font color="#444444">// ref: arm cortex-m3: 嵌入式系統設計入門 p13-9
-</font>
-<b>55</b> <strong>bool</strong> <font color="#2040a0">init_mpu</font><font color="4444FF">(</font><font color="4444FF">)</font>
-
-<b>56</b> <font color="4444FF"><strong>{</strong></font>
-
-<b>57</b>   <font color="#444444">// ref: Cortex™-M3 Technical Reference Manual 9.2 (file name: DDI0337E_cortex_m3_r1p1_trm.pdf)
-</font>
-<b>58</b>   <font color="#444444">// in stm32f4discovery the value is 0x800
-</font>
-<b>59</b>   <font color="#444444">// so there are 8 regions
-</font>
-<b>60</b>   <font color="#444444">// qemu-system-arm -M lm3s6965evb -kernel list.bin -S -gdb tcp::1234
-</font>
-<b>61</b>   <font color="#444444">// the mpu_type is 0x0
-</font>
-<b>62</b> <font color="0000ff"><strong>#if 0
-</strong></font>
-<b>63</b>   <font color="#2040a0">u32</font> <strong>volatile</strong> <font color="4444FF">*</font><font color="#2040a0">mpu_type_reg_addr</font> <font color="4444FF">=</font> <font color="4444FF">(</font><font color="#2040a0">u32</font><font color="4444FF">*</font><font color="4444FF">)</font><font color="#FF0000">0xe000ed90</font><font color="4444FF">;</font> 
-
-<b>64</b>   <strong>if</strong> <font color="4444FF">(</font><font color="4444FF">*</font><font color="#2040a0">mpu_type_reg_addr</font> <font color="4444FF">=</font><font color="4444FF">=</font> <font color="#FF0000">0</font><font color="4444FF">)</font> <font color="#444444">// there is no mpu
-</font>
-<b>65</b>     <strong>return</strong> <strong>false</strong><font color="4444FF">;</font>
-
-<b>66</b> <font color="0000ff"><strong>#endif
-</strong></font>
-<b>67</b> 
-
-<b>68</b>   <strong>if</strong> <font color="4444FF">(</font><font color="#2040a0">MPU_TYPE_REG</font> <font color="4444FF">=</font><font color="4444FF">=</font> <font color="#FF0000">0</font><font color="4444FF">)</font> <font color="#444444">// there is no mpu
-</font>
-<b>69</b>     <strong>return</strong> <strong>false</strong><font color="4444FF">;</font>
-
+<b>54</b> <span style="color: #444444;">// ref: arm cortex-m3: 嵌入式系統設計入門 p13-9
+</span><b>55</b> <b>bool</b> <span style="color: #2040a0;">init_mpu</span><span style="color: #4444ff;">(</span><span style="color: #4444ff;">)</span>
+<b>56</b> <span style="color: #4444ff;"><b>{</b></span>
+<b>57</b>   <span style="color: #444444;">// ref: Cortex™-M3 Technical Reference Manual 9.2 (file name: DDI0337E_cortex_m3_r1p1_trm.pdf)
+</span><b>58</b>   <span style="color: #444444;">// in stm32f4discovery the value is 0x800
+</span><b>59</b>   <span style="color: #444444;">// so there are 8 regions
+</span><b>60</b>   <span style="color: #444444;">// qemu-system-arm -M lm3s6965evb -kernel list.bin -S -gdb tcp::1234
+</span><b>61</b>   <span style="color: #444444;">// the mpu_type is 0x0
+</span><b>62</b> <span style="color: blue;"><b>#if 0
+</b></span><b>63</b>   <span style="color: #2040a0;">u32</span> <b>volatile</b> <span style="color: #4444ff;">*</span><span style="color: #2040a0;">mpu_type_reg_addr</span> <span style="color: #4444ff;">=</span> <span style="color: #4444ff;">(</span><span style="color: #2040a0;">u32</span><span style="color: #4444ff;">*</span><span style="color: #4444ff;">)</span><span style="color: red;">0xe000ed90</span><span style="color: #4444ff;">;</span> 
+<b>64</b>   <b>if</b> <span style="color: #4444ff;">(</span><span style="color: #4444ff;">*</span><span style="color: #2040a0;">mpu_type_reg_addr</span> <span style="color: #4444ff;">=</span><span style="color: #4444ff;">=</span> <span style="color: red;">0</span><span style="color: #4444ff;">)</span> <span style="color: #444444;">// there is no mpu</span>
+<b>65</b>     <b>return</b> <b>false</b><span style="color: #4444ff;">;</span>
+<b>66</b> <span style="color: blue;"><b>#endif
+</b></span><b>67</b> 
+<b>68</b>   <b>if</b> <span style="color: #4444ff;">(</span><span style="color: #2040a0;">MPU_TYPE_REG</span> <span style="color: #4444ff;">=</span><span style="color: #4444ff;">=</span> <span style="color: red;">0</span><span style="color: #4444ff;">)</span> <span style="color: #444444;">// there is no mpu
+</span><b>69</b>     <b>return</b> <b>false</b><span style="color: #4444ff;">;</span>
 <b>70</b> 
-
-<b>71</b>   <font color="#444444">// base 0x0, 4g size
-</font>
-<b>72</b>   <font color="#2040a0">MPU_NUM_REG</font> <font color="4444FF">=</font> <font color="#FF0000">0</font><font color="4444FF">;</font>
-
-<b>73</b>   <font color="#2040a0">MPU_BASE_REG</font> <font color="4444FF">=</font> <font color="#FF0000">0</font><font color="4444FF">;</font>
-
-<b>74</b>   <font color="#2040a0">MPU_ATTR_SIZE_REG</font> <font color="4444FF">=</font> <font color="#FF0000">0x307003f</font><font color="4444FF">;</font>
-
-<b>75</b>   <font color="#444444">//(*((u32 volatile *)MPU_BASE_REG_ADDR)) = 0x307002f;
-</font>
-<b>76</b>   <font color="#2040a0">MPU_NUM_REG</font> <font color="4444FF">=</font> <font color="#FF0000">1</font><font color="4444FF">;</font>
-
-<b>77</b>   <font color="#2040a0">MPU_BASE_REG</font> <font color="4444FF">=</font> <font color="4444FF">(</font><font color="#2040a0">u32</font><font color="4444FF">)</font><font color="4444FF">&amp;</font><font color="#2040a0">mpu_reg1_begin_</font><font color="4444FF">;</font>
-
-<b>78</b>   <font color="#2040a0">MPU_ATTR_SIZE_REG</font> <font color="4444FF">=</font> <font color="#FF0000">0x707000F</font><font color="4444FF">;</font> <font color="#444444">// read only
-</font>
-<b>79</b>   <font color="#444444">//MPU_ATTR_SIZE_REG = 0x307000F; // r/w
-</font>
-<b>80</b>   <font color="#444444">// ap: 111 read only
-</font>
-<b>81</b>   <font color="#444444">// size: 256 byte
-</font>
-<b>82</b>   <font color="#444444">// S: 1, C: 1, B: 1
-</font>
-<b>83</b>   <font color="#444444">// TEX: 000
-</font>
-<b>84</b> 
-
-<b>85</b> <font color="0000ff"><strong>#if 0
-</strong></font>
-<b>86</b>   <font color="#2040a0">MPU_NUM_REG</font> <font color="4444FF">=</font> <font color="#FF0000">2</font><font color="4444FF">;</font>
-
-<b>87</b>   <font color="#2040a0">MPU_BASE_REG</font> <font color="4444FF">=</font> <font color="4444FF">(</font><font color="#2040a0">u32</font><font color="4444FF">)</font><font color="4444FF">&amp;</font><font color="#2040a0">mpu_reg2_begin_</font><font color="4444FF">;</font>
-
-<b>88</b>   <font color="#2040a0">MPU_ATTR_SIZE_REG</font> <font color="4444FF">=</font> <font color="#FF0000">0x1007000F</font><font color="4444FF">;</font>
-
-<b>89</b>   <font color="#444444">// disable execute
-</font>
-<b>90</b> <font color="0000ff"><strong>#endif
-</strong></font>
-<b>91</b> 
-
-<b>92</b>   <font color="#2040a0">MPU_CTRL_REG</font> <font color="4444FF">=</font> <font color="#FF0000">1</font><font color="4444FF">;</font> <font color="#444444">// enable MPU
-</font>
-<b>93</b> 
-
-<b>94</b>   <font color="#2040a0">__asm__</font> <font color="4444FF">(</font><font color="#008000">&quot;isb&quot;</font><font color="4444FF">)</font><font color="4444FF">;</font>
-
-<b>95</b>   <font color="#2040a0">__asm__</font> <font color="4444FF">(</font><font color="#008000">&quot;dsb&quot;</font><font color="4444FF">)</font><font color="4444FF">;</font>
-
+<b>71</b>   <span style="color: #444444;">// base 0x0, 4g size
+</span><b>72</b>   <span style="color: #2040a0;">MPU_NUM_REG</span> <span style="color: #4444ff;">=</span> <span style="color: red;">0</span><span style="color: #4444ff;">;</span>
+<b>73</b>   <span style="color: #2040a0;">MPU_BASE_REG</span> <span style="color: #4444ff;">=</span> <span style="color: red;">0</span>
+<b>74</b>   <span style="color: #2040a0;">MPU_ATTR_SIZE_REG</span> <span style="color: #4444ff;">=</span> <span style="color: red;">0x307003f</span><span style="color: #4444ff;">;</span>
+<b>75</b>   <span style="color: #444444;">//(*((u32 volatile *)MPU_BASE_REG_ADDR)) = 0x307002f;
+</span><b>76</b>   <span style="color: #2040a0;">MPU_NUM_REG</span> <span style="color: #4444ff;">=</span> <span style="color: red;">1</span><span style="color: #4444ff;">;</span>
+<b>77</b>   <span style="color: #2040a0;">MPU_BASE_REG</span> <span style="color: #4444ff;">=</span> <span style="color: #4444ff;">(</span><span style="color: #2040a0;">u32</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">&amp;</span><span style="color: #2040a0;">mpu_reg1_begin_</span><span style="color: #4444ff;">;</span>
+<b>78</b>   <span style="color: #2040a0;">MPU_ATTR_SIZE_REG</span> <span style="color: #4444ff;">=</span> <span style="color: red;">0x707000F</span><span style="color: #4444ff;">;</span> <span style="color: #444444;">// read only
+</span><b>79</b>   <span style="color: #444444;">//MPU_ATTR_SIZE_REG = 0x307000F; // r/w
+</span><b>80</b>   <span style="color: #444444;">// ap: 111 read only
+</span><b>81</b>   <span style="color: #444444;">// size: 256 byte
+</span><b>82</b>   <span style="color: #444444;">// S: 1, C: 1, B: 1
+</span><b>83</b>   <span style="color: #444444;">// TEX: 000
+</span><b>84</b> 
+<b>85</b> <span style="color: blue;"><b>#if 0
+</b></span><b>86</b>   <span style="color: #2040a0;">MPU_NUM_REG</span> <span style="color: #4444ff;">=</span> <span style="color: red;">2</span><span style="color: #4444ff;">;</span>
+<b>87</b>   <span style="color: #2040a0;">MPU_BASE_REG</span> <span style="color: #4444ff;">=</span> <span style="color: #4444ff;">(</span><span style="color: #2040a0;">u32</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">&amp;</span><span style="color: #2040a0;">mpu_reg2_begin_</span><span style="color: #4444ff;">;</span>
+<b>88</b>   <span style="color: #2040a0;">MPU_ATTR_SIZE_REG</span> <span style="color: #4444ff;">=</span> <span style="color: red;">0x1007000F</span><span style="color: #4444ff;">;</span>
+<b>89</b>   <span style="color: #444444;">// disable execute
+</span><b>90</b> <span style="color: blue;"><b>#endif
+</b></span><b>91</b> 
+<b>92</b>   <span style="color: #2040a0;">MPU_CTRL_REG</span> <span style="color: #4444ff;">=</span> <span style="color: red;">1</span><span style="color: #4444ff;">;</span> <span style="color: #444444;">// enable MPU
+</span><b>93</b> 
+<b>94</b>   <span style="color: #2040a0;">__asm__</span> <span style="color: #4444ff;">(</span><span style="color: green;">"isb"</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
+<b>95</b>   <span style="color: #2040a0;">__asm__</span> <span style="color: #4444ff;">(</span><span style="color: green;">"dsb"</span><span style="color: #4444ff;">)</span><span style="color: #4444ff;">;</span>
 <b>96</b> 
-
-<b>97</b>   <strong>return</strong> <strong>true</strong><font color="4444FF">;</font>
-
-<b>98</b> <font color="4444FF"><strong>}</strong></font>
-
+<b>97</b>   <b>return</b> <b>true</b><span style="color: #4444ff;">;</span>
+<b>98</b> <span style="color: #4444ff;"><b>}</b></span>
 <b>99</b> 
-
 </pre>
 </fieldset>
 
-這是程式碼, 是 c++ 的版本, 沒意外的話, 接下來的例子都以 c++ 為主。這是參考 arm cortex-m3: 嵌入式系統設計入門 p13-9, 不過我遇上上面提到的問題, 所以實作真的不容易, 總是會有其他的問題發生。3 個暫存器就可以搞定, 在加上一個 enable mpu 的暫存器。
+這是程式碼, 是 c++ 的版本, 沒意外的話, 接下來的例子都以 c++ 為主。這是參考 arm cortex-m3: 嵌入式系統設計入門 p13-9 上的程式, 不過我遇到上面提到的問題, 所以實作真的不容易, 總是會有其他的問題發生。3 個暫存器就可以搞定, 在加上一個 enable mpu 的暫存器。
 
 設定 0 號 region, base, size/屬性 ...
 設定 1 號 region, base,size/屬性 ...
 屬性程式碼碼有註解, 搭配書中解釋應該沒問題。
 
 最後的
- __asm__ ("isb");
- __asm__ ("dsb");
+__asm__ ("isb");
+__asm__ ("dsb");
 別忘記。
 
 直接貼
-http://blog.feabhas.com/2013/02/setting-up-the-cortex-m34-armv7-m-memory-protection-unit-mpu/
+<a href="http://blog.feabhas.com/2013/02/setting-up-the-cortex-m34-armv7-m-memory-protection-unit-mpu/">http://blog.feabhas.com/2013/02/setting-up-the-cortex-m34-armv7-m-memory-protection-unit-mpu/</a>
 的解釋:
-<pre class="cmd">
-After the MPU has been enabled, ISB and DSB barrier calls have been added to ensure that the pipeline is flushed and no further operations are executed until the memory access that enables the MPU completes.
+
+<pre class="cmd">After the MPU has been enabled, ISB and DSB barrier calls have been added to 
+ensure that the pipeline is flushed and no further operations are executed until 
+the memory access that enables the MPU completes.
 </pre>
 
 使用 gdb 跑一次, 這樣就大功告成。
+
+source code:
+<a href="https://github.com/descent/stm32f4_prog/tree/master/mpu/cpp">https://github.com/descent/stm32f4_prog/tree/master/mpu/cpp</a>
+
+
+
