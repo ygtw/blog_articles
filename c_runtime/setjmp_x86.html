@@ -416,6 +416,13 @@ L19 設定這次的 function return address, 這樣離開時, 就會回到 setjm
 </pre>
 </fieldset>
 
+20140227 補充:
+這個版本有些錯誤, 在遇到 register 變數時有可能會出錯。
+
+這是修改後的版本:
+<a href="https://github.com/descent/progs/blob/master/coroutine/my_setjmp.S">https://github.com/descent/progs/blob/master/coroutine/my_setjmp.S</a>
+
+<a href="https://github.com/descent/progs/blob/master/coroutine/sample.c">https://github.com/descent/progs/blob/master/coroutine/sample.c</a> 就是讓這個實作出錯的例子, 我已經修改完成, 目前沒問題了, 但不保證沒有其他問題。
 ref:
 
 <ol>
