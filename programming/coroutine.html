@@ -1,27 +1,30 @@
-
-我的 setjmp/longjmp 會有錯誤, 在使用 register variable, but standard setjmp/longjmp 不會有錯。
-
-
-為何 Routine 1 count 是 1, 2 , 4 的值, 而不是 1, 2, 3 ?
-[Routine 1] pass 1
-[Routine 2] pass 4
-[Routine 1] pass 2
-[Routine 2] pass 2
-[Routine 1] pass 4
-[Routine 2] pass 0
-
-
-
-
-
 從 jserv 的課程得知 coroutine: <a href="http://wiki.csie.ncku.edu.tw/embedded/Lab2">http://wiki.csie.ncku.edu.tw/embedded/Lab2</a>
 
 The Art of Computer Programming, Volume 1 1.4.2 coroutines 就在討論 coroutine。
 
-我的 setjmp/longjmp 會有錯誤, 在使用 register variable, but standard setjmp/longjmp 不會有錯。
+test env:
+debian/x86 32 bit
 
 
-為何 Routine 1 count 是 1, 2 , 4 的值, 而不是 1, 2, 3 ?
+我對 coroutine 很有興趣, 想把這東西搞懂。練習這個作業時花了不少時間, 每次解開一個 bug, 後面的 bug 又接踵而來。
+
+難關一:
+
+在使用 register variable 時, 用我自己實作的 setjmp/longjmp 會有錯誤 (segment fault), 但是標準程式庫的 setjmp/longjmp 不會有錯。
+
+這個 register unsigned long savedstack; 可害死我, 花了兩個晚上才找出來為什麼會讓我的 setjmp/longjmp 當掉, 在我的系統中 savedstack 會用 ebx, 結果我的 setjmp/longjmp 沒有保留好 ebx, 就發生了 ebx 的值被改掉, 也就是 savedstack 這變數被在執行 setjmp 之後被改了。
+<a href="https://www.blogger.com/goog_252224402">
+</a> <a href="https://github.com/descent/progs/blob/master/coroutine/my_setjmp.S">https://github.com/descent/progs/blob/master/coroutine/my_setjmp.S</a> 我已經做了一點修正。
+
+難關二:
+
+movl&nbsp;&nbsp;&nbsp; (%esp), %eax 改成 movl&nbsp;&nbsp;&nbsp; 4(%esp), %eax
+因為 %esp 保存的函式返回值變成在 4(%esp), 因為我多了 push %ebx 的動作。
+這個 bug 造成我用 setjmp 存下來的位址無法讓 longjmp 順利跳回。
+
+難關三:
+
+還有一個問題, 為何 Routine 1 count 是 1, 2 , 4 的值, 而不是 1, 2, 3 ?
 [Routine 1] pass 1
 [Routine 2] pass 4
 [Routine 1] pass 2
@@ -29,16 +32,199 @@ The Art of Computer Programming, Volume 1 1.4.2 coroutines 就在討論 coroutin
 [Routine 1] pass 4
 [Routine 2] pass 0
 
-使用 gdb single step 到 longjmp 會有問題, 直接設定 b __longjmp 在這裡觀察 __longjmp 的動作即可。
+要追這問題可讓我大傷腦筋, 使用 gdb single step 到 longjmp 會有問題, 直接設定 b __longjmp 在這裡觀察 __longjmp 的動作即可。
 
 將
 void routine1()
 void routine2()
 的 count 宣告改成 static 就符合預期了。
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //volatile unsigned count = 0;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; static unsigned count = 0;
+//volatile unsigned count = 0;
+static unsigned count = 0;
 
+執行結果:
+[Routine 1] pass 1
+[Routine 2] pass 4
+[Routine 1] pass 2
+[Routine 2] pass 3
+[Routine 1] pass 3
+[Routine 2] pass 2
+[Routine 1] pass 4
+[Routine 2] pass 1
+[Routine 1] pass 5
+[Routine 2] pass 0
+
+不過原因是什麼呢? 似乎是:
+L19 ~ 21, L37 ~ 39 的 macro 有錯,&nbsp; 改成 L74 ~ 83, L88 ~ 92 就正常了。
+
+<fieldset>
+<legend>sample.c</legend>
+<pre style="white-space: pre-wrap;"><b>  1</b> /* use setjmp/longjmp to implement coroutines */
+<b>  2</b> 
+<b>  3</b> #include &lt;stdio.h&gt;
+<b>  4</b> #include &lt;setjmp.h&gt;
+<b>  5</b> #include &lt;stdlib.h&gt;
+<b>  6</b> //#include "my_setjmp.h"
+<b>  7</b> 
+<b>  8</b> //#define setjmp my_setjmp
+<b>  9</b> //#define longjmp my_longjmp
+<b> 10</b> 
+<b> 11</b> #define STACK_SIZE 4096
+<b> 12</b> 
+<b> 13</b> /*
+<b> 14</b>  * Change SP prior to calling setjmp so that longjmp will
+<b> 15</b>  * start the routine with 'stackptr'.
+<b> 16</b>  */
+<b> 17</b> #if defined(__i386__)
+<b> 18</b> //#error "386"
+<span style="color: red;"><b> 19</b> #define SAVE_STACK_POINTER_ASM(savedstack, stackptr) \
+<b> 20</b> "movl %%esp, %[savedstack]\n" /* savedstack &lt;- SP */ \
+<b> 21</b> "movl %[stackptr], %%esp"    /* SP &lt;- stackptr */</span>
+<b> 22</b> #elif defined(__x86_64__)
+<b> 23</b> #define SAVE_STACK_POINTER_ASM(savedstack, stackptr) \
+<b> 24</b> "movq %%rsp, %[savedstack]\n" /* savedstack &lt;- SP */ \
+<b> 25</b> "movq %[stackptr], %%rsp"    /* SP &lt;- stackptr */
+<b> 26</b> #else
+<b> 27</b> #error "Unsupported architecture!"
+<b> 28</b> #endif
+<b> 29</b> 
+<b> 30</b> #define SAVE_STACK_POINTER(savedstack, stackptr) \
+<b> 31</b> do { \
+<b> 32</b> asm volatile ( SAVE_STACK_POINTER_ASM(savedstack, stackptr) \
+<b> 33</b> : [savedstack] "=r" (savedstack): [stackptr] "r" (stackptr) ); \
+<b> 34</b> } while (0)
+<b> 35</b> 
+<b> 36</b> /* Restore "normal" stack prior to return */
+<span style="color: red;"><b> 37</b> #if defined(__i386__)
+<b> 38</b> #define RESTORE_STACK_ASM(savedstack) \
+<b> 39</b> "movl %[savedstack],%%esp"</span>
+<b> 40</b> #elif defined(__x86_64__)
+<b> 41</b> #define RESTORE_STACK_ASM(savedstack) \
+<b> 42</b> "movq %[savedstack],%%rsp"
+<b> 43</b> #else
+<b> 44</b> #error "Unsupported architecture!"
+<b> 45</b> #endif
+<b> 46</b> 
+<b> 47</b> #define RESTORE_STACK(savedstack) \
+<b> 48</b> do { \
+<b> 49</b> asm volatile ( RESTORE_STACK_ASM(savedstack) \
+<b> 50</b> : : [savedstack] "r" (savedstack)); \
+<b> 51</b> } while (0)
+<b> 52</b> 
+<b> 53</b> jmp_buf routine1_buf;
+<b> 54</b> jmp_buf routine2_buf;
+<b> 55</b> 
+<b> 56</b> void routine1()
+<b> 57</b> {
+<b> 58</b> volatile unsigned count = 0;
+<b> 59</b> 
+<b> 60</b> /* Start of Routine #1 */
+<b> 61</b> setjmp(routine1_buf);
+<b> 62</b> 
+<b> 63</b> printf("[Routine 1] pass %d\n", ++count);
+<b> 64</b> 
+<b> 65</b> longjmp(routine2_buf, 1);
+<b> 66</b> }
+<b> 67</b> 
+<b> 68</b> void create_routine1(const void *stackptr)
+<b> 69</b> {
+<b> 70</b> register unsigned long savedstack;
+<b> 71</b> 
+<b> 72</b> //SAVE_STACK_POINTER(savedstack, stackptr);
+<b> 73</b> 
+<span style="color: blue;"><b> 74</b>         asm volatile ( 
+<b> 75</b>                        "movl %%esp, %0"
+<b> 76</b>                        :"=r"(savedstack)
+<b> 77</b>                        :
+<b> 78</b>                      );
+<b> 79</b>         asm volatile ( 
+<b> 80</b>                        "movl %0, %%esp"
+<b> 81</b>                        :
+<b> 82</b>                        :"r"(stackptr)
+<b> 83</b>                      );</span>
+<b> 84</b> 
+<b> 85</b> 
+<b> 86</b> if (setjmp(routine1_buf) == 0) {
+<b> 87</b> //RESTORE_STACK(savedstack);
+<span style="color: blue;"><b> 88</b>         asm volatile ( 
+<b> 89</b>                        "movl %0, %%esp"
+<b> 90</b>                        :
+<b> 91</b>                        :"r"(savedstack)
+<b> 92</b>                      );</span>
+<b> 93</b> }
+<b> 94</b> else {
+<b> 95</b> /* We got here through longjmp */
+<b> 96</b> routine1();
+<b> 97</b> }
+<b> 98</b> }
+<b> 99</b> 
+<b>100</b> #define FINAL_NUM 5
+<b>101</b> void routine2()
+<b>102</b> {
+<b>103</b> volatile unsigned count = 0;
+<b>104</b> 
+<b>105</b> /* Start of Routine #2 */
+<b>106</b> setjmp(routine2_buf);
+<b>107</b> 
+<b>108</b> printf("[Routine 2] pass %d\n", (FINAL_NUM - ++count));
+<b>109</b> 
+<b>110</b> if (count &lt; FINAL_NUM)
+<b>111</b> longjmp(routine1_buf, 1);
+<b>112</b> 
+<b>113</b> exit(0);
+<b>114</b> }
+<b>115</b> 
+<b>116</b> void create_routine2(const void *stackptr)
+<b>117</b> {
+<b>118</b> register unsigned long savedstack;
+<b>119</b> 
+<b>120</b>         asm volatile ( 
+<b>121</b>                        "movl %%esp, %0"
+<b>122</b>                        :"=r"(savedstack)
+<b>123</b>                        :
+<b>124</b>                      );
+<b>125</b>         asm volatile ( 
+<b>126</b>                        "movl %0, %%esp"
+<b>127</b>                        :
+<b>128</b>                        :"r"(stackptr)
+<b>129</b>                      );
+<b>130</b> 
+<b>131</b> 
+<b>132</b> if (setjmp(routine2_buf) == 0) {
+<b>133</b> //RESTORE_STACK(savedstack);
+<b>134</b>         asm volatile ( 
+<b>135</b>                        "movl %0, %%esp"
+<b>136</b>                        :
+<b>137</b>                        :"r"(savedstack)
+<b>138</b>                      );
+<b>139</b> }
+<b>140</b> else {
+<b>141</b> routine2();
+<b>142</b> }
+<b>143</b> }
+<b>144</b> 
+<b>145</b> int main(void)
+<b>146</b> {
+<b>147</b> create_routine1((char *) malloc(STACK_SIZE) + STACK_SIZE);
+<b>148</b> create_routine2((char *) malloc(STACK_SIZE) + STACK_SIZE);
+<b>149</b> longjmp(routine1_buf, 1);
+<b>150</b>         #if 0
+<b>151</b> routine1();
+<b>152</b> routine1();
+<b>153</b> routine1();
+<b>154</b> routine1();
+<b>155</b> routine1();
+<b>156</b> routine1();
+<b>157</b>         #endif
+<b>158</b> 
+<b>159</b> return 0;
+<b>160</b> }
+</pre>
+</fieldset>
+
+這兩個 macro 沒有正確的將 stack 轉移到 malloc 出來的記憶體區塊, 造成兩個 count 變數其實是同一個, 會互相影響。
+
+執行結果:
 
 [Routine 1] pass 1
 [Routine 2] pass 4
@@ -51,56 +237,14 @@ void routine2()
 [Routine 1] pass 5
 [Routine 2] pass 0
 
-似乎是
+呼 ... 結束了嗎? 還沒, 我要 port 到 stm32f4Discovery 版子上, 這就簡單不少了, 將之前的努力集合起來, 把 usart 的 code 貼過來, 做些小修改, 從 minicom 就可以得到和 x86 上相同的結果。
 
-#define SAVE_STACK_POINTER_ASM(savedstack, stackptr) \
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "movl %%esp, %[savedstack]\n" /* savedstack <- br="" sp="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "movl %[stackptr], %%esp"&nbsp;&nbsp;&nbsp; /* SP <- br="" stackptr=""></-></->
+source code:
+<a href="https://github.com/descent/stm32f4_prog/tree/master/coroutine">https://github.com/descent/stm32f4_prog/tree/master/coroutine</a>
 
-#define RESTORE_STACK_ASM(savedstack) \
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "movl %[savedstack],%%esp"
-
-換成這樣就正常了
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; asm volatile (
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "movl %%esp, %0"
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :"=r"(savedstack)
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; );
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; asm volatile (
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "movl %0, %%esp"
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :"r"(stackptr)
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; );
-
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; asm volatile (
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "movl %0, %%esp"
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :"r"(savedstack)
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; );
-
-
-
-https://github.com/descent/progs/tree/master/coroutine
-這是用我自己寫的 setjmp/longjmp, 執行的結果就是 1, 2, 3, 4, 5 符合我的預期。
-
-[Routine 1] pass 1
-[Routine 2] pass 4
-[Routine 1] pass 2
-[Routine 2] pass 3
-[Routine 1] pass 3
-[Routine 2] pass 2
-[Routine 1] pass 4
-[Routine 2] pass 1
-[Routine 1] pass 5
-[Routine 2] pass 0
-
-這個 register unsigned long savedstack; 可害死我, 花了兩個晚上才找出來為什麼會讓我的 setjmp/longjmp 當掉, 在我的系統 savedstack 會用 ebx, 結果我的 setjmp/longjmp 沒有保留好 ebx, 就發生了 ebx 的值被改掉, 也就是 savedstack 這變數被在執行 setjmp 之後被改了。
-
-再來是
-
-movl&nbsp;&nbsp;&nbsp; (%esp), %eax 改成 movl&nbsp;&nbsp;&nbsp; 4(%esp), %eax
-因為 %esp 保存的函式返回值變成在 4(%esp), 因為我多了 push %ebx 的動作。
+這樣結束了嗎? not yet, 作業題目可不是這樣 ...
 
 Coroutines in C: 
 <a href="http://www.chiark.greenend.org.uk/~sgtatham/coroutines.html">http://www.chiark.greenend.org.uk/~sgtatham/coroutines.html</a>
+簡體中文翻譯: <a href="http://www.oschina.net/translate/coroutines-in-c">http://www.oschina.net/translate/coroutines-in-c</a>
 
