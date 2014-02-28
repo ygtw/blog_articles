@@ -1,0 +1,106 @@
+
+我的 setjmp/longjmp 會有錯誤, 在使用 register variable, but standard setjmp/longjmp 不會有錯。
+
+
+為何 Routine 1 count 是 1, 2 , 4 的值, 而不是 1, 2, 3 ?
+[Routine 1] pass 1
+[Routine 2] pass 4
+[Routine 1] pass 2
+[Routine 2] pass 2
+[Routine 1] pass 4
+[Routine 2] pass 0
+
+
+
+
+
+從 jserv 的課程得知 coroutine: <a href="http://wiki.csie.ncku.edu.tw/embedded/Lab2">http://wiki.csie.ncku.edu.tw/embedded/Lab2</a>
+
+The Art of Computer Programming, Volume 1 1.4.2 coroutines 就在討論 coroutine。
+
+我的 setjmp/longjmp 會有錯誤, 在使用 register variable, but standard setjmp/longjmp 不會有錯。
+
+
+為何 Routine 1 count 是 1, 2 , 4 的值, 而不是 1, 2, 3 ?
+[Routine 1] pass 1
+[Routine 2] pass 4
+[Routine 1] pass 2
+[Routine 2] pass 2
+[Routine 1] pass 4
+[Routine 2] pass 0
+
+使用 gdb single step 到 longjmp 會有問題, 直接設定 b __longjmp 在這裡觀察 __longjmp 的動作即可。
+
+將
+void routine1()
+void routine2()
+的 count 宣告改成 static 就符合預期了。
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //volatile unsigned count = 0;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; static unsigned count = 0;
+
+
+[Routine 1] pass 1
+[Routine 2] pass 4
+[Routine 1] pass 2
+[Routine 2] pass 3
+[Routine 1] pass 3
+[Routine 2] pass 2
+[Routine 1] pass 4
+[Routine 2] pass 1
+[Routine 1] pass 5
+[Routine 2] pass 0
+
+似乎是
+
+#define SAVE_STACK_POINTER_ASM(savedstack, stackptr) \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "movl %%esp, %[savedstack]\n" /* savedstack <- br="" sp="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "movl %[stackptr], %%esp"&nbsp;&nbsp;&nbsp; /* SP <- br="" stackptr=""></-></->
+
+#define RESTORE_STACK_ASM(savedstack) \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "movl %[savedstack],%%esp"
+
+換成這樣就正常了
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; asm volatile (
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "movl %%esp, %0"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :"=r"(savedstack)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; );
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; asm volatile (
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "movl %0, %%esp"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :"r"(stackptr)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; );
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; asm volatile (
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "movl %0, %%esp"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :"r"(savedstack)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; );
+
+
+
+https://github.com/descent/progs/tree/master/coroutine
+這是用我自己寫的 setjmp/longjmp, 執行的結果就是 1, 2, 3, 4, 5 符合我的預期。
+
+[Routine 1] pass 1
+[Routine 2] pass 4
+[Routine 1] pass 2
+[Routine 2] pass 3
+[Routine 1] pass 3
+[Routine 2] pass 2
+[Routine 1] pass 4
+[Routine 2] pass 1
+[Routine 1] pass 5
+[Routine 2] pass 0
+
+這個 register unsigned long savedstack; 可害死我, 花了兩個晚上才找出來為什麼會讓我的 setjmp/longjmp 當掉, 在我的系統 savedstack 會用 ebx, 結果我的 setjmp/longjmp 沒有保留好 ebx, 就發生了 ebx 的值被改掉, 也就是 savedstack 這變數被在執行 setjmp 之後被改了。
+
+再來是
+
+movl&nbsp;&nbsp;&nbsp; (%esp), %eax 改成 movl&nbsp;&nbsp;&nbsp; 4(%esp), %eax
+因為 %esp 保存的函式返回值變成在 4(%esp), 因為我多了 push %ebx 的動作。
+
+Coroutines in C: 
+<a href="http://www.chiark.greenend.org.uk/~sgtatham/coroutines.html">http://www.chiark.greenend.org.uk/~sgtatham/coroutines.html</a>
+
