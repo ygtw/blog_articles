@@ -7,6 +7,8 @@ debian/x86 32 bit
 
 我對 coroutine 很有興趣, 想把這東西搞懂。練習這個作業時花了不少時間, 每次解開一個 bug, 後面的 bug 又接踵而來。
 
+這篇並不是在介紹 coroutine, 我還沒有搞懂, 只是紀錄我做這個作業遇到的問題。
+
 難關一:
 
 在使用 register variable 時, 用我自己實作的 setjmp/longjmp 會有錯誤 (segment fault), 但是標準程式庫的 setjmp/longjmp 不會有錯。
@@ -14,6 +16,8 @@ debian/x86 32 bit
 這個 register unsigned long savedstack; 可害死我, 花了兩個晚上才找出來為什麼會讓我的 setjmp/longjmp 當掉, 在我的系統中 savedstack 會用 ebx, 結果我的 setjmp/longjmp 沒有保留好 ebx, 就發生了 ebx 的值被改掉, 也就是 savedstack 這變數被在執行 setjmp 之後被改了。
 <a href="https://www.blogger.com/goog_252224402">
 </a> <a href="https://github.com/descent/progs/blob/master/coroutine/my_setjmp.S">https://github.com/descent/progs/blob/master/coroutine/my_setjmp.S</a> 我已經做了一點修正。
+
+cm3 的 setjmp/longjmp 沒遇到這樣的問題。 
 
 難關二:
 
@@ -245,18 +249,17 @@ source code:
 
 這樣結束了嗎? not yet, 作業題目可不是這樣 ..., rot13 我用了 c 語言而不是組合語言, 先饒了我吧!
 
-Coroutines in C: 
-<a href="http://www.chiark.greenend.org.uk/~sgtatham/coroutines.html">http://www.chiark.greenend.org.uk/~sgtatham/coroutines.html</a>
-簡體中文翻譯: <a href="http://www.oschina.net/translate/coroutines-in-c">http://www.oschina.net/translate/coroutines-in-c</a>
+ref:
+<ul>
+<li>Coroutines in C:
+<a href="http://www.chiark.greenend.org.uk/~sgtatham/coroutines.html">http://www.chiark.greenend.org.uk/~sgtatham/coroutines.html</a></li>
+<li>簡體中文翻譯: <a href="http://www.oschina.net/translate/coroutines-in-c">http://www.oschina.net/translate/coroutines-in-c</a></li>
+<li><a href="http://coolshell.cn/articles/10975.html">一个“蝇量级” C 语言协程库</a> 下面的回文提供了更多資料:</li>
+<li><a href="http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/reference/coroutine.html">http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/reference/coroutine.html</a></li>
+<li><a href="http://blog.csdn.net/tietao/article/details/8459964">http://blog.csdn.net/tietao/article/details/8459964</a></li>
+<li><a href="http://blog.csdn.net/tietao/article/details/8507455">http://blog.csdn.net/tietao/article/details/8507455</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Duff%27s_device">http://en.wikipedia.org/wiki/Duff%27s_device</a></li>
+<li><a href="http://blog.think-async.com/2010/03/potted-guide-to-stackless-coroutines.html">http://blog.think-async.com/2010/03/potted-guide-to-stackless-coroutines.html</a></li>
+<li><a href="http://dunkels.com/adam/pt/index.html">http://dunkels.com/adam/pt/index.html</a></li>
+</ul>
 
-
-http://coolshell.cn/articles/10975.html
-下面的回文提供了更多資料:
-http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/reference/coroutine.html
-http://blog.csdn.net/tietao/article/details/8459964
-http://blog.csdn.net/tietao/article/details/8507455
-http://en.wikipedia.org/wiki/Duff%27s_device
-
-http://blog.think-async.com/2010/03/potted-guide-to-stackless-coroutines.html
-
-http://dunkels.com/adam/pt/index.html
